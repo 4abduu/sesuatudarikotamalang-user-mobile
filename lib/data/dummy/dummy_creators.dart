@@ -1,0 +1,10 @@
+import '../models/creator_model.dart';
+
+final List<CreatorModel> dummyCreators = [
+  const CreatorModel(id: 'dini-aulia', name: 'Dini Aulia', handle: 'dini.draws', city: 'Kayutangan, Malang', bio: 'Ilustrator yang jatuh cinta sama genteng tua dan jendela kayu Kayutangan. Setiap postcard-nya digambar tangan dulu baru dipindai.', specialty: 'Postcard & Zine', joinedYear: 2022, productCount: 14, rating: 4.9, accent: '#C9874A'),
+  const CreatorModel(id: 'bagas-pratama', name: 'Bagas Pratama', handle: 'bagas.pinco', city: 'Ijen, Malang', bio: 'Mulai bikin pin enamel dari garasi rumah nenek. Sekarang pin-nya jadi oleh-oleh andalan anak-anak muda yang mampir ke Kayutangan.', specialty: 'Pin Enamel', joinedYear: 2023, productCount: 9, rating: 4.8, accent: '#A8452B'),
+  const CreatorModel(id: 'rara-kamila', name: 'Rara Kamila', handle: 'rara.sablon', city: 'Klojen, Malang', bio: 'Sablon manual satu-satu di belakang rumah. Motifnya diambil dari ornamen ubin dan kerawang Malang tempo dulu.', specialty: 'Apparel', joinedYear: 2021, productCount: 18, rating: 4.9, accent: '#6B7A3D'),
+  const CreatorModel(id: 'pak-tarjo', name: 'Pak Tarjo', handle: 'tarjo.kayu', city: 'Tlogomas, Malang', bio: 'Tukang kayu senior yang mulai bikin gantungan kunci dan coaster kayu jati sisa. Tiap potong diberi inisial tangan.', specialty: 'Kriya Kayu', joinedYear: 2020, productCount: 11, rating: 5.0, accent: '#8A6A3A'),
+  const CreatorModel(id: 'nina-hartanto', name: 'Nina Hartanto', handle: 'nina.tote', city: 'Blimbing, Malang', bio: 'Menjahit tote bag dari kanvas tebal sisa pabrik. Motifnya disablon pakai blok kayu buatan sendiri.', specialty: 'Tote Bag', joinedYear: 2022, productCount: 12, rating: 4.7, accent: '#C99A2E'),
+  const CreatorModel(id: 'yoga-mahendra', name: 'Yoga Mahendra', handle: 'yoga.stickrs', city: 'Lowokwaru, Malang', bio: 'Desainer stiker yang doeloe jadi street artist. Sekarang bikin pack stiker ornamen dan kata-kata Malang-an jadul.', specialty: 'Stiker', joinedYear: 2023, productCount: 16, rating: 4.8, accent: '#B5502F'),
+];
