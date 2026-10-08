@@ -3,5 +3,18 @@ class CategoryModel {
   final String name;
   final String blurb;
   final String iconName; // lucide icon name
-  const CategoryModel({required this.id, required this.name, required this.blurb, required this.iconName});
+  
+  // ===============================================================
+  // OPTION GAMBAR FIGMA: Tambahan field imagePath untuk aset gambar.
+  // Jika ingin versi awal tanpa imagePath, bisa dikomentari baris ini.
+  // ===============================================================
+  final String imagePath;
+
+  const CategoryModel({
+    required this.id,
+    required this.name,
+    required this.blurb,
+    required this.iconName,
+    this.imagePath = '', // default value agar kompatibel dengan versi awal
+  });
 }
