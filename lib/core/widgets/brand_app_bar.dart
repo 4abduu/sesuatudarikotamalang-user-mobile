@@ -9,10 +9,11 @@ import '../../features/notifications/providers/notifications_provider.dart';
 
 /// Brand-flavored AppBar used by AppScaffold on every screen.
 ///
-/// Always shows two trailing actions:
-///   1. A search icon → pushes `/pencarian` (global search).
-///   2. A bell icon → pushes `/notifikasi`. Shows a small unread-count
-///      badge when [NotificationsProvider] has unread items.
+/// Trailing actions:
+///   1. Search icon → pushes `/pencarian` (global search). Always shown.
+///   2. Bell icon → pushes `/notifikasi`. Shows unread-count badge when
+///      [NotificationsProvider] has unread items. **Hidden for guests**
+///      (notifikasi butuh login).
 /// Plus any extra actions the calling screen wants to append.
 ///
 /// This guarantees the global search entry point is reachable from every
@@ -82,35 +83,37 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
           icon: const Icon(Icons.search, color: AppColors.foreground),
           onPressed: () => context.push(RouteNames.pencarian),
         ),
-        IconButton(
-          tooltip: 'Notifikasi',
-          icon: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              const Icon(Icons.notifications_none, color: AppColors.foreground),
-              if (unread > 0)
-                Positioned(
-                  top: -2,
-                  right: -2,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: AppColors.destructive,
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: AppColors.background, width: 1.5),
-                    ),
-                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                    child: Text(
-                      unread > 9 ? '9+' : '$unread',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.onPrimary),
+        // Bell icon — only for authenticated users. Guest doesn't see it.
+        if (auth.isAuthenticated)
+          IconButton(
+            tooltip: 'Notifikasi',
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(Icons.notifications_none, color: AppColors.foreground),
+                if (unread > 0)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: AppColors.destructive,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: AppColors.background, width: 1.5),
+                      ),
+                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                      child: Text(
+                        unread > 9 ? '9+' : '$unread',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.onPrimary),
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
+            onPressed: () => context.push(RouteNames.notifications),
           ),
-          onPressed: () => context.push(RouteNames.notifications),
-        ),
         if (actions != null) ...actions!,
       ],
     );

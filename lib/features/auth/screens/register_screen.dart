@@ -7,6 +7,7 @@ import '../../../core/utils/password_validator.dart';
 import '../../../data/models/user_model.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/password_criteria_checklist.dart';
+import '../widgets/google_sign_in_button.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -34,6 +35,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     context.go('/akun');
   }
 
+  /// Prototype: Google Sign-In mock — login sebagai buyer demo.
+  /// TODO: ganti dengan GoogleSignIn OAuth (lihat dokumen master 4.6)
+  void _googleSignUp() {
+    context.read<AuthProvider>().login(context.read<AuthProvider>().demoUsers[0]);
+    context.go('/akun');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,9 +64,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(height: 24),
         SizedBox(width: double.infinity, child: ElevatedButton(onPressed: _submit, child: const Text('Daftar'))),
         const SizedBox(height: 16),
+        // ===== Daftar dengan Google (prototype: login sebagai buyer demo) =====
+        // TODO: ganti dengan GoogleSignIn OAuth (lihat dokumen master 4.6)
+        GoogleSignInButton(label: 'Daftar dengan Google', onTap: _googleSignUp),
+        const SizedBox(height: 16),
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Text('Sudah punya akun? ', style: AppTextStyles.bodyMuted),
-          GestureDetector(onTap: () => context.push('/login'), child: const Text('Masuk', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary))),
+          GestureDetector(onTap: () => context.push('/login'), child: Text('Masuk', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary))),
         ]),
       ]))),
     );

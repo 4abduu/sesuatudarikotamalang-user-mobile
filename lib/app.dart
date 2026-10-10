@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routing/app_router.dart';
 import 'features/auth/providers/auth_provider.dart';
@@ -16,18 +17,15 @@ class SesuatuApp extends StatefulWidget {
 
 class _SesuatuAppState extends State<SesuatuApp> {
   bool _initialized = false;
+  GoRouter? _router;
 
   Future<void> _initProviders() async {
-    final auth = context.read<AuthProvider>();
-    final orders = context.read<OrdersProvider>();
-    final reviews = context.read<ReviewsProvider>();
-    final applications = context.read<ApplicationsProvider>();
-    final notifications = context.read<NotificationsProvider>();
-    await auth.init();
-    await orders.init();
-    await reviews.init();
-    await applications.init();
-    await notifications.init();
+    final ctx = context;
+    await ctx.read<AuthProvider>().init();
+    await ctx.read<OrdersProvider>().init();
+    await ctx.read<ReviewsProvider>().init();
+    await ctx.read<ApplicationsProvider>().init();
+    await ctx.read<NotificationsProvider>().init();
     if (mounted) setState(() => _initialized = true);
   }
 
@@ -35,6 +33,9 @@ class _SesuatuAppState extends State<SesuatuApp> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_initialized) _initProviders();
+    // Build router lazily — reuses AuthProvider via refreshListenable so
+    // the router re-evaluates redirects when auth state changes (login/logout).
+    _router ??= buildAppRouter(context.read<AuthProvider>());
   }
 
   @override
@@ -43,7 +44,7 @@ class _SesuatuAppState extends State<SesuatuApp> {
       title: 'Sesuatu DariKota Malang',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),
-      routerConfig: buildAppRouter(),
+      routerConfig: _router!,
       builder: (context, child) {
         if (!_initialized) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));

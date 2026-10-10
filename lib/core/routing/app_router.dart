@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/app_theme.dart';
 import 'route_names.dart';
+import '../../features/auth/providers/auth_provider.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/catalog/screens/catalog_screen.dart';
 import '../../features/product_detail/screens/product_detail_screen.dart';
@@ -28,9 +29,31 @@ import '../../features/account/screens/application_status_screen.dart';
 import '../../features/account/screens/account_settings_screen.dart';
 import '../../features/search/screens/search_results_screen.dart';
 
-GoRouter buildAppRouter() {
+/// Rute yang butuh login — guest diarahkan ke `/login?next=<original>`.
+/// Autentikasi dicek lewat [AuthProvider] (ChangeNotifierProvider).
+bool _isProtectedRoute(String location) {
+  return location.startsWith('/notifikasi') ||
+      location.startsWith('/akun') ||
+      location.startsWith('/dashboard-kreator') ||
+      location.startsWith('/reservasi');
+}
+
+GoRouter buildAppRouter(AuthProvider auth) {
   return GoRouter(
     initialLocation: RouteNames.home,
+    refreshListenable: auth, // re-redirect saat login/logout terjadi
+    redirect: (context, state) {
+      final location = state.uri.toString();
+      // Hanya redirect kalau provider sudah hydrated (data session sudah
+      // dimuat dari SharedPreferences). Sebelum hydrated, biarkan loading
+      // screen yang menangani.
+      if (!auth.hydrated) return null;
+      if (!auth.isAuthenticated && _isProtectedRoute(location)) {
+        final encoded = Uri.encodeComponent(location);
+        return '/login?next=$encoded';
+      }
+      return null;
+    },
     routes: [
       GoRoute(path: RouteNames.home, builder: (_, __) => const HomeScreen()),
       GoRoute(path: RouteNames.catalog, builder: (_, __) => const CatalogScreen()),

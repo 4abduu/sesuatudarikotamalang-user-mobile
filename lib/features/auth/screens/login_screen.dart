@@ -6,6 +6,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../data/models/user_model.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/demo_login_buttons.dart';
+import '../widgets/google_sign_in_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -32,6 +33,12 @@ class _LoginScreenState extends State<LoginScreen> {
     context.go(next ?? '/');
   }
 
+  void _demoLogin(UserModel user) {
+    context.read<AuthProvider>().login(user);
+    final next = GoRouterState.of(context).uri.queryParameters['next'];
+    context.go(next ?? '/');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,6 +56,10 @@ class _LoginScreenState extends State<LoginScreen> {
         Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () => context.push('/lupa-password'), child: const Text('Lupa password?', style: TextStyle(fontSize: 12)))),
         const SizedBox(height: 8),
         SizedBox(width: double.infinity, child: ElevatedButton(onPressed: _login, child: const Text('Masuk'))),
+        const SizedBox(height: 16),
+        // ===== Masuk dengan Google (prototype: login sebagai buyer demo) =====
+        // TODO: ganti dengan GoogleSignIn OAuth (lihat dokumen master 4.6)
+        GoogleSignInButton(onTap: () => _demoLogin(context.read<AuthProvider>().demoUsers[0])),
         const SizedBox(height: 20),
         DemoLoginButtons(onSuccess: () {
           final next = GoRouterState.of(context).uri.queryParameters['next'];
@@ -57,10 +68,10 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 16),
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Text('Belum punya akun? ', style: AppTextStyles.bodyMuted),
-          GestureDetector(onTap: () => context.push('/register'), child: const Text('Daftar di sini', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary))),
+          GestureDetector(onTap: () => context.push('/register'), child: Text('Daftar di sini', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary))),
         ]),
         const SizedBox(height: 8),
-        GestureDetector(onTap: () => context.go('/'), child: const Text('Lanjut sebagai tamu', style: TextStyle(fontSize: 12, color: AppColors.muted))),
+        GestureDetector(onTap: () => context.go('/'), child: Text('Lanjut sebagai tamu', style: TextStyle(fontSize: 12, color: AppColors.muted))),
       ]))),
     );
   }

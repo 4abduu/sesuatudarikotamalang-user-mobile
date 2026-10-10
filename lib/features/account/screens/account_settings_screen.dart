@@ -6,8 +6,8 @@ import 'dart:io';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/password_validator.dart';
-import '../../../features/auth/providers/auth_provider.dart';
-import '../../../features/auth/widgets/password_criteria_checklist.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../auth/widgets/password_criteria_checklist.dart';
 import '../../../shared/app_scaffold.dart';
 
 class AccountSettingsScreen extends StatelessWidget {
@@ -30,15 +30,7 @@ class AccountSettingsScreen extends StatelessWidget {
         const SizedBox(height: 12),
         _ChangePasswordSection(),
         const SizedBox(height: 24),
-        OutlinedButton(
-          onPressed: () async {
-            await auth.logout();
-            if (!context.mounted) return;
-            context.go('/');
-          },
-          style: OutlinedButton.styleFrom(foregroundColor: AppColors.destructive),
-          child: const Text('Keluar'),
-        ),
+        OutlinedButton(onPressed: () async { await auth.logout(); if (context.mounted) context.go('/'); }, style: OutlinedButton.styleFrom(foregroundColor: AppColors.destructive), child: const Text('Keluar')),
       ])),
     );
   }
@@ -68,9 +60,10 @@ class _ProfileSectionState extends State<_ProfileSection> {
     final picker = ImagePicker();
     final xfile = await picker.pickImage(source: ImageSource.gallery);
     if (xfile != null) {
-      if (!mounted) return;
       setState(() => _avatarPath = xfile.path);
-      context.read<AuthProvider>().updateProfile(avatarUrl: xfile.path);
+      if (mounted) {
+        context.read<AuthProvider>().updateProfile(avatarUrl: xfile.path);
+      }
     }
   }
 
@@ -98,23 +91,40 @@ class _ChangeEmailOtpSectionState extends State<_ChangeEmailOtpSection> {
   final _otp = TextEditingController();
   String _generatedOtp = '';
   bool _otpSent = false;
+  late String _oldEmail;
 
   @override
-  void initState() { super.initState(); _email.text = context.read<AuthProvider>().user?.email ?? ''; }
+  void initState() {
+    super.initState();
+    // OTP dikirim ke email LAMA (bukan email baru) untuk verifikasi
+    // kepemilikan akun. Email baru hanya diaktifkan setelah OTP diverifikasi.
+    _oldEmail = context.read<AuthProvider>().user?.email ?? '';
+    // Field "Email baru" dikosongkan — user harus ketik email baru.
+    _email.text = '';
+  }
   @override
   void dispose() { _email.dispose(); _otp.dispose(); super.dispose(); }
 
   void _sendOtp() {
-    if (_email.text.trim().isEmpty) return;
+    if (_email.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Isi email baru dulu')));
+      return;
+    }
+    // Validasi: email baru harus berbeda dari email lama.
+    if (_email.text.trim() == _oldEmail) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email baru harus berbeda dari email sekarang')));
+      return;
+    }
     setState(() { _generatedOtp = (DateTime.now().millisecondsSinceEpoch % 900000 + 100000).toString(); _otpSent = true; });
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('(Mode demo) Kode OTP: $_generatedOtp')));
+    // OTP dikirim ke email LAMA untuk verifikasi kepemilikan.
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('(Mode demo) Kode OTP dikirim ke $_oldEmail: $_generatedOtp')));
   }
 
   void _verify() {
     if (_otp.text == _generatedOtp) {
       context.read<AuthProvider>().changeEmail(_email.text);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email berhasil diganti')));
-      setState(() => _otpSent = false);
+      setState(() { _otpSent = false; _email.clear(); _otp.clear(); });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Kode OTP salah')));
     }
@@ -122,10 +132,34 @@ class _ChangeEmailOtpSectionState extends State<_ChangeEmailOtpSection> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
-      TextField(controller: _email, decoration: const InputDecoration(labelText: 'Email baru')),
-      const SizedBox(height: 8),
+    return Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      // Info: email lama (untuk transparansi — OTP akan dikirim ke sini)
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(color: AppColors.moss.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
+        child: Row(children: [
+          const Icon(Icons.info_outline, size: 16, color: AppColors.moss),
+          const SizedBox(width: 8),
+          Expanded(child: Text('Email sekarang: $_oldEmail', style: AppTextStyles.caption.copyWith(color: AppColors.moss))),
+        ]),
+      ),
+      const SizedBox(height: 12),
+      TextField(controller: _email, enabled: !_otpSent, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email baru', hintText: 'kamu@email.com')),
       if (_otpSent) ...[
+        const SizedBox(height: 8),
+        // Info: OTP dikirim ke email lama
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(color: AppColors.mustard.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+          child: Row(children: [
+            const Icon(Icons.mark_email_read_outlined, size: 16, color: AppColors.mustard),
+            const SizedBox(width: 8),
+            Expanded(child: Text('Kode OTP dikirim ke $_oldEmail', style: AppTextStyles.caption.copyWith(color: AppColors.mustard, fontWeight: FontWeight.w600))),
+          ]),
+        ),
+        const SizedBox(height: 12),
         TextField(controller: _otp, keyboardType: TextInputType.number, maxLength: 6, decoration: const InputDecoration(labelText: 'Kode OTP')),
         const SizedBox(height: 8),
         ElevatedButton(onPressed: _verify, child: const Text('Verifikasi')),
