@@ -7,6 +7,7 @@ import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/secondary_button.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/auth/widgets/auth_gate_bottom_sheet.dart';
+import '../../../features/catalog/providers/products_provider.dart';
 import '../providers/variant_selection_provider.dart';
 
 class ProductActionButtons extends StatelessWidget {
@@ -22,36 +23,48 @@ class ProductActionButtons extends StatelessWidget {
     final isOwn = auth.user?.creatorId != null &&
         auth.user!.creatorId!.isNotEmpty &&
         auth.user!.creatorId == creatorId;
+    final matched = variantProvider.matchedVariant;
+    final int stockAvailable = matched != null ? matched.effectiveStock : 1;
+    final bool isOutOfStock = stockAvailable <= 0;
+
     return Column(children: [
       PrimaryButton(
-        label: 'Pesan untuk Pick-up di Toko',
-        icon: const Icon(Icons.store, size: 18),
-        onPressed: isOwn
-          ? () {
-              showDialog(
-                context: context,
-                builder: (_) => AlertDialog(
-                  title: const Text('Ini produkmu sendiri'),
-                  content: const Text('Kamu tidak bisa memesan produk sendiri. Untuk uji coba, gunakan akun pembeli lain atau logout dulu.'),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Mengerti')),
-                  ],
-                ),
-              );
-            }
-          : () {
-              if (!auth.isAuthenticated) {
-                showAuthGateSheet(context, next: '/reservasi/$productId', contextLabel: 'pesan pickup');
-                return;
-              }
-              context.push('/reservasi/$productId');
-            },
+        label: isOutOfStock ? 'Stok Habis' : 'Pesan untuk Pick-up di Toko',
+        icon: isOutOfStock ? null : const Icon(Icons.store, size: 18),
+        onPressed: isOutOfStock
+            ? null
+            : (isOwn
+                ? () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: const Text('Ini produkmu sendiri'),
+                        content: const Text(
+                            'Kamu tidak bisa memesan produk sendiri. Untuk uji coba, gunakan akun pembeli lain atau logout dulu.'),
+                        actions: [
+                          TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Mengerti')),
+                        ],
+                      ),
+                    );
+                  }
+                : () {
+                    if (!auth.isAuthenticated) {
+                      showAuthGateSheet(context,
+                          next: '/reservasi/$productId',
+                          contextLabel: 'pesan pickup');
+                      return;
+                    }
+                    context.push('/reservasi/$productId');
+                  }),
       ),
       const SizedBox(height: 8),
       Row(children: [
         Expanded(child: SecondaryButton(fullWidth: true, label: 'WhatsApp', icon: const Icon(Icons.chat, size: 16, color: AppColors.moss), onPressed: () {
+          final waNumber = context.read<ProductsProvider>().whatsappAdminNumber;
           final text = 'Halo, saya mau tanya stok untuk $productName (varian: ${variantProvider.variantLabel}). Apakah masih tersedia?';
-          launchUrl(Uri.parse('https://wa.me/6281234567890?text=${Uri.encodeComponent(text)}'));
+          launchUrl(Uri.parse('https://wa.me/$waNumber?text=${Uri.encodeComponent(text)}'));
         })),
         const SizedBox(width: 8),
         Expanded(child: SecondaryButton(fullWidth: true, label: 'Shopee', icon: const Icon(Icons.shopping_bag, size: 16, color: AppColors.primary), onPressed: () {

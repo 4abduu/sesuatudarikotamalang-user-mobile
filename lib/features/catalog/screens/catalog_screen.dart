@@ -22,10 +22,23 @@ class _CatalogScreenState extends State<CatalogScreen> {
   SortOption _sort = SortOption.terbaru;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final p = context.read<ProductsProvider>();
+      p.fetchCategories();
+      p.fetchProducts(categoryId: _category);
+    });
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final q = GoRouterState.of(context).uri.queryParameters['kategori'];
-    if (q != null && _category == null) setState(() => _category = q);
+    if (q != null && _category == null) {
+      setState(() => _category = q);
+      context.read<ProductsProvider>().fetchProducts(categoryId: q);
+    }
   }
 
   List<ProductModel> _filterAndSort(List<ProductModel> products) {

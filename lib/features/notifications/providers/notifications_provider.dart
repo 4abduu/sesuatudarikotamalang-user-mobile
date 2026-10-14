@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../core/network/api_client.dart';
-import '../../../data/dummy/dummy_notifications.dart';
 import '../../../data/models/notification_model.dart';
 
 class NotificationsProvider extends ChangeNotifier {
@@ -34,9 +33,6 @@ class NotificationsProvider extends ChangeNotifier {
       }
     } catch (e) {
       _errorMessage = e.toString();
-      if (_items.isEmpty) {
-        _items = List.from(dummyNotifications);
-      }
     } finally {
       _isLoading = false;
       notifyListeners();

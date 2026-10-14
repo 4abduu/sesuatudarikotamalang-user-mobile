@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
 import '../../data/models/product_model.dart';
-import '../../data/dummy/dummy_categories.dart';
+import '../../features/catalog/providers/products_provider.dart';
 import 'badge_chip.dart';
 import 'rating_stars.dart';
 import '../utils/currency_formatter.dart';
@@ -14,7 +15,9 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cat = dummyCategories.firstWhere((c) => c.id == product.categoryId, orElse: () => dummyCategories.first);
+    final categories = context.watch<ProductsProvider>().categories;
+    final catMatch = categories.where((c) => c.id == product.categoryId).toList();
+    final catName = catMatch.isNotEmpty ? catMatch.first.name : '';
     return GestureDetector(
       onTap: onTap,
       child: Card(
@@ -24,7 +27,26 @@ class ProductCard extends StatelessWidget {
             child: Stack(children: [
               Positioned.fill(child: _ArtPlaceholder(seed: product.id)),
               if (product.badge != BadgeType.none) Positioned(top: 8, left: 8, child: BadgeChip(badge: product.badge)),
-              Positioned(bottom: 8, right: 8, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: AppColors.background.withValues(alpha: 0.85), borderRadius: BorderRadius.circular(999)), child: Text(cat.name, style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.muted)))),
+              if (catName.isNotEmpty)
+                Positioned(
+                  bottom: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.background.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      catName,
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.muted,
+                      ),
+                    ),
+                  ),
+                ),
             ]),
           ),
           Padding(padding: const EdgeInsets.all(10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

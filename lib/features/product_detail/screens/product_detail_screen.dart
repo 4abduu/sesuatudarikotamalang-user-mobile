@@ -6,11 +6,10 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/badge_chip.dart';
 import '../../../core/widgets/rating_stars.dart';
-import '../../../data/dummy/dummy_products.dart';
-import '../../../data/dummy/dummy_creators.dart';
 import '../../../data/models/product_model.dart';
 import '../../../shared/app_scaffold.dart';
 import '../../catalog/providers/products_provider.dart';
+import '../../creators/providers/artisans_provider.dart';
 import '../providers/variant_selection_provider.dart';
 import '../widgets/product_gallery.dart';
 import '../widgets/variant_picker.dart';
@@ -60,16 +59,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       );
     }
 
-    final product = _product ??
-        dummyProducts.firstWhere(
-          (p) => p.id == widget.productId,
-          orElse: () => dummyProducts.first,
-        );
+    final product = _product;
+    if (product == null) {
+      return AppScaffold(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+        body: const Center(child: Text('Produk tidak ditemukan')),
+      );
+    }
 
-    final creator = dummyCreators.firstWhere(
-      (c) => c.id == product.creatorId,
-      orElse: () => dummyCreators.first,
-    );
+    final artisans = context.watch<ArtisansProvider>().artisans;
+    final creatorMatches = artisans.where((c) => c.id == product.creatorId).toList();
+    final creator = creatorMatches.isNotEmpty ? creatorMatches.first : null;
 
     return ChangeNotifierProvider(
       key: ValueKey(product.id),
@@ -127,38 +130,39 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ProductReviewsSection(product: product),
               const SizedBox(height: 24),
               RelatedProductsSection(product: product),
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () => context.push('/kreator/${creator.id}'),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: AppColors.primary,
-                          child: Text(
-                            creator.name.substring(0, 1),
-                            style: const TextStyle(color: AppColors.onPrimary),
+              if (creator != null) ...[
+                GestureDetector(
+                  onTap: () => context.push('/kreator/${creator.id}'),
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: AppColors.primary,
+                            child: Text(
+                              creator.name.isNotEmpty ? creator.name.substring(0, 1) : 'K',
+                              style: const TextStyle(color: AppColors.onPrimary),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(creator.name, style: AppTextStyles.title),
-                              Text(creator.specialty, style: AppTextStyles.caption),
-                            ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(creator.name, style: AppTextStyles.title),
+                                Text(creator.specialty, style: AppTextStyles.caption),
+                              ],
+                            ),
                           ),
-                        ),
-                        const Icon(Icons.chevron_right),
-                      ],
+                          const Icon(Icons.chevron_right),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
+              ],
             ],
           ),
         ),

@@ -34,7 +34,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _submit() async {
     final v = validatePassword(_pw.text);
-    if (_nama.text.trim().isEmpty || _email.text.trim().isEmpty || !v.isValid || _pw.text != _confirm.text) {
+    if (_nama.text.trim().isEmpty ||
+        _email.text.trim().isEmpty ||
+        !v.isValid ||
+        _pw.text != _confirm.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Periksa kembali isianmu ya')),
       );
@@ -50,7 +53,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
             password: _pw.text.trim(),
           );
       if (!mounted) return;
-      context.go('/akun');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pendaftaran berhasil! Silakan masuk ke akunmu.'),
+          backgroundColor: AppColors.moss,
+        ),
+      );
+      context.go('/login');
     } catch (e) {
       if (!mounted) return;
       if (e is ApiException) {
@@ -67,10 +76,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  /// Prototype: Google Sign-In mock — login sebagai buyer demo.
-  void _googleSignUp() {
-    context.read<AuthProvider>().login(context.read<AuthProvider>().demoUsers[0]);
-    context.go('/akun');
+  /// Google Sign-In — mengambil idToken dari Google lalu POST /api/auth/google
+  Future<void> _googleSignUp() async {
+    setState(() => _isLoading = true);
+    try {
+      await context.read<AuthProvider>().loginWithGoogle();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Berhasil masuk dengan Google!'),
+          backgroundColor: AppColors.moss,
+        ),
+      );
+      context.go('/');
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e is ApiException ? e.message : 'Login Google gagal: $e';
+      if (e is! ApiException || e.status != 0 || !msg.contains('dibatalkan')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -84,6 +113,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/images/logos/logo_sesuatu.jpg',
+                  width: 52,
+                  height: 52,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(Icons.brush, color: AppColors.onPrimary, size: 26),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               Text('Buat akun baru', style: AppTextStyles.h1),
               const SizedBox(height: 4),
               Text(
@@ -116,7 +164,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   labelText: 'Password',
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
-                    icon: Icon(_showPw ? Icons.visibility_off : Icons.visibility),
+                    icon:
+                        Icon(_showPw ? Icons.visibility_off : Icons.visibility),
                     onPressed: () => setState(() => _showPw = !_showPw),
                   ),
                 ),
@@ -141,13 +190,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
                         )
                       : const Text('Daftar'),
                 ),
               ),
               const SizedBox(height: 16),
-              GoogleSignInButton(label: 'Daftar dengan Google', onTap: _googleSignUp),
+              GoogleSignInButton(
+                  label: 'Daftar dengan Google', onTap: _googleSignUp),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/product_card.dart';
-import '../../../data/dummy/dummy_products.dart';
 import '../../../data/models/product_model.dart';
+import '../../catalog/providers/products_provider.dart';
 
 class RelatedProductsSection extends StatelessWidget {
   final ProductModel product;
   const RelatedProductsSection({super.key, required this.product});
   @override
   Widget build(BuildContext context) {
-    final related = dummyProducts.where((p) => p.categoryId == product.categoryId && p.id != product.id).take(4).toList();
+    final allProducts = context.watch<ProductsProvider>().products;
+    final related = allProducts.where((p) => p.categoryId == product.categoryId && p.id != product.id).take(4).toList();
     if (related.isEmpty) return const SizedBox.shrink();
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text('Produk Serupa', style: AppTextStyles.h2),

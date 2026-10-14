@@ -5,7 +5,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/widgets/badge_chip.dart';
 import '../../../core/widgets/illustrations/leaf_sprig_painter.dart';
-import '../../../core/widgets/illustrations/swirl_ornament_painter.dart';
 import '../../../data/models/product_model.dart';
 import '../../../data/dummy/dummy_reviews.dart';
 import '../../../core/widgets/rating_stars.dart';
@@ -102,9 +101,6 @@ class HeroSection extends StatelessWidget {
                               color:
                                   AppColors.onPrimary.withValues(alpha: 0.8))),
                       const Spacer(),
-                      SwirlOrnament(
-                          size: 18,
-                          color: AppColors.onPrimary.withValues(alpha: 0.6)),
                       const SizedBox(width: 6),
                       const Icon(Icons.location_on,
                           size: 12, color: AppColors.onPrimary),

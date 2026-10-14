@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import '../../../core/network/api_client.dart';
-import '../../../data/dummy/dummy_products.dart';
-import '../../../data/dummy/dummy_categories.dart';
 import '../../../data/models/product_model.dart';
 import '../../../data/models/category_model.dart';
 
 class ProductsProvider extends ChangeNotifier {
   List<ProductModel> _products = [];
   List<CategoryModel> _categories = [];
+  String _whatsappAdminNumber = '6281234567890';
   bool _isLoading = false;
   String? _errorMessage;
 
   List<ProductModel> get products => _products;
   List<CategoryModel> get categories => _categories;
+  String get whatsappAdminNumber => _whatsappAdminNumber;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
@@ -20,6 +20,21 @@ class ProductsProvider extends ChangeNotifier {
   Future<void> init() async {
     await fetchCategories();
     await fetchProducts();
+    await fetchSettings();
+  }
+
+  /// Ambil pengaturan publik seperti nomor WA admin (GET /api/settings/public)
+  Future<void> fetchSettings() async {
+    try {
+      final res = await ApiClient.get('/settings/public');
+      if (res != null && res['settings'] != null) {
+        final wa = res['settings']['whatsappAdminNumber'] as String?;
+        if (wa != null && wa.isNotEmpty) {
+          _whatsappAdminNumber = wa.replaceAll(RegExp(r'[^0-9]'), '');
+          notifyListeners();
+        }
+      }
+    } catch (_) {}
   }
 
   /// Ambil daftar kategori (GET /api/categories)
@@ -34,13 +49,7 @@ class ProductsProvider extends ChangeNotifier {
         notifyListeners();
         return;
       }
-    } catch (_) {
-      // Fallback ke dummyCategories jika offline/backend belum ada data
-      if (_categories.isEmpty) {
-        _categories = dummyCategories;
-        notifyListeners();
-      }
-    }
+    } catch (_) {}
   }
 
   /// Ambil daftar produk (GET /api/products)
@@ -73,10 +82,6 @@ class ProductsProvider extends ChangeNotifier {
         _products = list;
       }
     } catch (e) {
-      // Fallback ke dummyProducts bila backend offline atau gagal
-      if (_products.isEmpty) {
-        _products = dummyProducts;
-      }
       _errorMessage = e.toString();
     } finally {
       _isLoading = false;
@@ -104,7 +109,7 @@ class ProductsProvider extends ChangeNotifier {
     try {
       return _products.firstWhere((p) => p.id == id);
     } catch (_) {
-      return dummyProducts.firstWhere((p) => p.id == id, orElse: () => dummyProducts.first);
+      return null;
     }
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/network/api_client.dart';
 import '../../../data/models/review_model.dart';
-import '../../../data/dummy/dummy_reviews.dart';
 
 class ReviewsProvider extends ChangeNotifier {
   List<ReviewModel> _reviews = [];
@@ -32,9 +31,6 @@ class ReviewsProvider extends ChangeNotifier {
       }
     } catch (e) {
       _errorMessage = e.toString();
-      if (_reviews.isEmpty) {
-        _reviews = List.from(dummyReviews);
-      }
     } finally {
       _isLoading = false;
       notifyListeners();

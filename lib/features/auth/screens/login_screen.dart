@@ -4,9 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../data/models/user_model.dart';
 import '../providers/auth_provider.dart';
-import '../widgets/demo_login_buttons.dart';
 import '../widgets/google_sign_in_button.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -44,7 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.of(ctx).pop();
-              _demoLogin(context.read<AuthProvider>().demoUsers[0]);
+              _loginWithGoogle();
             },
             child: const Text('Gunakan Google'),
           ),
@@ -70,6 +68,12 @@ class _LoginScreenState extends State<LoginScreen> {
       final auth = context.read<AuthProvider>();
       await auth.loginWithApi(email: email, password: password);
       if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Berhasil masuk! Selamat datang kembali.'),
+          backgroundColor: AppColors.moss,
+        ),
+      );
       final next = GoRouterState.of(context).uri.queryParameters['next'];
       context.go(next ?? '/');
     } catch (e) {
@@ -92,10 +96,31 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _demoLogin(UserModel user) {
-    context.read<AuthProvider>().login(user);
-    final next = GoRouterState.of(context).uri.queryParameters['next'];
-    context.go(next ?? '/');
+  Future<void> _loginWithGoogle() async {
+    setState(() => _isLoading = true);
+    try {
+      await context.read<AuthProvider>().loginWithGoogle();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Berhasil masuk dengan Google!'),
+          backgroundColor: AppColors.moss,
+        ),
+      );
+      final next = GoRouterState.of(context).uri.queryParameters['next'];
+      context.go(next ?? '/');
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e is ApiException ? e.message : 'Login Google gagal: $e';
+      // Hanya tampilkan error jika bukan "dibatalkan user"
+      if (e is! ApiException || e.status != 0 || !msg.contains('dibatalkan')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -103,24 +128,34 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/images/logos/logo_sesuatu.jpg',
+                  width: 52,
+                  height: 52,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(Icons.brush, color: AppColors.onPrimary, size: 26),
+                  ),
                 ),
-                child: const Icon(Icons.eco, color: AppColors.onPrimary),
               ),
               const SizedBox(height: 16),
               Text('Masuk ke akunmu', style: AppTextStyles.h1),
               const SizedBox(height: 4),
-              Text('Senang melihatmu lagi di Kayutangan.', style: AppTextStyles.bodyMuted),
+              Text('Senang melihatmu lagi di Kayutangan.',
+                  style: AppTextStyles.bodyMuted),
               const SizedBox(height: 24),
               TextField(
                 controller: _email,
@@ -138,7 +173,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   labelText: 'Password',
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
-                    icon: Icon(_showPw ? Icons.visibility_off : Icons.visibility),
+                    icon:
+                        Icon(_showPw ? Icons.visibility_off : Icons.visibility),
                     onPressed: () => setState(() => _showPw = !_showPw),
                   ),
                 ),
@@ -147,7 +183,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () => context.push('/lupa-password'),
-                  child: const Text('Lupa password?', style: TextStyle(fontSize: 12)),
+                  child: const Text('Lupa password?',
+                      style: TextStyle(fontSize: 12)),
                 ),
               ),
               const SizedBox(height: 8),
@@ -159,7 +196,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
                         )
                       : const Text('Masuk'),
                 ),
@@ -167,16 +205,9 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               // ===== Masuk dengan Google =====
               GoogleSignInButton(
-                onTap: () => _demoLogin(context.read<AuthProvider>().demoUsers[0]),
+                onTap: _isLoading ? null : _loginWithGoogle,
               ),
-              const SizedBox(height: 20),
-              DemoLoginButtons(
-                onSuccess: () {
-                  final next = GoRouterState.of(context).uri.queryParameters['next'];
-                  context.go(next ?? '/');
-                },
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

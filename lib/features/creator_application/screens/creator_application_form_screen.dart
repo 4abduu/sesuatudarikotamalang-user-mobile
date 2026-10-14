@@ -8,10 +8,10 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/primary_button.dart';
-import '../../../data/dummy/dummy_categories.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/auth/widgets/auth_gate_bottom_sheet.dart';
 import '../../../features/account/providers/applications_provider.dart';
+import '../../../features/catalog/providers/products_provider.dart';
 import '../../../shared/app_scaffold.dart';
 
 class CreatorApplicationFormScreen extends StatefulWidget {
@@ -102,9 +102,22 @@ class _CreatorApplicationFormScreenState extends State<CreatorApplicationFormScr
             const SizedBox(height: 12),
             _Field(controller: _brand, label: 'Nama Brand / Karya', icon: Icons.store),
             const SizedBox(height: 12),
-            DropdownButtonFormField<String>(initialValue: _category, decoration: const InputDecoration(labelText: 'Kategori Utama', prefixIcon: Icon(Icons.category)),
-              items: dummyCategories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
-              onChanged: (v) => setState(() => _category = v)),
+            Builder(
+              builder: (ctx) {
+                final cats = ctx.watch<ProductsProvider>().categories;
+                return DropdownButtonFormField<String>(
+                  initialValue: _category,
+                  decoration: const InputDecoration(
+                    labelText: 'Kategori Utama',
+                    prefixIcon: Icon(Icons.category),
+                  ),
+                  items: cats
+                      .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
+                      .toList(),
+                  onChanged: (v) => setState(() => _category = v),
+                );
+              },
+            ),
             const SizedBox(height: 12),
             TextField(controller: _desc, maxLines: 4, decoration: const InputDecoration(labelText: 'Deskripsi Produk / Karya', alignLabelWithHint: true)),
             const SizedBox(height: 12),

@@ -7,8 +7,6 @@ import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/secondary_button.dart';
-import '../../../data/dummy/dummy_categories.dart';
-import '../../../data/dummy/dummy_products.dart';
 import '../../../data/models/product_model.dart';
 import '../../../data/models/variant_option_model.dart';
 import '../../../shared/app_scaffold.dart';
@@ -180,7 +178,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             const SizedBox(height: 12),
             Consumer<ProductsProvider>(
               builder: (context, prodProv, _) {
-                final categories = prodProv.categories.isNotEmpty ? prodProv.categories : dummyCategories;
+                final categories = prodProv.categories;
                 return DropdownButtonFormField<String>(
                   initialValue: _category,
                   decoration: const InputDecoration(labelText: 'Kategori', prefixIcon: Icon(Icons.category_outlined)),

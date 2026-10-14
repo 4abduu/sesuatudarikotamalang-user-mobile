@@ -14,29 +14,92 @@ class VariantPicker extends StatelessWidget {
     if (!product.hasVariants) {
       return Text('Stok tersedia: ${product.totalStock}', style: AppTextStyles.bodyMuted);
     }
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: product.variantOptions.asMap().entries.map((entry) {
-      final i = entry.key;
-      final opt = entry.value;
-      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text(opt.name, style: AppTextStyles.label),
-          Text(provider.selected[i] ?? 'Pilih dulu', style: AppTextStyles.caption),
-        ]),
-        const SizedBox(height: 6),
-        Wrap(spacing: 8, runSpacing: 8, children: opt.values.map((v) {
-          final active = provider.selected[i] == v;
-          final available = provider.isValueAvailable(i, v);
-          return GestureDetector(onTap: available ? () => provider.selectOption(i, v) : null,
-            child: Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: active ? AppColors.primary : (available ? AppColors.surface : AppColors.surfaceAlt),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: active ? AppColors.primary : (available ? AppColors.border : AppColors.border)),
+
+    final matched = provider.matchedVariant;
+    final int stockToShow = matched != null ? matched.effectiveStock : product.totalStock;
+    final isLimited = stockToShow <= 10;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Pilih Varian', style: AppTextStyles.h3),
+            Text(
+              isLimited ? 'Stok terbatas · $stockToShow tersedia' : 'Stok: $stockToShow tersedia',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFC27803), // Kuning-amber / terracotta lembut sesuai desain
               ),
-              child: Text(v, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: active ? AppColors.onPrimary : (available ? AppColors.foreground : AppColors.muted), decoration: available ? TextDecoration.none : TextDecoration.lineThrough))));
-        }).toList()),
-        const SizedBox(height: 12),
-      ]);
-    }).toList());
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        ...product.variantOptions.asMap().entries.map((entry) {
+          final i = entry.key;
+          final opt = entry.value;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(opt.name, style: AppTextStyles.label),
+                  Text(provider.selected[i] ?? 'Pilih dulu', style: AppTextStyles.caption),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: opt.values.map((v) {
+                  final active = provider.selected[i] == v;
+                  final available = provider.isValueAvailable(i, v);
+                  return GestureDetector(
+                    onTap: available ? () => provider.selectOption(i, v) : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: active
+                            ? AppColors.primary
+                            : (available ? AppColors.surface : AppColors.surfaceAlt),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: active
+                              ? AppColors.primary
+                              : (available ? AppColors.border : AppColors.border),
+                        ),
+                      ),
+                      child: Text(
+                        v,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: active
+                              ? AppColors.onPrimary
+                              : (available ? AppColors.foreground : AppColors.muted),
+                          decoration: available ? TextDecoration.none : TextDecoration.lineThrough,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 12),
+            ],
+          );
+        }),
+        const SizedBox(height: 4),
+        Text(
+          'Varian terpilih: ${provider.variantLabel}',
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppColors.muted,
+          ),
+        ),
+      ],
+    );
   }
 }

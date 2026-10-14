@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../data/dummy/dummy_categories.dart';
+import '../../catalog/providers/products_provider.dart';
 
 class CategoryGrid extends StatelessWidget {
   const CategoryGrid({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final categories = context.watch<ProductsProvider>().categories;
+
+    if (categories.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -23,9 +30,9 @@ class CategoryGrid extends StatelessWidget {
             crossAxisSpacing: 8,
             childAspectRatio: 0.85,
           ),
-          itemCount: dummyCategories.length,
+          itemCount: categories.length,
           itemBuilder: (_, i) {
-            final c = dummyCategories[i];
+            final c = categories[i];
             return GestureDetector(
               onTap: () => context.push('/katalog?kategori=${c.id}'),
 

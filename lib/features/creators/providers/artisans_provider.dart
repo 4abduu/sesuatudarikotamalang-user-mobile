@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../core/network/api_client.dart';
-import '../../../data/dummy/dummy_creators.dart';
 import '../../../data/models/creator_model.dart';
 import '../../../data/models/product_model.dart';
 
@@ -33,9 +32,6 @@ class ArtisansProvider extends ChangeNotifier {
         _artisans = list;
       }
     } catch (e) {
-      if (_artisans.isEmpty) {
-        _artisans = dummyCreators;
-      }
       _errorMessage = e.toString();
     } finally {
       _isLoading = false;
@@ -49,7 +45,9 @@ class ArtisansProvider extends ChangeNotifier {
       final res = await ApiClient.get('/artisans/$id');
       if (res != null && res['artisan'] != null) {
         final creator = CreatorModel.fromJson(res['artisan'] as Map<String, dynamic>);
-        final products = (res['products'] as List<dynamic>?)
+        final rawProducts = (res['artisan']?['products'] as List<dynamic>?) ??
+            (res['products'] as List<dynamic>?);
+        final products = rawProducts
                 ?.map((e) => ProductModel.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [];
@@ -68,14 +66,14 @@ class ArtisansProvider extends ChangeNotifier {
       }
     } catch (_) {}
 
-    // Fallback lokal jika offline
-    final creator = _artisans.firstWhere(
-      (a) => a.id == id,
-      orElse: () => dummyCreators.firstWhere((c) => c.id == id, orElse: () => dummyCreators.first),
-    );
-    return {
-      'artisan': creator,
-      'products': <ProductModel>[],
-    };
+    // Fallback dari cache list lokal
+    final match = _artisans.where((a) => a.id == id).toList();
+    if (match.isNotEmpty) {
+      return {
+        'artisan': match.first,
+        'products': <ProductModel>[],
+      };
+    }
+    return null;
   }
 }

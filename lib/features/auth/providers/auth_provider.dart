@@ -1,6 +1,8 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/config/google_config.dart';
 import '../../../core/network/api_client.dart';
 import '../../../data/models/user_model.dart';
 
@@ -79,6 +81,45 @@ class AuthProvider extends ChangeNotifier {
       'password': password,
     });
 
+    final token = res['token'] as String;
+    await ApiClient.saveToken(token);
+    _user = UserModel.fromJson(res['user']);
+    await _persist();
+    notifyListeners();
+  }
+
+  /// Login via Google Sign-In (POST /api/auth/google {idToken})
+  Future<void> loginWithGoogle() async {
+    if (GoogleConfig.webClientId.isEmpty || GoogleConfig.webClientId.startsWith('GANTI')) {
+      throw ApiException(
+        0,
+        'Google Client ID belum diisi. Silakan masukkan Client ID di lib/core/config/google_config.dart.',
+      );
+    }
+
+    final googleSignIn = GoogleSignIn(
+      clientId: kIsWeb ? GoogleConfig.webClientId : null,
+      serverClientId: kIsWeb ? null : GoogleConfig.webClientId,
+      scopes: ['email', 'profile'],
+    );
+
+    // Sign out dulu agar always show account picker
+    await googleSignIn.signOut();
+    final account = await googleSignIn.signIn();
+
+    if (account == null) {
+      // User membatalkan dialog pilih akun
+      throw ApiException(0, 'Login Google dibatalkan');
+    }
+
+    final auth = await account.authentication;
+    final idToken = auth.idToken;
+
+    if (idToken == null) {
+      throw ApiException(0, 'Gagal mendapatkan token Google. Pastikan Web Client ID sudah dikonfigurasi.');
+    }
+
+    final res = await ApiClient.post('/auth/google', body: {'idToken': idToken});
     final token = res['token'] as String;
     await ApiClient.saveToken(token);
     _user = UserModel.fromJson(res['user']);

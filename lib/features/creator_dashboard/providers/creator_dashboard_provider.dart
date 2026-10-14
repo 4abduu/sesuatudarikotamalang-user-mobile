@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../core/network/api_client.dart';
 import '../../../data/models/product_model.dart';
 import '../../../data/models/creator_model.dart';
-import '../../../data/dummy/dummy_creators.dart';
-import '../../../data/dummy/dummy_products.dart';
 
 class CreatorDashboardProvider extends ChangeNotifier {
   CreatorModel? _artisanProfile;
@@ -45,12 +43,6 @@ class CreatorDashboardProvider extends ChangeNotifier {
       }
     } catch (e) {
       _errorMessage = e.toString();
-      if (_myProducts.isEmpty) {
-        _myProducts = List.from(dummyProducts);
-      }
-      if (_artisanProfile == null && dummyCreators.isNotEmpty) {
-        _artisanProfile = dummyCreators.first;
-      }
     } finally {
       _isLoading = false;
       notifyListeners();

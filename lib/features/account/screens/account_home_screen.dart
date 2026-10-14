@@ -1,10 +1,10 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/image_helper.dart';
 import '../../../core/widgets/craft_cards.dart';
 import '../../../data/models/user_model.dart';
 import '../../../features/auth/providers/auth_provider.dart';
@@ -201,7 +201,7 @@ class _ProfileHeader extends StatelessWidget {
         CircleAvatar(
           radius: 32,
           backgroundColor: AppColors.onPrimary,
-          backgroundImage: hasAvatar ? FileImage(File(avatarUrl!)) : null,
+          backgroundImage: safeImageProvider(avatarUrl),
           child: !hasAvatar
             ? Text(initials.isEmpty ? '?' : initials, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.primary, fontFamily: 'Baloo 2'))
             : null,

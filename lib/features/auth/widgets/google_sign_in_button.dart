@@ -11,7 +11,8 @@ import '../../../core/theme/app_colors.dart';
 class GoogleSignInButton extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
-  const GoogleSignInButton({super.key, this.label = 'Masuk dengan Google', this.onTap});
+  const GoogleSignInButton(
+      {super.key, this.label = 'Masuk dengan Google', this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +40,14 @@ class GoogleSignInButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(width: 18, height: 18, child: _GoogleLogo()),
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: Image.asset(
+                  'assets/images/logos/google.png',
+                  errorBuilder: (_, __, ___) => const _GoogleLogo(),
+                ),
+              ),
               const SizedBox(width: 10),
               Text(
                 label,
@@ -92,13 +100,17 @@ class _GoogleLogoPainter extends CustomPainter {
     // Flutter canvas: 0°=east, 90°=south, 180°=west, 270°=north (clockwise).
     // Arcs sweep clockwise.
     // Red: north → east (top-right)
-    _drawArc(canvas, rect, const Color(0xFFEA4335), 270 + gap, 90 - 2 * gap, stroke);
+    _drawArc(
+        canvas, rect, const Color(0xFFEA4335), 270 + gap, 90 - 2 * gap, stroke);
     // Yellow: east → south (bottom-right)
-    _drawArc(canvas, rect, const Color(0xFFFBBC05), 0 + gap, 90 - 2 * gap, stroke);
+    _drawArc(
+        canvas, rect, const Color(0xFFFBBC05), 0 + gap, 90 - 2 * gap, stroke);
     // Green: south → west (bottom-left)
-    _drawArc(canvas, rect, const Color(0xFF34A853), 90 + gap, 90 - 2 * gap, stroke);
+    _drawArc(
+        canvas, rect, const Color(0xFF34A853), 90 + gap, 90 - 2 * gap, stroke);
     // Blue: west → north (top-left)
-    _drawArc(canvas, rect, const Color(0xFF4285F4), 180 + gap, 90 - 2 * gap, stroke);
+    _drawArc(
+        canvas, rect, const Color(0xFF4285F4), 180 + gap, 90 - 2 * gap, stroke);
 
     // Horizontal bar (blue) from center to right — the "G" crossbar.
     final barPaint = Paint()
@@ -113,7 +125,8 @@ class _GoogleLogoPainter extends CustomPainter {
     );
   }
 
-  void _drawArc(Canvas canvas, Rect rect, Color color, double startDeg, double sweepDeg, double strokeWidth) {
+  void _drawArc(Canvas canvas, Rect rect, Color color, double startDeg,
+      double sweepDeg, double strokeWidth) {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke

@@ -45,7 +45,7 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: Image.asset(
-              'assets/images/aaa.jpg',
+              'assets/images/logos/logo_sesuatu.jpg',
               width: 36,
               height: 36,
               fit: BoxFit.cover,
@@ -60,7 +60,8 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.brush, size: 18, color: AppColors.onPrimary),
+                child: const Icon(Icons.brush,
+                    size: 18, color: AppColors.onPrimary),
               ),
             ),
           ),
