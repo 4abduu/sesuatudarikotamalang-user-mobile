@@ -63,18 +63,28 @@ class HeroSection extends StatelessWidget {
                             child: ElevatedButton(
                                 onPressed: () => context.push('/katalog'),
                                 style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.onPrimary,
-                                    foregroundColor: AppColors.primary),
-                                child: const Text('Lihat Katalog'))),
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: AppColors.onPrimary),
+                                child: Text(
+                                  'Lihat Katalog',
+                                  style: GoogleFonts.baloo2(fontWeight: FontWeight.bold),
+                                ),
+                            ),
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                             child: OutlinedButton(
                                 onPressed: () => context.push('/kreator'),
                                 style: OutlinedButton.styleFrom(
-                                    foregroundColor: AppColors.onPrimary,
+                                    foregroundColor: AppColors.primary,
                                     side: const BorderSide(
-                                        color: AppColors.onPrimary)),
-                                child: const Text('Artisans'))),
+                                        color: AppColors.primary)),
+                                child: Text(
+                                  'Artisans',
+                                   style: GoogleFonts.baloo2(fontWeight: FontWeight.bold),
+                                ),
+                            ),
+                        ),
                       ]),
                     ),
                     const SizedBox(height: 12),

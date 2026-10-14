@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
 import '../routing/route_names.dart';
-import '../../features/auth/providers/auth_provider.dart';
-import '../../features/notifications/providers/notifications_provider.dart';
 
 /// Brand-flavored AppBar used by AppScaffold on every screen.
 ///
@@ -37,9 +34,6 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final canPop = ModalRoute.of(context)?.canPop ?? false;
-    final auth = context.watch<AuthProvider>();
-    final notifications = context.watch<NotificationsProvider>();
-    final unread = auth.isAuthenticated ? notifications.unreadCount : 0;
     return AppBar(
       backgroundColor: AppColors.background,
       foregroundColor: AppColors.foreground,
@@ -48,21 +42,30 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppColors.primary, AppColors.primaryLight],
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.asset(
+              'assets/images/aaa.jpg',
+              width: 36,
+              height: 36,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [AppColors.primary, AppColors.primaryLight],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.brush, size: 18, color: AppColors.onPrimary),
               ),
-              borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.brush, size: 16, color: AppColors.onPrimary),
           ),
-          if (title != null) ...[
-            const SizedBox(width: 8),
+          const SizedBox(width: 10),
+          if (title != null)
             Flexible(
               child: Text(
                 title!,
@@ -73,8 +76,32 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Sesuatu',
+                  style: GoogleFonts.baloo2(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.foreground,
+                    height: 1.1,
+                  ),
+                ),
+                Text(
+                  'DariKota Malang',
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                    height: 1.1,
+                  ),
+                ),
+              ],
             ),
-          ],
         ],
       ),
       actions: [
@@ -83,37 +110,6 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
           icon: const Icon(Icons.search, color: AppColors.foreground),
           onPressed: () => context.push(RouteNames.pencarian),
         ),
-        // Bell icon — only for authenticated users. Guest doesn't see it.
-        if (auth.isAuthenticated)
-          IconButton(
-            tooltip: 'Notifikasi',
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(Icons.notifications_none, color: AppColors.foreground),
-                if (unread > 0)
-                  Positioned(
-                    top: -2,
-                    right: -2,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: AppColors.destructive,
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: AppColors.background, width: 1.5),
-                      ),
-                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                      child: Text(
-                        unread > 9 ? '9+' : '$unread',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.onPrimary),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            onPressed: () => context.push(RouteNames.notifications),
-          ),
         if (actions != null) ...actions!,
       ],
     );
