@@ -11,8 +11,22 @@ import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/notifications/providers/notifications_provider.dart';
 import '../../../shared/app_scaffold.dart';
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
+
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<NotificationsProvider>().fetchNotifications();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -36,22 +50,34 @@ class NotificationsScreen extends StatelessWidget {
             child: const Text('Tandai dibaca', style: TextStyle(fontSize: 12)),
           ),
       ],
-      body: items.isEmpty
-        ? const EmptyState(icon: Icons.notifications_none, title: 'Belum ada notifikasi')
-        : ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: items.length,
-            itemBuilder: (_, i) {
-              final n = items[i];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _NotificationCard(
-                  notification: n,
-                  onTap: () => provider.markRead(n.id),
-                ),
-              );
-            },
-          ),
+      body: RefreshIndicator(
+        onRefresh: () => provider.fetchNotifications(),
+        child: provider.isLoading && items.isEmpty
+            ? const Center(child: CircularProgressIndicator())
+            : items.isEmpty
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: const [
+                      SizedBox(height: 120),
+                      EmptyState(icon: Icons.notifications_none, title: 'Belum ada notifikasi'),
+                    ],
+                  )
+                : ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: items.length,
+                    itemBuilder: (_, i) {
+                      final n = items[i];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _NotificationCard(
+                          notification: n,
+                          onTap: () => provider.markRead(n.id),
+                        ),
+                      );
+                    },
+                  ),
+      ),
     );
   }
 }
@@ -110,19 +136,38 @@ class _NotificationCard extends StatelessWidget {
 
   IconData _typeIcon(NotificationType t) {
     switch (t) {
-      case NotificationType.order: return Icons.shopping_bag_outlined;
-      case NotificationType.review: return Icons.star_outline;
-      case NotificationType.creator: return Icons.palette_outlined;
-      case NotificationType.system: return Icons.notifications_outlined;
+      case NotificationType.order:
+      case NotificationType.pesananUpdate:
+        return Icons.shopping_bag_outlined;
+      case NotificationType.review:
+      case NotificationType.ulasanBaru:
+        return Icons.star_outline;
+      case NotificationType.creator:
+      case NotificationType.pengajuanDiterima:
+      case NotificationType.pengajuanDitolak:
+        return Icons.palette_outlined;
+      case NotificationType.system:
+      case NotificationType.umum:
+        return Icons.notifications_outlined;
     }
   }
 
   Color _typeColor(NotificationType t) {
     switch (t) {
-      case NotificationType.order: return AppColors.primary;
-      case NotificationType.review: return AppColors.mustard;
-      case NotificationType.creator: return AppColors.moss;
-      case NotificationType.system: return AppColors.muted;
+      case NotificationType.order:
+      case NotificationType.pesananUpdate:
+        return AppColors.primary;
+      case NotificationType.review:
+      case NotificationType.ulasanBaru:
+        return AppColors.mustard;
+      case NotificationType.creator:
+      case NotificationType.pengajuanDiterima:
+        return AppColors.moss;
+      case NotificationType.pengajuanDitolak:
+        return AppColors.destructive;
+      case NotificationType.system:
+      case NotificationType.umum:
+        return AppColors.muted;
     }
   }
 }

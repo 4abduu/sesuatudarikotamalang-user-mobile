@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/craft_cards.dart';
-import '../../../data/dummy/dummy_creators.dart';
-import '../../../data/dummy/dummy_products.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../shared/app_scaffold.dart';
+
+import '../providers/creator_dashboard_provider.dart';
 
 class CreatorDashboardScreen extends StatelessWidget {
   const CreatorDashboardScreen({super.key});
@@ -25,37 +25,50 @@ class CreatorDashboardScreen extends StatelessWidget {
         ElevatedButton(onPressed: () => context.push('/daftar-kreator'), child: const Text('Ajukan Jadi Kreator')),
       ])));
     }
-    final creator = dummyCreators.firstWhere((c) => c.id == auth.user!.creatorId, orElse: () => dummyCreators.first);
-    final products = dummyProducts.where((p) => p.creatorId == creator.id).toList();
+
+    final dashboard = context.watch<CreatorDashboardProvider>();
+    final products = dashboard.myProducts;
+    final artisan = dashboard.artisanProfile;
+
     return AppScaffold(
       title: 'Dashboard Kreator',
-      body: SingleChildScrollView(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Halo, ${auth.user!.name}!', style: AppTextStyles.h1),
-        Text(creator.specialty, style: AppTextStyles.bodyMuted),
-        const SizedBox(height: 16),
-        _StatRow(products: products),
-        const SizedBox(height: 16),
-        MenuCard(
-          icon: Icons.inventory_2_outlined,
-          title: 'Produk Saya',
-          subtitle: '${products.length} produk aktif',
-          onTap: () => context.push('/dashboard-kreator/my-products'),
+      body: RefreshIndicator(
+        onRefresh: () => dashboard.fetchDashboardData(),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Halo, ${artisan?.name ?? auth.user!.name}!', style: AppTextStyles.h1),
+              Text(artisan?.bio.isNotEmpty == true ? artisan!.bio : (artisan?.name ?? 'Kreator Mitra Kota Malang'), style: AppTextStyles.bodyMuted),
+              const SizedBox(height: 16),
+              _StatRow(products: products),
+              const SizedBox(height: 16),
+              MenuCard(
+                icon: Icons.inventory_2_outlined,
+                title: 'Produk Saya',
+                subtitle: '${products.length} produk aktif',
+                onTap: () => context.push('/dashboard-kreator/my-products'),
+              ),
+              const SizedBox(height: 10),
+              MenuCard(
+                icon: Icons.auto_stories_outlined,
+                title: 'Cerita Saya',
+                subtitle: '${products.where((p) => p.hasStory).length} cerita',
+                onTap: () => context.push('/dashboard-kreator/my-stories'),
+              ),
+              const SizedBox(height: 10),
+              MenuCard(
+                icon: Icons.assignment_outlined,
+                title: 'Status Pengajuan',
+                subtitle: 'Diterima & Tayang',
+                onTap: () => context.push('/akun/pengajuan'),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 10),
-        MenuCard(
-          icon: Icons.auto_stories_outlined,
-          title: 'Cerita Saya',
-          subtitle: '${products.where((p) => p.hasStory).length} cerita',
-          onTap: () => context.push('/dashboard-kreator/my-stories'),
-        ),
-        const SizedBox(height: 10),
-        MenuCard(
-          icon: Icons.assignment_outlined,
-          title: 'Status Pengajuan',
-          subtitle: 'Diterima & Tayang',
-          onTap: () => context.push('/akun/pengajuan'),
-        ),
-      ])),
+      ),
     );
   }
 }

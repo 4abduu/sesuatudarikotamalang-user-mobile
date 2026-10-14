@@ -233,6 +233,7 @@ class _RoleBadge extends StatelessWidget {
     final label = switch (role) {
       Role.creator => 'Kreator',
       Role.buyer => 'Pembeli',
+      Role.admin => 'Admin',
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

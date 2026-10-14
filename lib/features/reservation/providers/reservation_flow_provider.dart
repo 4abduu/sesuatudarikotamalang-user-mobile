@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/order_model.dart';
 import '../../../data/models/product_model.dart';
-import '../../../data/dummy/dummy_products.dart';
 import '../../product_detail/providers/variant_selection_provider.dart';
 import '../../../core/utils/stock_helper.dart';
 
@@ -17,18 +16,25 @@ class ReservationFlowProvider extends ChangeNotifier {
   PaymentMethod? _paymentMethod;
   bool _paid = false;
   bool _processing = false;
+  OrderModel? _createdOrder;
 
-  ReservationFlowProvider(this.productId) : product = dummyProducts.firstWhere((p) => p.id == productId, orElse: () => dummyProducts.first) {
+  ReservationFlowProvider(this.product) {
     variantProvider = VariantSelectionProvider(product);
   }
 
-  final String productId;
+  String get productId => product.id;
   ReservationStep get step => _step;
   DateTime? get selectedDate => _selectedDate;
   String? get selectedSlot => _selectedSlot;
   PaymentMethod? get paymentMethod => _paymentMethod;
   bool get paid => _paid;
   bool get processing => _processing;
+  OrderModel? get createdOrder => _createdOrder;
+
+  void setCreatedOrder(OrderModel order) {
+    _createdOrder = order;
+    notifyListeners();
+  }
 
   bool get canContinue => _selectedDate != null && _selectedSlot != null;
 

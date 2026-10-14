@@ -57,15 +57,13 @@ class VariantSelectionProvider extends ChangeNotifier {
     return product.variantOptions.asMap().entries.map((e) => '${e.value.name}: ${v.options[e.key]}').join(', ');
   }
 
-  /// Effective stock for the currently matched variant, accounting for
-  /// already-reserved units (paid Lunas/Selesai + active MenungguBayar
-  /// holds that haven't expired). Returns 0 if no variant is matched
-  /// or the variant has no stock entry.
-  ///
-  /// For non-variant products, treats the variantLabel as 'Standar'.
+  /// Effective stock dari backend (atau dihitung jika offline)
   int effectiveStockForMatched(List<OrderModel> orders) {
     final v = matchedVariant;
     if (v == null) return 0;
+    if (v.effectiveStock >= 0) {
+      return v.effectiveStock;
+    }
     final original = v.stock;
     final reserved = reservedCount(orders, product.id, variantLabel);
     return effectiveStock(original, reserved);

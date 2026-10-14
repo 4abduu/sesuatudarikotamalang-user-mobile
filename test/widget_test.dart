@@ -16,6 +16,10 @@ import 'package:sesuatu_darikota_malang/features/account/providers/orders_provid
 import 'package:sesuatu_darikota_malang/features/account/providers/reviews_provider.dart';
 import 'package:sesuatu_darikota_malang/features/account/providers/applications_provider.dart';
 import 'package:sesuatu_darikota_malang/features/notifications/providers/notifications_provider.dart';
+import 'package:sesuatu_darikota_malang/features/catalog/providers/products_provider.dart';
+import 'package:sesuatu_darikota_malang/features/creators/providers/artisans_provider.dart';
+import 'package:sesuatu_darikota_malang/features/search/providers/search_provider.dart';
+import 'package:sesuatu_darikota_malang/features/creator_dashboard/providers/creator_dashboard_provider.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -27,10 +31,14 @@ void main() {
       MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => AuthProvider()),
+          ChangeNotifierProvider(create: (_) => ProductsProvider()),
+          ChangeNotifierProvider(create: (_) => ArtisansProvider()),
+          ChangeNotifierProvider(create: (_) => SearchProvider()),
           ChangeNotifierProvider(create: (_) => OrdersProvider()),
           ChangeNotifierProvider(create: (_) => ReviewsProvider()),
           ChangeNotifierProvider(create: (_) => ApplicationsProvider()),
           ChangeNotifierProvider(create: (_) => NotificationsProvider()),
+          ChangeNotifierProvider(create: (_) => CreatorDashboardProvider()),
         ],
         child: const SesuatuApp(),
       ),

@@ -4,13 +4,13 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
-import '../../../core/utils/order_status_helper.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/auth/widgets/auth_gate_bottom_sheet.dart';
 import '../../../features/account/providers/orders_provider.dart';
 import '../../../data/models/order_model.dart';
+import '../../../data/models/product_model.dart';
 import '../../../shared/app_scaffold.dart';
 import '../providers/reservation_flow_provider.dart';
 import '../widgets/step_indicator.dart';
@@ -18,6 +18,9 @@ import '../widgets/date_time_picker_step.dart';
 import '../widgets/payment_method_step.dart';
 import '../widgets/midtrans_mock_sheet.dart';
 import '../widgets/hold_countdown_widget.dart';
+
+import '../../../core/network/api_client.dart';
+import '../../../features/catalog/providers/products_provider.dart';
 
 class ReservationFlowScreen extends StatelessWidget {
   final String productId;
@@ -33,8 +36,37 @@ class ReservationFlowScreen extends StatelessWidget {
       });
       return const Scaffold(body: LoadingIndicator(label: 'Memeriksa sesi...'));
     }
+
+    final products = context.watch<ProductsProvider>();
+    final product = products.products.cast<ProductModel?>().firstWhere(
+      (p) => p?.id == productId,
+      orElse: () => null,
+    );
+
+    if (product == null) {
+      return FutureBuilder<ProductModel?>(
+        future: products.getProductById(productId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(body: LoadingIndicator(label: 'Memuat data produk...'));
+          }
+          final loadedProduct = snapshot.data;
+          if (loadedProduct == null) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Reservasi')),
+              body: const Center(child: Text('Produk tidak ditemukan')),
+            );
+          }
+          return ChangeNotifierProvider(
+            create: (_) => ReservationFlowProvider(loadedProduct),
+            child: const _ReservationBody(),
+          );
+        },
+      );
+    }
+
     return ChangeNotifierProvider(
-      create: (_) => ReservationFlowProvider(productId),
+      create: (_) => ReservationFlowProvider(product),
       child: const _ReservationBody(),
     );
   }
@@ -45,7 +77,6 @@ class _ReservationBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.watch<ReservationFlowProvider>();
-    final auth = context.read<AuthProvider>();
     final orders = context.read<OrdersProvider>();
     return AppScaffold(
       title: 'Reservasi Pickup',
@@ -73,31 +104,78 @@ class _ReservationBody extends StatelessWidget {
             PaymentMethodStep(provider: p),
             const SizedBox(height: 24),
             Row(children: [
-              Expanded(child: OutlinedButton(onPressed: () => p.prevStep(), child: const Text('Kembali'))),
+              Expanded(child: OutlinedButton(onPressed: p.processing ? null : () => p.prevStep(), child: const Text('Kembali'))),
               const SizedBox(width: 8),
               Expanded(child: ElevatedButton(
-                onPressed: p.paymentMethod == null ? null : () {
-                  // Check-at-submit — pass user's orders so effective stock
-                  // (original minus reserved) is validated, not just raw.
+                onPressed: (p.paymentMethod == null || p.processing) ? null : () async {
+                  // Check-at-submit: Validasi stok lokal dulu
                   final err = p.checkAtSubmit(orders: orders.orders);
                   if (err != null) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
                     if (err.contains('habis')) p.restart();
                     return;
                   }
-                  p.nextStep();
-                  if (p.paymentMethod == PaymentMethod.midtrans) {
-                    showModalBottomSheet(context: context, isScrollControlled: true, builder: (_) => MidtransMockSheet(amount: p.product.price, onPaid: () {
-                      Navigator.pop(context);
-                      p.setPaid();
-                      _createOrder(context, p, auth, orders, PaymentMethod.midtrans);
-                    }));
-                  } else {
-                    // COD: create order with hold
-                    _createOrder(context, p, auth, orders, PaymentMethod.cod);
+
+                  p.setProcessing(true);
+                  try {
+                    final variant = p.variantProvider.matchedVariant;
+                    final created = await orders.createOrder(
+                      productId: p.product.id,
+                      variantId: (p.product.hasVariants && variant != null) ? variant.id : null,
+                      pickupDate: p.selectedDate!,
+                      pickupSlot: p.selectedSlot!,
+                      paymentMethod: p.paymentMethod == PaymentMethod.midtrans ? 'midtrans' : 'cod',
+                    );
+
+                    p.setCreatedOrder(created);
+                    p.nextStep();
+
+                    if (p.paymentMethod == PaymentMethod.midtrans) {
+                      if (context.mounted) {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (_) => MidtransMockSheet(
+                            amount: p.product.price,
+                            onPaid: () {
+                              Navigator.pop(context);
+                              p.setPaid();
+                              orders.setStatus(created.id, OrderStatus.lunas);
+                            },
+                          ),
+                        );
+                      }
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Reservasi berhasil dibuat!')),
+                        );
+                      }
+                    }
+                  } on ApiException catch (e) {
+                    if (context.mounted) {
+                      String msg = e.message;
+                      if (e.status == 409) {
+                        msg = 'Maaf, stok produk ini baru saja habis. Silakan pilih varian lain.';
+                        p.restart();
+                      } else if (e.status == 403) {
+                        msg = 'Tidak dapat memesan produk milik sendiri.';
+                      }
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Terjadi kesalahan: ${e.toString()}')),
+                      );
+                    }
+                  } finally {
+                    p.setProcessing(false);
                   }
                 },
-                child: const Text('Pesan Sekarang'),
+                child: p.processing
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text('Pesan Sekarang'),
               )),
             ]),
           ] else ...[
@@ -106,28 +184,6 @@ class _ReservationBody extends StatelessWidget {
         ]))),
       ]),
     );
-  }
-
-  void _createOrder(BuildContext context, ReservationFlowProvider p, AuthProvider auth, OrdersProvider orders, PaymentMethod method) {
-    final order = OrderModel(
-      id: 'uo-${DateTime.now().millisecondsSinceEpoch}',
-      orderNumber: orders.makeOrderNumber(),
-      userId: auth.user!.id,
-      productId: p.product.id,
-      productName: p.product.name,
-      variantLabel: p.variantProvider.variantLabel,
-      pickupDate: p.selectedDate!.toIso8601String().substring(0, 10),
-      pickupSlot: p.selectedSlot!,
-      paymentMethod: method == PaymentMethod.midtrans ? 'Midtrans' : 'Cash/QRIS',
-      status: method == PaymentMethod.midtrans ? OrderStatus.lunas : OrderStatus.menungguBayar,
-      total: p.product.price,
-      createdAt: DateTime.now().toIso8601String().substring(0, 10),
-      pickupDeadline: method == PaymentMethod.midtrans ? computePickupDeadline(p.selectedDate!.toIso8601String(), defaultPickupDeadlineDays) : null,
-      holdExpiresAt: method == PaymentMethod.cod ? DateTime.now().add(const Duration(hours: 2)).toIso8601String() : null,
-      holdExtendedMinutes: 0,
-    );
-    orders.addOrder(order);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Reservasi berhasil dibuat!')));
   }
 }
 
@@ -145,11 +201,23 @@ class _ResultSection extends StatelessWidget {
         const SizedBox(height: 8),
         Text('Stok kombinasi sudah di-hold & dikurangi permanen.', style: AppTextStyles.bodyMuted, textAlign: TextAlign.center),
         const SizedBox(height: 24),
-        PrimaryButton(label: 'Lihat Tiket Reservasi', icon: const Icon(Icons.qr_code, size: 16), onPressed: () => context.go('/reservasi/konfirmasi')),
+        PrimaryButton(
+          label: 'Lihat Tiket Reservasi',
+          icon: const Icon(Icons.qr_code, size: 16),
+          onPressed: () {
+            if (provider.createdOrder != null) {
+              context.push('/akun/pesanan/${provider.createdOrder!.id}');
+            } else {
+              context.go('/reservasi/konfirmasi');
+            }
+          },
+        ),
       ]);
     } else {
       // COD countdown
-      final holdExpiry = DateTime.now().add(const Duration(hours: 2));
+      final holdExpiry = provider.createdOrder?.holdExpiresAt != null
+          ? DateTime.tryParse(provider.createdOrder!.holdExpiresAt!) ?? DateTime.now().add(const Duration(hours: 2))
+          : DateTime.now().add(const Duration(hours: 2));
       return Column(children: [
         const Icon(Icons.hourglass_top, size: 48, color: AppColors.mustard),
         const SizedBox(height: 12),
@@ -159,7 +227,17 @@ class _ResultSection extends StatelessWidget {
         const SizedBox(height: 16),
         HoldCountdownWidget(expiresAt: holdExpiry),
         const SizedBox(height: 24),
-        PrimaryButton(label: 'Lihat Tiket Reservasi', icon: const Icon(Icons.qr_code, size: 16), onPressed: () => context.go('/reservasi/konfirmasi')),
+        PrimaryButton(
+          label: 'Lihat Tiket Reservasi',
+          icon: const Icon(Icons.qr_code, size: 16),
+          onPressed: () {
+            if (provider.createdOrder != null) {
+              context.push('/akun/pesanan/${provider.createdOrder!.id}');
+            } else {
+              context.go('/reservasi/konfirmasi');
+            }
+          },
+        ),
       ]);
     }
   }

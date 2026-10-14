@@ -7,6 +7,9 @@ import 'features/account/providers/orders_provider.dart';
 import 'features/account/providers/reviews_provider.dart';
 import 'features/account/providers/applications_provider.dart';
 import 'features/notifications/providers/notifications_provider.dart';
+import 'features/catalog/providers/products_provider.dart';
+import 'features/creators/providers/artisans_provider.dart';
+import 'features/creator_dashboard/providers/creator_dashboard_provider.dart';
 import 'package:provider/provider.dart';
 
 class SesuatuApp extends StatefulWidget {
@@ -20,12 +23,25 @@ class _SesuatuAppState extends State<SesuatuApp> {
   GoRouter? _router;
 
   Future<void> _initProviders() async {
-    final ctx = context;
-    await ctx.read<AuthProvider>().init();
-    await ctx.read<OrdersProvider>().init();
-    await ctx.read<ReviewsProvider>().init();
-    await ctx.read<ApplicationsProvider>().init();
-    await ctx.read<NotificationsProvider>().init();
+    // Baca semua provider sebelum await pertama untuk menghindari
+    // penggunaan BuildContext di seberang async gap.
+    final auth = context.read<AuthProvider>();
+    final products = context.read<ProductsProvider>();
+    final artisans = context.read<ArtisansProvider>();
+    final orders = context.read<OrdersProvider>();
+    final reviews = context.read<ReviewsProvider>();
+    final applications = context.read<ApplicationsProvider>();
+    final notifications = context.read<NotificationsProvider>();
+    final creatorDashboard = context.read<CreatorDashboardProvider>();
+
+    await auth.init();
+    await products.init();
+    await artisans.init();
+    await orders.init();
+    await reviews.init();
+    await applications.init();
+    await notifications.init();
+    await creatorDashboard.init();
     if (mounted) setState(() => _initialized = true);
   }
 

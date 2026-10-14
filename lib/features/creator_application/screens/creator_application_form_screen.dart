@@ -9,7 +9,6 @@ import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../data/dummy/dummy_categories.dart';
-import '../../../data/models/creator_application_model.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/auth/widgets/auth_gate_bottom_sheet.dart';
 import '../../../features/account/providers/applications_provider.dart';
@@ -39,23 +38,40 @@ class _CreatorApplicationFormScreenState extends State<CreatorApplicationFormScr
   @override
   void dispose() { _nama.dispose(); _wa.dispose(); _brand.dispose(); _desc.dispose(); super.dispose(); }
 
-  void _submit() {
+  bool _isSubmitting = false;
+
+  Future<void> _submit() async {
     final auth = context.read<AuthProvider>();
-    if (!auth.isAuthenticated) { showAuthGateSheet(context, next: '/daftar-kreator', contextLabel: 'mendaftar jadi kreator'); return; }
-    if (_nama.text.trim().isEmpty || _brand.text.trim().isEmpty || _desc.text.trim().isEmpty || _category == null) {
+    if (!auth.isAuthenticated) {
+      showAuthGateSheet(context, next: '/daftar-kreator', contextLabel: 'mendaftar jadi kreator');
+      return;
+    }
+    if (_nama.text.trim().isEmpty || _brand.text.trim().isEmpty || _desc.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Lengkapi semua field')));
       return;
     }
-    final app = CreatorApplicationModel(
-      id: 'app-${DateTime.now().millisecondsSinceEpoch}', userId: auth.user!.id,
-      applicantName: _nama.text, contact: _wa.text, email: auth.user!.email,
-      brandName: _brand.text, description: _desc.text, category: _category!,
-      submittedAt: 'Baru saja', status: ApplicationStatus.pending,
-    );
-    context.read<ApplicationsProvider>().addApplication(app);
-    auth.setApplication(app.id);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pengajuan terkirim! Tim kami akan mengkurasi.')));
-    context.go('/akun/pengajuan');
+
+    setState(() => _isSubmitting = true);
+    try {
+      final app = await context.read<ApplicationsProvider>().apply(
+        applicantName: _nama.text.trim(),
+        contact: _wa.text.trim(),
+        brandName: _brand.text.trim(),
+        description: _desc.text.trim(),
+        categoryId: _category,
+      );
+      auth.setApplication(app.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pengajuan terkirim! Tim kami akan mengkurasi.')));
+        context.go('/akun/pengajuan');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal mengirim pengajuan: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
@@ -94,7 +110,10 @@ class _CreatorApplicationFormScreenState extends State<CreatorApplicationFormScr
             const SizedBox(height: 12),
             _PhotoDropzone(),
             const SizedBox(height: 24),
-            PrimaryButton(label: 'Kirim Pengajuan', onPressed: _submit),
+            PrimaryButton(
+              label: _isSubmitting ? 'Mengirim...' : 'Kirim Pengajuan',
+              onPressed: _isSubmitting ? null : _submit,
+            ),
           ],
         ])))),
         if (isGuest) Positioned.fill(child: Container(color: AppColors.background.withValues(alpha: 0.3), child: Center(child: Card(margin: const EdgeInsets.all(32), child: Padding(padding: const EdgeInsets.all(20), child: Column(mainAxisSize: MainAxisSize.min, children: [

@@ -28,6 +28,10 @@ import '../widgets/variant_builder.dart';
 /// Edit mode: when `?id=<productId>` is provided, the form pre-fills
 /// from the matching product in [dummyProducts]. Save shows a SnackBar
 /// and pops the screen.
+import 'package:provider/provider.dart';
+import '../../../features/catalog/providers/products_provider.dart';
+import '../providers/creator_dashboard_provider.dart';
+
 class ProductFormScreen extends StatefulWidget {
   final String productId;
   const ProductFormScreen({super.key, this.productId = ''});
@@ -43,6 +47,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   String? _category;
   bool _limited = false;
   String? _photoPath;
+  bool _isSaving = false;
 
   List<VariantOptionModel> _opts = [];
   Map<String, int> _stocks = {};
@@ -53,21 +58,24 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   void initState() {
     super.initState();
     if (_isEdit) {
-      final p = dummyProducts.firstWhere(
-        (x) => x.id == widget.productId,
-        orElse: () => dummyProducts.first,
+      final dashboard = context.read<CreatorDashboardProvider>();
+      final p = dashboard.myProducts.cast<ProductModel?>().firstWhere(
+        (x) => x?.id == widget.productId,
+        orElse: () => null,
       );
-      _nama.text = p.name;
-      _deskripsi.text = p.description;
-      _harga.text = p.price.toString();
-      _category = p.categoryId;
-      _limited = p.badge == BadgeType.limited;
-      _opts = List.from(p.variantOptions);
-      final stocks = <String, int>{};
-      for (final v in p.variants) {
-        stocks[v.options.join(' / ')] = v.stock;
+      if (p != null) {
+        _nama.text = p.name;
+        _deskripsi.text = p.description;
+        _harga.text = p.price.toString();
+        _category = p.categoryId;
+        _limited = p.isLimited;
+        _opts = List.from(p.variantOptions);
+        final stocks = <String, int>{};
+        for (final v in p.variants) {
+          stocks[v.options.join(' / ')] = v.stock;
+        }
+        _stocks = stocks;
       }
-      _stocks = stocks;
     }
   }
 
@@ -85,7 +93,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     if (xfile != null) setState(() => _photoPath = xfile.path);
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (_nama.text.trim().isEmpty ||
         _deskripsi.text.trim().isEmpty ||
         _category == null ||
@@ -102,10 +110,44 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(_isEdit ? 'Produk "${_nama.text}" diperbarui' : 'Produk "${_nama.text}" ditambahkan')),
-    );
-    context.pop();
+
+    setState(() => _isSaving = true);
+    try {
+      final dashboard = context.read<CreatorDashboardProvider>();
+      if (_isEdit) {
+        await dashboard.updateProduct(
+          id: widget.productId,
+          name: _nama.text.trim(),
+          categoryId: _category,
+          description: _deskripsi.text.trim(),
+          price: price,
+          isLimited: _limited,
+        );
+      } else {
+        await dashboard.createProduct(
+          name: _nama.text.trim(),
+          categoryId: _category!,
+          price: price,
+          description: _deskripsi.text.trim(),
+          isLimited: _limited,
+          stock: 10,
+        );
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_isEdit ? 'Produk "${_nama.text}" diperbarui' : 'Produk "${_nama.text}" ditambahkan')),
+        );
+        context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menyimpan produk: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
@@ -136,13 +178,18 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: _category,
-              decoration: const InputDecoration(labelText: 'Kategori', prefixIcon: Icon(Icons.category_outlined)),
-              items: dummyCategories
-                  .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
-                  .toList(),
-              onChanged: (v) => setState(() => _category = v),
+            Consumer<ProductsProvider>(
+              builder: (context, prodProv, _) {
+                final categories = prodProv.categories.isNotEmpty ? prodProv.categories : dummyCategories;
+                return DropdownButtonFormField<String>(
+                  initialValue: _category,
+                  decoration: const InputDecoration(labelText: 'Kategori', prefixIcon: Icon(Icons.category_outlined)),
+                  items: categories
+                      .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
+                      .toList(),
+                  onChanged: (v) => setState(() => _category = v),
+                );
+              },
             ),
             const SizedBox(height: 12),
             TextField(
@@ -182,7 +229,13 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               },
             ),
             const SizedBox(height: 24),
-            PrimaryButton(label: _isEdit ? 'Simpan Perubahan' : 'Tambah Produk', onPressed: _save, icon: const Icon(Icons.save_outlined, size: 18)),
+            PrimaryButton(
+              label: _isSaving
+                  ? 'Menyimpan...'
+                  : (_isEdit ? 'Simpan Perubahan' : 'Tambah Produk'),
+              onPressed: _isSaving ? null : _save,
+              icon: const Icon(Icons.save_outlined, size: 18),
+            ),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,

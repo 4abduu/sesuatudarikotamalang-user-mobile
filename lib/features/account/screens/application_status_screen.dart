@@ -14,8 +14,22 @@ import '../../../features/account/providers/applications_provider.dart';
 import '../../../features/notifications/providers/notifications_provider.dart';
 import '../../../shared/app_scaffold.dart';
 
-class ApplicationStatusScreen extends StatelessWidget {
+class ApplicationStatusScreen extends StatefulWidget {
   const ApplicationStatusScreen({super.key});
+
+  @override
+  State<ApplicationStatusScreen> createState() => _ApplicationStatusScreenState();
+}
+
+class _ApplicationStatusScreenState extends State<ApplicationStatusScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ApplicationsProvider>().fetchMyApplications();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -23,12 +37,30 @@ class ApplicationStatusScreen extends StatelessWidget {
     final app = apps.latestForUser(auth.user?.id ?? '');
     return AppScaffold(
       title: 'Pengajuan Kreator',
-      body: app == null
-        ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const EmptyState(icon: Icons.assignment, title: 'Belum mengajukan', description: 'Kamu belum mengajukan jadi kreator.'),
-            PrimaryButton(label: 'Daftar Jadi Kreator', onPressed: () => context.push('/daftar-kreator')),
-          ]))
-        : SingleChildScrollView(padding: const EdgeInsets.all(16), child: Column(children: [
+      body: RefreshIndicator(
+        onRefresh: () => apps.fetchMyApplications(),
+        child: apps.isLoading && app == null
+            ? const Center(child: CircularProgressIndicator())
+            : app == null
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      const SizedBox(height: 120),
+                      Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const EmptyState(icon: Icons.assignment, title: 'Belum mengajukan', description: 'Kamu belum mengajukan jadi kreator.'),
+                            PrimaryButton(label: 'Daftar Jadi Kreator', onPressed: () => context.push('/daftar-kreator')),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                : SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(children: [
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -69,7 +101,9 @@ class ApplicationStatusScreen extends StatelessWidget {
                 ),
               ),
             ],
-          ])),
+          ]),
+        ),
+      ),
     );
   }
 
@@ -94,7 +128,7 @@ class ApplicationStatusScreen extends StatelessWidget {
                 rejectReason: reason,
               );
               if (context.mounted) {
-                await context.read<NotificationsProvider>().addNotification(
+                context.read<NotificationsProvider>().addNotification(
                   NotificationModel(
                     id: 'n-${DateTime.now().millisecondsSinceEpoch}',
                     type: NotificationType.creator,
@@ -128,7 +162,7 @@ class ApplicationStatusScreen extends StatelessWidget {
               ).id;
               auth.becomeCreator(creatorId);
               if (context.mounted) {
-                await context.read<NotificationsProvider>().addNotification(
+                context.read<NotificationsProvider>().addNotification(
                   NotificationModel(
                     id: 'n-${DateTime.now().millisecondsSinceEpoch}',
                     type: NotificationType.creator,

@@ -20,24 +20,47 @@ class CreatorApplicationModel {
     required this.status, this.rejectReason,
   });
 
-  factory CreatorApplicationModel.fromJson(Map<String, dynamic> j) =>
-    CreatorApplicationModel(
-      id: j['id'], userId: j['userId'], applicantName: j['applicantName'],
-      contact: j['contact'], email: j['email'], brandName: j['brandName'],
-      description: j['description'], category: j['category'],
-      submittedAt: j['submittedAt'],
-      status: j['status'] == 'approved' ? ApplicationStatus.approved
-            : j['status'] == 'rejected' ? ApplicationStatus.rejected
-            : ApplicationStatus.pending,
-      rejectReason: j['rejectReason'],
+  factory CreatorApplicationModel.fromJson(Map<String, dynamic> j) {
+    final statusStr = (j['status'] ?? '').toString().toLowerCase();
+    final ApplicationStatus parsedStatus;
+    if (statusStr == 'approved' || statusStr == 'diterima') {
+      parsedStatus = ApplicationStatus.approved;
+    } else if (statusStr == 'rejected' || statusStr == 'ditolak') {
+      parsedStatus = ApplicationStatus.rejected;
+    } else {
+      parsedStatus = ApplicationStatus.pending;
+    }
+
+    return CreatorApplicationModel(
+      id: (j['id'] ?? '').toString(),
+      userId: (j['userId'] ?? '').toString(),
+      applicantName: j['applicantName'] as String? ?? '',
+      contact: j['contact'] as String? ?? '',
+      email: j['email'] as String? ?? '',
+      brandName: j['brandName'] as String? ?? '',
+      description: j['description'] as String? ?? '',
+      category: j['category'] as String? ?? (j['categoryId'] as String? ?? ''),
+      submittedAt: (j['submittedAt'] ?? '').toString(),
+      status: parsedStatus,
+      rejectReason: j['rejectReason'] as String?,
     );
+  }
 
   Map<String, dynamic> toJson() => {
-    'id': id, 'userId': userId, 'applicantName': applicantName, 'contact': contact,
-    'email': email, 'brandName': brandName, 'description': description,
-    'category': category, 'submittedAt': submittedAt,
-    'status': status == ApplicationStatus.approved ? 'approved'
-            : status == ApplicationStatus.rejected ? 'rejected' : 'pending',
+    'id': id,
+    'userId': userId,
+    'applicantName': applicantName,
+    'contact': contact,
+    'email': email,
+    'brandName': brandName,
+    'description': description,
+    'category': category,
+    'submittedAt': submittedAt,
+    'status': status == ApplicationStatus.approved
+        ? 'diterima'
+        : status == ApplicationStatus.rejected
+            ? 'ditolak'
+            : 'pending',
     'rejectReason': rejectReason,
   };
 }

@@ -22,7 +22,7 @@ class BehindTheDesignSection extends StatelessWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('PROSES PEMBUATAN', style: AppTextStyles.eyebrow),
           const SizedBox(height: 4),
-          Text(s.process, style: AppTextStyles.body),
+          Text(s.process ?? '', style: AppTextStyles.body),
         ])),
     ])));
   }

@@ -1,20 +1,37 @@
 class CategoryModel {
   final String id;
   final String name;
+  final String slug;
   final String blurb;
-  final String iconName; // lucide icon name
-  
-  // ===============================================================
-  // OPTION GAMBAR FIGMA: Tambahan field imagePath untuk aset gambar.
-  // Jika ingin versi awal tanpa imagePath, bisa dikomentari baris ini.
-  // ===============================================================
+  final String iconName;
   final String imagePath;
 
   const CategoryModel({
     required this.id,
     required this.name,
-    required this.blurb,
-    required this.iconName,
-    this.imagePath = '', // default value agar kompatibel dengan versi awal
+    this.slug = '',
+    this.blurb = '',
+    this.iconName = '',
+    this.imagePath = '',
   });
+
+  factory CategoryModel.fromJson(Map<String, dynamic> j) {
+    return CategoryModel(
+      id: j['id'] ?? '',
+      name: j['name'] ?? '',
+      slug: j['slug'] ?? '',
+      blurb: j['blurb'] ?? '',
+      iconName: j['iconName'] ?? '',
+      imagePath: j['imagePath'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'slug': slug,
+    'blurb': blurb,
+    'iconName': iconName,
+    'imagePath': imagePath,
+  };
 }

@@ -11,52 +11,237 @@ import '../../../data/models/order_model.dart';
 import '../../../features/reservation/widgets/qr_ticket_card.dart';
 import '../../../shared/app_scaffold.dart';
 
-class OrderDetailScreen extends StatelessWidget {
+import '../../../core/theme/app_colors.dart';
+import '../../reservation/widgets/midtrans_mock_sheet.dart';
+import '../../reservation/widgets/hold_countdown_widget.dart';
+
+class OrderDetailScreen extends StatefulWidget {
   final String orderId;
   const OrderDetailScreen({super.key, required this.orderId});
+
+  @override
+  State<OrderDetailScreen> createState() => _OrderDetailScreenState();
+}
+
+class _OrderDetailScreenState extends State<OrderDetailScreen> {
+  bool _isLoading = true;
+  bool _isProcessingAction = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOrder();
+  }
+
+  Future<void> _loadOrder() async {
+    setState(() => _isLoading = true);
+    await context.read<OrdersProvider>().getOrderDetail(widget.orderId);
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _handleCancel(OrderModel order) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Batalkan Reservasi'),
+        content: const Text('Apakah Anda yakin ingin membatalkan reservasi ini?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Tidak')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.destructive),
+            child: const Text('Ya, Batalkan'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    setState(() => _isProcessingAction = true);
+    try {
+      await context.read<OrdersProvider>().cancelOrder(order.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pesanan berhasil dibatalkan.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal membatalkan: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessingAction = false);
+    }
+  }
+
+  Future<void> _handlePayAgain(OrderModel order) async {
+    setState(() => _isProcessingAction = true);
+    try {
+      await context.read<OrdersProvider>().payAgain(order.id);
+      if (mounted) {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) => MidtransMockSheet(
+            amount: order.total,
+            onPaid: () async {
+              Navigator.pop(context);
+              context.read<OrdersProvider>().setStatus(order.id, OrderStatus.lunas);
+              await _loadOrder();
+            },
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal meminta token pembayaran: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessingAction = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final orders = context.watch<OrdersProvider>();
-    final o = orders.orders.firstWhere((o) => o.id == orderId, orElse: () => orders.orders.first);
+    final o = orders.orders.firstWhere((o) => o.id == widget.orderId, orElse: () => orders.orders.first);
     final status = effectiveStatus(o);
     final isCompleted = status == OrderStatus.selesai;
+    final isWaitingPayment = status == OrderStatus.menungguBayar;
+    final isPaid = status == OrderStatus.lunas;
+
+    // Sesuai Bagian 4 API_CONTRACT:
+    // Tampilkan QR untuk order yang bisa diambil: lunas dan cod berstatus menunggu_bayar.
+    final bool shouldShowQr = isPaid || (isWaitingPayment && o.paymentMethod.toLowerCase().contains('cod') || o.paymentMethod.toLowerCase().contains('cash'));
+
     return AppScaffold(
       title: o.orderNumber,
       leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
-      body: SingleChildScrollView(padding: const EdgeInsets.all(16), child: Column(children: [
-        QrTicketCard(code: o.orderNumber),
-        const SizedBox(height: 16),
-        Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Detail Pesanan', style: AppTextStyles.h3),
-          const SizedBox(height: 12),
-          _Row(label: 'Produk', value: o.productName),
-          _Row(label: 'Varian', value: o.variantLabel),
-          _Row(label: 'Tanggal Ambil', value: formatDateID(o.pickupDate)),
-          _Row(label: 'Waktu', value: o.pickupSlot),
-          _Row(label: 'Pembayaran', value: '${o.paymentMethod} (${status.label})'),
-          _Row(label: 'Total', value: formatRupiah(o.total)),
-          if (status == OrderStatus.lewatBatas) ...[
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF9B3320).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                'Toko tidak lagi menjamin penyimpanan barang ini. Hubungi toko untuk konfirmasi.',
-                style: TextStyle(fontSize: 12, color: Color(0xFF9B3320)),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadOrder,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    if (shouldShowQr) ...[
+                      QrTicketCard(code: o.orderNumber),
+                      const SizedBox(height: 16),
+                    ] else if (isWaitingPayment && o.paymentMethod.toLowerCase() == 'midtrans') ...[
+                      Card(
+                        color: AppColors.mustard.withValues(alpha: 0.1),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              const Icon(Icons.payment, size: 48, color: AppColors.mustard),
+                              const SizedBox(height: 8),
+                              Text('Menunggu Pembayaran Online', style: AppTextStyles.h3),
+                              const SizedBox(height: 4),
+                              Text('Selesaikan pembayaran sebelum batas waktu berakhir.', style: AppTextStyles.caption, textAlign: TextAlign.center),
+                              if (o.holdExpiresAt != null) ...[
+                                const SizedBox(height: 12),
+                                HoldCountdownWidget(
+                                  expiresAt: DateTime.tryParse(o.holdExpiresAt!) ?? DateTime.now().add(const Duration(hours: 1)),
+                                ),
+                              ],
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.credit_card, size: 16),
+                                  label: const Text('Bayar Sekarang'),
+                                  onPressed: _isProcessingAction ? null : () => _handlePayAgain(o),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Detail Pesanan', style: AppTextStyles.h3),
+                            const SizedBox(height: 12),
+                            _Row(label: 'Produk', value: o.productName),
+                            _Row(label: 'Varian', value: o.variantLabel),
+                            _Row(label: 'Tanggal Ambil', value: formatDateID(o.pickupDate)),
+                            _Row(label: 'Waktu', value: o.pickupSlot),
+                            _Row(label: 'Pembayaran', value: '${o.paymentMethod} (${status.label})'),
+                            _Row(label: 'Total', value: formatRupiah(o.total)),
+                            if (status == OrderStatus.lewatBatas) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF9B3320).withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  'Toko tidak lagi menjamin penyimpanan barang ini. Hubungi admin untuk konfirmasi.',
+                                  style: TextStyle(fontSize: 12, color: Color(0xFF9B3320)),
+                                ),
+                              ),
+                            ],
+                            if (status == OrderStatus.kedaluwarsa) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.muted.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  'Batas waktu pembayaran/pengambilan telah habis. Stok telah dilepas kembali ke toko.',
+                                  style: TextStyle(fontSize: 12, color: AppColors.muted),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    if (isCompleted && !o.reviewed) ...[
+                      PrimaryButton(
+                        label: 'Beri Ulasan',
+                        icon: const Icon(Icons.star, size: 16),
+                        onPressed: () => context.push('/akun/ulasan/write?order=${widget.orderId}'),
+                      ),
+                    ] else if (isCompleted && o.reviewed) ...[
+                      const Text('Sudah diulas', style: TextStyle(fontSize: 13, color: Color(0xFF6B7A3D))),
+                    ],
+
+                    if (isWaitingPayment) ...[
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.cancel_outlined, size: 16, color: AppColors.destructive),
+                          label: const Text('Batalkan Reservasi', style: TextStyle(color: AppColors.destructive)),
+                          onPressed: _isProcessingAction ? null : () => _handleCancel(o),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
-          ],
-        ]))),
-        const SizedBox(height: 16),
-        if (isCompleted && !o.reviewed) ...[
-          PrimaryButton(label: 'Beri Ulasan', icon: const Icon(Icons.star, size: 16), onPressed: () => context.push('/akun/ulasan/write?order=$orderId')),
-        ] else if (isCompleted && o.reviewed) ...[
-          const Text('Sudah diulas', style: TextStyle(fontSize: 13, color: Color(0xFF6B7A3D))),
-        ],
-      ])),
     );
   }
 }

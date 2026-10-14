@@ -7,7 +7,6 @@ import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/secondary_button.dart';
-import '../../../data/dummy/dummy_products.dart';
 import '../../../shared/app_scaffold.dart';
 import '../providers/story_ai_provider.dart';
 
@@ -21,6 +20,10 @@ import '../providers/story_ai_provider.dart';
 ///
 /// Edit mode: when `?productId=<id>` matches a product with an
 /// existing story, pre-fill the title and body. Save → SnackBar + pop.
+import 'package:provider/provider.dart';
+import '../../../data/models/product_model.dart';
+import '../providers/creator_dashboard_provider.dart';
+
 class StoryFormScreen extends StatefulWidget {
   final String productId;
   const StoryFormScreen({super.key, this.productId = ''});
@@ -34,20 +37,24 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
   final _isi = TextEditingController();
   final List<String> _photos = [];
   String _productName = '';
+  bool _isSaving = false;
   bool get _isEdit => _judul.text.isNotEmpty;
 
   @override
   void initState() {
     super.initState();
     if (widget.productId.isNotEmpty) {
-      final p = dummyProducts.firstWhere(
-        (x) => x.id == widget.productId,
-        orElse: () => dummyProducts.first,
+      final dashboard = context.read<CreatorDashboardProvider>();
+      final p = dashboard.myProducts.cast<ProductModel?>().firstWhere(
+        (x) => x?.id == widget.productId,
+        orElse: () => null,
       );
-      _productName = p.name;
-      if (p.hasStory) {
-        _judul.text = p.story!.title;
-        _isi.text = p.story!.body;
+      if (p != null) {
+        _productName = p.name;
+        if (p.hasStory) {
+          _judul.text = p.story!.title;
+          _isi.text = p.story!.body;
+        }
       }
     }
   }
@@ -67,17 +74,37 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
     }
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (_judul.text.trim().isEmpty || _isi.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Judul dan isi cerita wajib diisi')),
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(_isEdit ? 'Cerita "${_judul.text}" diperbarui' : 'Cerita "${_judul.text}" ditambahkan')),
-    );
-    context.pop();
+
+    setState(() => _isSaving = true);
+    try {
+      final dashboard = context.read<CreatorDashboardProvider>();
+      await dashboard.saveStory(
+        productId: widget.productId,
+        title: _judul.text.trim(),
+        content: _isi.text.trim(),
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_isEdit ? 'Cerita "${_judul.text}" diperbarui' : 'Cerita "${_judul.text}" ditambahkan')),
+        );
+        context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menyimpan cerita: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   /// Buka panel AI — showModalBottomSheet. View tidak memegang logika bisnis:
@@ -158,7 +185,13 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
             const SizedBox(height: 8),
             _PhotoGallery(photos: _photos, onPick: _pickPhoto, onRemove: (i) => setState(() => _photos.removeAt(i))),
             const SizedBox(height: 24),
-            PrimaryButton(label: _isEdit ? 'Simpan Perubahan' : 'Tambah Cerita', onPressed: _save, icon: const Icon(Icons.save_outlined, size: 18)),
+            PrimaryButton(
+              label: _isSaving
+                  ? 'Menyimpan...'
+                  : (_isEdit ? 'Simpan Perubahan' : 'Tambah Cerita'),
+              onPressed: _isSaving ? null : _save,
+              icon: const Icon(Icons.save_outlined, size: 18),
+            ),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
@@ -445,7 +478,7 @@ class _AiHelperSheetState extends State<_AiHelperSheet> {
           icon: const Icon(Icons.auto_awesome, size: 16),
         );
       case StoryAiState.loading:
-        return PrimaryButton(
+        return const PrimaryButton(
           label: 'AI lagi merangkai ceritamu…',
           onPressed: null,
           loading: true,
@@ -590,19 +623,19 @@ class _LoadingView extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         // Skeleton shimmer Judul
-        _ShimmerBlock(width: 140, height: 14),
+        const _ShimmerBlock(width: 140, height: 14),
         const SizedBox(height: 10),
-        _ShimmerBlock(width: double.infinity, height: 10),
+        const _ShimmerBlock(width: double.infinity, height: 10),
         const SizedBox(height: 6),
-        _ShimmerBlock(width: double.infinity * 0.92, height: 10),
+        const _ShimmerBlock(width: double.infinity, height: 10),
         const SizedBox(height: 6),
-        _ShimmerBlock(width: double.infinity * 0.85, height: 10),
+        const _ShimmerBlock(width: double.infinity, height: 10),
         const SizedBox(height: 14),
-        _ShimmerBlock(width: 120, height: 14),
+        const _ShimmerBlock(width: 120, height: 14),
         const SizedBox(height: 10),
-        _ShimmerBlock(width: double.infinity, height: 10),
+        const _ShimmerBlock(width: double.infinity, height: 10),
         const SizedBox(height: 6),
-        _ShimmerBlock(width: double.infinity * 0.9, height: 10),
+        const _ShimmerBlock(width: double.infinity, height: 10),
       ],
     );
   }
