@@ -194,10 +194,15 @@ class AuthProvider extends ChangeNotifier {
   /// Verify Change Email (POST /api/auth/change-email/verify)
   Future<void> verifyChangeEmail(String code) async {
     final res = await ApiClient.post('/auth/change-email/verify', body: {'code': code});
-    if (res != null && res['email'] != null && _user != null) {
-      _user = _user!.copyWith(email: res['email']);
-      await _persist();
-      notifyListeners();
+    if (res != null) {
+      if (res['token'] != null) {
+        await ApiClient.saveToken(res['token'] as String);
+      }
+      if (res['email'] != null && _user != null) {
+        _user = _user!.copyWith(email: res['email']);
+        await _persist();
+        notifyListeners();
+      }
     }
   }
 
@@ -206,10 +211,13 @@ class AuthProvider extends ChangeNotifier {
     required String oldPassword,
     required String newPassword,
   }) async {
-    await ApiClient.post('/auth/change-password', body: {
+    final res = await ApiClient.post('/auth/change-password', body: {
       'oldPassword': oldPassword,
       'newPassword': newPassword,
     });
+    if (res != null && res['token'] != null) {
+      await ApiClient.saveToken(res['token'] as String);
+    }
   }
 
   void becomeCreator(String creatorId) {
