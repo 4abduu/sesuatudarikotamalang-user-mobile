@@ -18,6 +18,11 @@ class VariantPicker extends StatelessWidget {
     final matched = provider.matchedVariant;
     final int stockToShow = matched != null ? matched.effectiveStock : product.totalStock;
     final isLimited = stockToShow <= 10;
+    final stockLabel = stockToShow <= 0
+        ? 'Stok habis'
+        : stockToShow > 10
+            ? 'Stok 10+ tersedia'
+            : 'Stok terbatas · $stockToShow tersedia';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -27,11 +32,11 @@ class VariantPicker extends StatelessWidget {
           children: [
             Text('Pilih Varian', style: AppTextStyles.h3),
             Text(
-              isLimited ? 'Stok terbatas · $stockToShow tersedia' : 'Stok: $stockToShow tersedia',
-              style: const TextStyle(
+              stockLabel,
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFFC27803), // Kuning-amber / terracotta lembut sesuai desain
+                color: isLimited ? const Color(0xFFC27803) : AppColors.muted,
               ),
             ),
           ],

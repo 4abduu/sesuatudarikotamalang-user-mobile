@@ -110,6 +110,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   RatingStars(value: product.rating, size: 14, showValue: true),
                   const SizedBox(width: 8),
                   Text('${product.soldCount} terjual', style: AppTextStyles.caption),
+                  const SizedBox(width: 8),
+                  Text('•', style: AppTextStyles.caption),
+                  const SizedBox(width: 8),
+                  Text(
+                    product.totalStock <= 0
+                        ? 'Stok habis'
+                        : product.totalStock > 10
+                            ? 'Stok 10+'
+                            : 'Sisa ${product.totalStock}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: product.totalStock <= 10 ? const Color(0xFFC27803) : AppColors.muted,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
