@@ -107,7 +107,13 @@ class OrdersProvider extends ChangeNotifier {
   Future<Map<String, dynamic>?> payAgain(String id) async {
     final res = await ApiClient.post('/orders/$id/pay');
     if (res != null && res['snap'] != null) {
-      return res['snap'] as Map<String, dynamic>;
+      final snapData = res['snap'] as Map<String, dynamic>;
+      final idx = _orders.indexWhere((o) => o.id == id);
+      if (idx != -1) {
+        _orders[idx] = _orders[idx].copyWith(snap: snapData);
+        notifyListeners();
+      }
+      return snapData;
     }
     return null;
   }

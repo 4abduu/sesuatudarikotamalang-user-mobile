@@ -16,8 +16,8 @@ import '../providers/reservation_flow_provider.dart';
 import '../widgets/step_indicator.dart';
 import '../widgets/date_time_picker_step.dart';
 import '../widgets/payment_method_step.dart';
-import '../widgets/midtrans_mock_sheet.dart';
 import '../widgets/hold_countdown_widget.dart';
+import 'midtrans_webview_screen.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../features/catalog/providers/products_provider.dart';
@@ -131,19 +131,34 @@ class _ReservationBody extends StatelessWidget {
                     p.nextStep();
 
                     if (p.paymentMethod == PaymentMethod.midtrans) {
-                      if (context.mounted) {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (_) => MidtransMockSheet(
-                            amount: p.product.price,
-                            onPaid: () {
-                              Navigator.pop(context);
+                      final redirectUrl = created.snap?['redirect_url'] as String?;
+                      if (redirectUrl != null && redirectUrl.isNotEmpty) {
+                        if (context.mounted) {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => MidtransWebViewScreen(
+                                url: redirectUrl,
+                                orderId: created.id,
+                              ),
+                            ),
+                          );
+
+                          // Polling status order dari webhook backend (maks 60s, cek tiap 3s)
+                          for (int i = 0; i < 15; i++) {
+                            await Future.delayed(const Duration(seconds: 3));
+                            final updated = await orders.getOrderDetail(created.id);
+                            if (updated != null && updated.status == OrderStatus.lunas) {
                               p.setPaid();
-                              orders.setStatus(created.id, OrderStatus.lunas);
-                            },
-                          ),
-                        );
+                              break;
+                            }
+                          }
+                        }
+                      } else {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Pesanan dibuat. Silakan selesaikan pembayaran di detail pesanan.')),
+                          );
+                        }
                       }
                     } else {
                       if (context.mounted) {

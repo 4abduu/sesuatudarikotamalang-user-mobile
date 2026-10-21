@@ -12,7 +12,7 @@ import '../../../features/reservation/widgets/qr_ticket_card.dart';
 import '../../../shared/app_scaffold.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../reservation/widgets/midtrans_mock_sheet.dart';
+import '../../reservation/screens/midtrans_webview_screen.dart';
 import '../../reservation/widgets/hold_countdown_widget.dart';
 
 class OrderDetailScreen extends StatefulWidget {
@@ -80,25 +80,54 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Future<void> _handlePayAgain(OrderModel order) async {
     setState(() => _isProcessingAction = true);
     try {
-      await context.read<OrdersProvider>().payAgain(order.id);
-      if (mounted) {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (_) => MidtransMockSheet(
-            amount: order.total,
-            onPaid: () async {
-              Navigator.pop(context);
-              context.read<OrdersProvider>().setStatus(order.id, OrderStatus.lunas);
-              await _loadOrder();
-            },
+      // 1. Ambil URL pembayaran dari order.snap['redirect_url'] atau request baru jika belum ada
+      String? redirectUrl = order.snap?['redirect_url'] as String?;
+      
+      if (redirectUrl == null || redirectUrl.isEmpty) {
+        final snap = await context.read<OrdersProvider>().payAgain(order.id);
+        redirectUrl = snap?['redirect_url'] as String?;
+      }
+
+      if (redirectUrl == null || redirectUrl.isEmpty) {
+        throw 'Gagal mendapatkan tautan pembayaran.';
+      }
+
+      if (!mounted) return;
+
+      // 2. Buka Midtrans WebView Screen
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => MidtransWebViewScreen(
+            url: redirectUrl!,
+            orderId: order.id,
           ),
+        ),
+      );
+
+      // 3. Polling status order dari backend (setiap 3 detik hingga maks ~30 detik)
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Memeriksa status pembayaran...')),
         );
+        for (int i = 0; i < 10; i++) {
+          await Future.delayed(const Duration(seconds: 3));
+          if (!mounted) break;
+          final updated = await context.read<OrdersProvider>().getOrderDetail(order.id);
+          if (updated != null && updated.status == OrderStatus.lunas) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Pembayaran berhasil dikonfirmasi!')),
+              );
+            }
+            break;
+          }
+        }
+        if (mounted) await _loadOrder();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal meminta token pembayaran: $e')),
+          SnackBar(content: Text('Pembayaran: $e')),
         );
       }
     } finally {
