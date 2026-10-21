@@ -105,17 +105,28 @@ class OrdersProvider extends ChangeNotifier {
 
   /// Bayar ulang order Midtrans yang menunggu bayar (POST /api/orders/:id/pay)
   Future<Map<String, dynamic>?> payAgain(String id) async {
-    final res = await ApiClient.post('/orders/$id/pay');
-    if (res != null && res['snap'] != null) {
-      final snapData = res['snap'] as Map<String, dynamic>;
-      final idx = _orders.indexWhere((o) => o.id == id);
-      if (idx != -1) {
-        _orders[idx] = _orders[idx].copyWith(snap: snapData);
-        notifyListeners();
+    try {
+      final res = await ApiClient.post('/orders/$id/pay');
+      if (res != null && res['snap'] != null) {
+        final snapData = res['snap'] as Map<String, dynamic>;
+        final idx = _orders.indexWhere((o) => o.id == id);
+        if (idx != -1) {
+          _orders[idx] = _orders[idx].copyWith(snap: snapData);
+          notifyListeners();
+        }
+        return snapData;
       }
-      return snapData;
+      return null;
+    } on ApiException catch (e) {
+      // 409 PAYMENT_ALREADY_CREATED: Pembayaran sudah dibuat sebelumnya di Midtrans
+      if (e.status == 409 || e.code == 'PAYMENT_ALREADY_CREATED') {
+        final idx = _orders.indexWhere((o) => o.id == id);
+        if (idx != -1 && _orders[idx].snap != null) {
+          return _orders[idx].snap;
+        }
+      }
+      rethrow;
     }
-    return null;
   }
 
   void addOrder(OrderModel order) {

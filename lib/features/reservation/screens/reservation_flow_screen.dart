@@ -131,8 +131,19 @@ class _ReservationBody extends StatelessWidget {
                     p.nextStep();
 
                     if (p.paymentMethod == PaymentMethod.midtrans) {
+                      final snapError = created.snap?['error'] as String?;
                       final redirectUrl = created.snap?['redirect_url'] as String?;
-                      if (redirectUrl != null && redirectUrl.isNotEmpty) {
+
+                      if (snapError != null && snapError.isNotEmpty) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Sistem pembayaran Midtrans sedang sibuk. Silakan coba bayar ulang nanti di menu Pesanan.'),
+                              duration: Duration(seconds: 4),
+                            ),
+                          );
+                        }
+                      } else if (redirectUrl != null && redirectUrl.isNotEmpty) {
                         if (context.mounted) {
                           await Navigator.of(context).push(
                             MaterialPageRoute(
