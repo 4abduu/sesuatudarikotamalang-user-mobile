@@ -134,13 +134,19 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Logout (hapus token dan user)
+  /// Logout (panggil POST /api/auth/logout lalu hapus token dan user)
   Future<void> logout() async {
-    _user = null;
-    await ApiClient.removeToken();
-    final sp = await SharedPreferences.getInstance();
-    await sp.remove(_key);
-    notifyListeners();
+    try {
+      await ApiClient.post('/auth/logout');
+    } catch (_) {
+      // Tetap lanjutkan pembersihan sesi lokal meski koneksi offline / gagal
+    } finally {
+      _user = null;
+      await ApiClient.removeToken();
+      final sp = await SharedPreferences.getInstance();
+      await sp.remove(_key);
+      notifyListeners();
+    }
   }
 
   /// Update Profile (PUT /api/auth/profile)
