@@ -11,6 +11,8 @@ import '../../../data/models/order_model.dart';
 import '../../../features/reservation/widgets/qr_ticket_card.dart';
 import '../../../shared/app_scaffold.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+import '../../catalog/providers/products_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../reservation/screens/midtrans_webview_screen.dart';
 import '../../reservation/widgets/hold_countdown_widget.dart';
@@ -264,6 +266,45 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           icon: const Icon(Icons.cancel_outlined, size: 16, color: AppColors.destructive),
                           label: const Text('Batalkan Reservasi', style: TextStyle(color: AppColors.destructive)),
                           onPressed: _isProcessingAction ? null : () => _handleCancel(o),
+                        ),
+                      ),
+                    ],
+
+                    if (status == OrderStatus.lunas) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Pesanan sudah dibayar. Pembatalan mandiri tidak dapat dilakukan.',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.foreground),
+                            ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                icon: const Icon(Icons.chat_outlined, size: 16, color: AppColors.primary),
+                                label: const Text('Butuh Bantuan? Hubungi Admin via WhatsApp'),
+                                onPressed: () {
+                                  final waNumber = context.read<ProductsProvider>().whatsappAdminNumber;
+                                  final msg = Uri.encodeComponent(
+                                    'Halo Admin Sesuatu DariKota Malang, saya butuh bantuan untuk pesanan ${o.orderNumber} (${o.productName}).',
+                                  );
+                                  launchUrl(
+                                    Uri.parse('https://wa.me/$waNumber?text=$msg'),
+                                    mode: LaunchMode.externalApplication,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
