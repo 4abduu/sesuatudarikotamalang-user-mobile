@@ -1,14 +1,15 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/primary_button.dart';
-import '../../../core/widgets/secondary_button.dart';
 import '../../../data/models/product_model.dart';
 import '../../../data/models/variant_option_model.dart';
+import '../../../features/auth/widgets/auth_field.dart';
 import '../../../shared/app_scaffold.dart';
 import '../widgets/variant_builder.dart';
 
@@ -152,8 +153,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   Widget build(BuildContext context) {
     return AppScaffold(
       title: _isEdit ? 'Edit Produk' : 'Tambah Produk',
+      showBottomNav: false,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -161,46 +163,37 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             const SizedBox(height: 16),
             _PhotoUploader(path: _photoPath, onPick: _pickPhoto),
             const SizedBox(height: 16),
-            TextField(
-              controller: _nama,
-              decoration: const InputDecoration(labelText: 'Nama Produk', prefixIcon: Icon(Icons.edit_outlined)),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _deskripsi,
-              maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: 'Deskripsi',
-                alignLabelWithHint: true,
-                prefixIcon: Icon(Icons.description_outlined),
-              ),
-            ),
-            const SizedBox(height: 12),
+            AuthField(controller: _nama, label: 'Nama Produk', icon: Icons.edit_outlined),
+            const SizedBox(height: 16),
+            AuthField(controller: _deskripsi, label: 'Deskripsi', icon: Icons.description_outlined, maxLines: 4),
+            const SizedBox(height: 16),
             Consumer<ProductsProvider>(
               builder: (context, prodProv, _) {
                 final categories = prodProv.categories;
-                return DropdownButtonFormField<String>(
-                  initialValue: _category,
-                  decoration: const InputDecoration(labelText: 'Kategori', prefixIcon: Icon(Icons.category_outlined)),
-                  items: categories
-                      .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _category = v),
-                );
+                return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Kategori', style: AppTextStyles.label),
+                  const SizedBox(height: 4),
+                  DropdownButtonFormField<String>(
+                    initialValue: _category,
+                    isDense: true,
+                    isExpanded: true,
+                    style: GoogleFonts.poppins(fontSize: 14, color: AppColors.foreground),
+                    dropdownColor: AppColors.surface,
+                    icon: const Padding(padding: EdgeInsets.only(right: 4), child: Icon(Icons.keyboard_arrow_down, size: 12, color: AppColors.muted)),
+                    decoration: authInputDecoration(icon: Icons.category_outlined),
+                    items: categories
+                        .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
+                        .toList(),
+                    onChanged: (v) => setState(() => _category = v),
+                  ),
+                ]);
               },
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _harga,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Harga (Rp)',
-                prefixIcon: Icon(Icons.payments_outlined),
-              ),
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
+            AuthField(controller: _harga, label: 'Harga (Rp)', icon: Icons.payments_outlined, keyboardType: TextInputType.number),
+            const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(12),
@@ -211,11 +204,15 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 onChanged: (v) => setState(() => _limited = v),
                 title: const Text('Limited Edition', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                 subtitle: const Text('Tandai sebagai edisi terbatas', style: TextStyle(fontSize: 12, color: AppColors.muted)),
-                activeThumbColor: AppColors.primary,
+                activeThumbColor: AppColors.onPrimary,
+                activeTrackColor: AppColors.primary,
+                inactiveThumbColor: AppColors.onPrimary,
+                inactiveTrackColor: AppColors.border,
+                trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
                 contentPadding: EdgeInsets.zero,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             VariantBuilder(
               options: _opts,
               stocks: _stocks,
@@ -226,24 +223,31 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 });
               },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             PrimaryButton(
               label: _isSaving
                   ? 'Menyimpan...'
                   : (_isEdit ? 'Simpan Perubahan' : 'Tambah Produk'),
               onPressed: _isSaving ? null : _save,
-              icon: const Icon(Icons.save_outlined, size: 18),
+              icon: const Icon(Icons.check, size: 16),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: SecondaryButton(
-                label: 'Batal',
+              child: OutlinedButton.icon(
                 onPressed: () => context.pop(),
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: AppColors.surface,
+                  foregroundColor: AppColors.primary,
+                  side: const BorderSide(color: AppColors.primary, width: 1.5),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                  textStyle: GoogleFonts.baloo2(fontSize: 14, fontWeight: FontWeight.w700),
+                ),
                 icon: const Icon(Icons.close, size: 16),
+                label: const Text('Batal'),
               ),
             ),
-            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -274,9 +278,9 @@ class _PhotoUploader extends StatelessWidget {
         ),
         child: path == null
             ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                const Icon(Icons.add_a_photo_outlined, size: 36, color: AppColors.muted),
+                const Icon(Icons.photo_camera_outlined, size: 36, color: AppColors.muted),
                 const SizedBox(height: 8),
-                Text('Unggah foto produk', style: AppTextStyles.label),
+                Text('Unggah foto produk', style: GoogleFonts.baloo2(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.foreground)),
                 Text('JPG/PNG · rasio 1:1 disarankan', style: AppTextStyles.caption),
               ])
             : null,

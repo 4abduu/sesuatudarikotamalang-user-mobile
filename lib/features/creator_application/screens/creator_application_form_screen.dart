@@ -4,15 +4,15 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_shadows.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/widgets/primary_button.dart';
-import '../../../features/auth/providers/auth_provider.dart';
-import '../../../features/auth/widgets/auth_gate_bottom_sheet.dart';
-import '../../../features/account/providers/applications_provider.dart';
-import '../../../features/catalog/providers/products_provider.dart';
-import '../../../shared/app_scaffold.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/primary_button.dart';
+import '../../../../features/auth/providers/auth_provider.dart';
+import '../../../../features/auth/widgets/auth_field.dart';
+import '../../../../features/auth/widgets/auth_gate_bottom_sheet.dart';
+import '../../../../features/account/providers/applications_provider.dart';
+import '../../../../features/catalog/providers/products_provider.dart';
+import '../../../../shared/app_scaffold.dart';
 
 class CreatorApplicationFormScreen extends StatefulWidget {
   const CreatorApplicationFormScreen({super.key});
@@ -81,8 +81,9 @@ class _CreatorApplicationFormScreenState extends State<CreatorApplicationFormScr
     final isCreator = auth.isCreator;
     return AppScaffold(
       title: 'Jadi Kreator',
+      showBottomNav: false,
       body: Stack(children: [
-        Opacity(opacity: isGuest ? 0.4 : 1.0, child: AbsorbPointer(absorbing: isGuest, child: SingleChildScrollView(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Opacity(opacity: isGuest ? 0.4 : 1.0, child: AbsorbPointer(absorbing: isGuest, child: SingleChildScrollView(padding: const EdgeInsets.fromLTRB(16, 16, 16, 24), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           if (isCreator) ...[
             Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
               const Icon(Icons.check_circle, size: 48, color: AppColors.moss),
@@ -95,31 +96,37 @@ class _CreatorApplicationFormScreenState extends State<CreatorApplicationFormScr
             Text('Daftar Konsinyasi Karyamu', style: AppTextStyles.h1),
             const SizedBox(height: 4),
             Text('Konsinyasikan karyamu di toko fisik Kayutangan.', style: AppTextStyles.bodyMuted),
-            const SizedBox(height: 24),
-            _Field(controller: _nama, label: 'Nama Lengkap', icon: Icons.person),
             const SizedBox(height: 12),
-            _Field(controller: _wa, label: 'Kontak / WhatsApp', icon: Icons.phone),
+            AuthField(controller: _nama, label: 'Nama Lengkap', icon: Icons.person_outline),
             const SizedBox(height: 12),
-            _Field(controller: _brand, label: 'Nama Brand / Karya', icon: Icons.store),
+            AuthField(controller: _wa, label: 'Kontak / WhatsApp', icon: Icons.phone_outlined),
+            const SizedBox(height: 12),
+            AuthField(controller: _brand, label: 'Nama Brand / Karya', icon: Icons.storefront_outlined),
             const SizedBox(height: 12),
             Builder(
               builder: (ctx) {
                 final cats = ctx.watch<ProductsProvider>().categories;
-                return DropdownButtonFormField<String>(
-                  initialValue: _category,
-                  decoration: const InputDecoration(
-                    labelText: 'Kategori Utama',
-                    prefixIcon: Icon(Icons.category),
+                return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Kategori Utama', style: AppTextStyles.label),
+                  const SizedBox(height: 4),
+                  DropdownButtonFormField<String>(
+                    initialValue: _category,
+                    isDense: true,
+                    isExpanded: true,
+                    style: GoogleFonts.poppins(fontSize: 14, color: AppColors.foreground),
+                    dropdownColor: AppColors.surface,
+                    icon: const Padding(padding: EdgeInsets.only(right: 4), child: Icon(Icons.keyboard_arrow_down, size: 16, color: AppColors.muted)),
+                    decoration: authInputDecoration(icon: Icons.category_outlined),
+                    items: cats
+                        .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
+                        .toList(),
+                    onChanged: (v) => setState(() => _category = v),
                   ),
-                  items: cats
-                      .map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _category = v),
-                );
+                ]);
               },
             ),
             const SizedBox(height: 12),
-            TextField(controller: _desc, maxLines: 4, decoration: const InputDecoration(labelText: 'Deskripsi Produk / Karya', alignLabelWithHint: true)),
+            AuthField(controller: _desc, label: 'Deskripsi Produk / Karya', maxLines: 4),
             const SizedBox(height: 12),
             _PhotoDropzone(),
             const SizedBox(height: 24),
@@ -143,15 +150,6 @@ class _CreatorApplicationFormScreenState extends State<CreatorApplicationFormScr
   }
 }
 
-class _Field extends StatelessWidget {
-  final TextEditingController controller;
-  final String label;
-  final IconData icon;
-  const _Field({required this.controller, required this.label, required this.icon});
-  @override
-  Widget build(BuildContext context) => TextField(controller: controller, decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)));
-}
-
 class _PhotoDropzone extends StatefulWidget {
   @override
   State<_PhotoDropzone> createState() => _PhotoDropzoneState();
@@ -171,14 +169,15 @@ class _PhotoDropzoneState extends State<_PhotoDropzone> {
     final hasPhoto = _photoPath != null;
     return GestureDetector(
       onTap: _pick,
-      child: Container(
+      child: CustomPaint(
+        // Border putus-putus 2px (border-dashed TSX), tanpa shadow.
+        foregroundPainter: const _DashedBorderPainter(color: AppColors.border, radius: 12, strokeWidth: 2),
+        child: Container(
         width: double.infinity,
         height: 140,
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border, style: BorderStyle.solid, width: 2),
           borderRadius: BorderRadius.circular(12),
           color: AppColors.surface,
-          boxShadow: AppShadows.soft,
           image: hasPhoto ? DecorationImage(image: FileImage(File(_photoPath!)), fit: BoxFit.cover) : null,
         ),
         child: hasPhoto
@@ -197,12 +196,41 @@ class _PhotoDropzoneState extends State<_PhotoDropzone> {
               ),
             ])
           : Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              const Icon(Icons.upload_file, size: 32, color: AppColors.muted),
+              const Icon(Icons.upload_outlined, size: 32, color: AppColors.muted),
               const SizedBox(height: 4),
               Text('Klik untuk unggah foto sampel', style: GoogleFonts.poppins(fontSize: 13, color: AppColors.muted)),
               Text('JPG/PNG · visual saja', style: GoogleFonts.poppins(fontSize: 11, color: AppColors.muted)),
             ]),
       ),
+      ),
     );
   }
+}
+
+class _DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double radius;
+  final double strokeWidth;
+  const _DashedBorderPainter({required this.color, required this.radius, required this.strokeWidth});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+    final rect = Rect.fromLTWH(strokeWidth / 2, strokeWidth / 2, size.width - strokeWidth, size.height - strokeWidth);
+    final path = Path()..addRRect(RRect.fromRectAndRadius(rect, Radius.circular(radius)));
+    const dash = 6.0, gap = 4.0;
+    for (final metric in path.computeMetrics()) {
+      double d = 0;
+      while (d < metric.length) {
+        canvas.drawPath(metric.extractPath(d, d + dash), paint);
+        d += dash + gap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedBorderPainter old) => old.color != color || old.radius != radius || old.strokeWidth != strokeWidth;
 }

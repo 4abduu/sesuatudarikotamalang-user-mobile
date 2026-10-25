@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/app_search_decoration.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/product_card.dart';
 import '../../../features/creators/widgets/creator_card.dart';
@@ -45,8 +46,9 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
 
     return AppScaffold(
       title: 'Pencarian',
+      showBottomNav: false,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -55,7 +57,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               onChanged: _onQueryChanged,
               onClear: _clear,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             if (searchProvider.isLoading)
               const Center(
                 child: Padding(
@@ -83,7 +85,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 const SizedBox(height: 16),
               ],
               if (products.isNotEmpty) ...[
-                _SectionHeader(title: 'Produk & Karya', count: products.length),
+                _SectionHeader(title: 'Produk', count: products.length),
                 const SizedBox(height: 8),
                 GridView.builder(
                   shrinkWrap: true,
@@ -126,18 +128,23 @@ class _SearchBar extends StatelessWidget {
       controller: controller,
       autofocus: true,
       onChanged: onChanged,
-      decoration: InputDecoration(
-        hintText: 'Cari produk, motif, atau nama kreator...',
-        prefixIcon: const Icon(Icons.search),
+      style: appSearchTextStyle.copyWith(fontSize: 14),
+      decoration: appSearchDecoration('Cari produk, motif, atau nama kreator...').copyWith(
         suffixIcon: controller.text.isNotEmpty
-            ? IconButton(
-                tooltip: 'Hapus',
-                icon: const Icon(Icons.close, size: 18),
-                onPressed: onClear,
+            ? Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: GestureDetector(
+                  onTap: onClear,
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+                    child: const Icon(Icons.close, size: 12, color: AppColors.primary),
+                  ),
+                ),
               )
             : null,
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
       ),
     );
   }
@@ -198,12 +205,12 @@ class _SectionHeader extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: AppColors.muted.withValues(alpha: 0.15),
+            color: AppColors.primary.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
             '$count',
-            style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.muted),
+            style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
           ),
         ),
       ],

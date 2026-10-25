@@ -36,11 +36,11 @@ class CreatorDashboardScreen extends StatelessWidget {
         onRefresh: () => dashboard.fetchDashboardData(),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Halo, ${artisan?.name ?? auth.user!.name}!', style: AppTextStyles.h1),
+              Text('Halo, ${artisan?.name ?? auth.user!.name}!', style: AppTextStyles.h1.copyWith(fontSize: 26)),
               Text(artisan?.bio.isNotEmpty == true ? artisan!.bio : (artisan?.name ?? 'Kreator Mitra Kota Malang'), style: AppTextStyles.bodyMuted),
               const SizedBox(height: 16),
               _StatRow(products: products),
@@ -60,7 +60,8 @@ class CreatorDashboardScreen extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               MenuCard(
-                icon: Icons.assignment_outlined,
+                icon: Icons.check_circle_outline,
+                iconColor: AppColors.moss,
                 title: 'Status Pengajuan',
                 subtitle: 'Diterima & Tayang',
                 onTap: () => context.push('/akun/pengajuan'),

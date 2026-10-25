@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 
 /// Tombol "Masuk dengan Google" — putih, full-width, rounded, dengan logo
@@ -41,8 +42,8 @@ class GoogleSignInButton extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                width: 20,
-                height: 20,
+                width: 18,
+                height: 18,
                 child: Image.asset(
                   'assets/images/logos/google.png',
                   errorBuilder: (_, __, ___) => const _GoogleLogo(),
@@ -51,11 +52,10 @@ class GoogleSignInButton extends StatelessWidget {
               const SizedBox(width: 10),
               Text(
                 label,
-                style: const TextStyle(
+                style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppColors.foreground,
-                  fontFamily: 'Poppins',
                 ),
               ),
             ],

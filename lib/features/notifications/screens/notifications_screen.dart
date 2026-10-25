@@ -64,12 +64,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   )
                 : ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                     itemCount: items.length,
                     itemBuilder: (_, i) {
                       final n = items[i];
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.only(bottom: 8),
                         child: _NotificationCard(
                           notification: n,
                           onTap: () => provider.markRead(n.id),
@@ -94,21 +94,21 @@ class _NotificationCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: n.read ? null : Border.all(color: AppColors.primary.withValues(alpha: 0.25), width: 1),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: n.read ? AppColors.border : AppColors.primary.withValues(alpha: 0.25)),
             boxShadow: AppShadows.soft,
           ),
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Container(
               width: 36,
               height: 36,
-              decoration: BoxDecoration(color: _typeColor(n.type).withValues(alpha: 0.12), shape: BoxShape.circle),
-              child: Icon(_typeIcon(n.type), color: _typeColor(n.type), size: 18),
+              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+              child: Icon(_typeIcon(n.type), color: AppColors.primary, size: 16),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -116,11 +116,11 @@ class _NotificationCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(children: [
-                    Expanded(child: Text(n.title, style: AppTextStyles.label.copyWith(fontWeight: n.read ? FontWeight.w500 : FontWeight.w700))),
+                    Expanded(child: Text(n.title, style: GoogleFonts.baloo2(fontSize: 13, height: 1.25, color: AppColors.foreground, fontWeight: n.read ? FontWeight.w500 : FontWeight.w700))),
                     Text(n.date, style: AppTextStyles.caption),
                   ]),
                   const SizedBox(height: 2),
-                  Text(n.body, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.muted), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text(n.body, style: GoogleFonts.poppins(fontSize: 12, height: 1.375, color: AppColors.muted), maxLines: 2, overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
@@ -141,33 +141,14 @@ class _NotificationCard extends StatelessWidget {
         return Icons.shopping_bag_outlined;
       case NotificationType.review:
       case NotificationType.ulasanBaru:
-        return Icons.star_outline;
+        return Icons.star;
       case NotificationType.creator:
       case NotificationType.pengajuanDiterima:
       case NotificationType.pengajuanDitolak:
-        return Icons.palette_outlined;
+        return Icons.schedule;
       case NotificationType.system:
       case NotificationType.umum:
-        return Icons.notifications_outlined;
-    }
-  }
-
-  Color _typeColor(NotificationType t) {
-    switch (t) {
-      case NotificationType.order:
-      case NotificationType.pesananUpdate:
-        return AppColors.primary;
-      case NotificationType.review:
-      case NotificationType.ulasanBaru:
-        return AppColors.mustard;
-      case NotificationType.creator:
-      case NotificationType.pengajuanDiterima:
-        return AppColors.moss;
-      case NotificationType.pengajuanDitolak:
-        return AppColors.destructive;
-      case NotificationType.system:
-      case NotificationType.umum:
-        return AppColors.muted;
+        return Icons.notifications_none;
     }
   }
 }

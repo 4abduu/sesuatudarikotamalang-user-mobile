@@ -4,7 +4,11 @@ import 'package:provider/provider.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/widgets/primary_button.dart';
+import '../../../shared/app_scaffold.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/auth_field.dart';
 import '../widgets/google_sign_in_button.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -125,115 +129,104 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.asset(
-                  'assets/images/logos/logo_sesuatu.jpg',
-                  width: 52,
-                  height: 52,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(16),
+    return AppScaffold(
+      showBottomNav: false,
+      body: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 48, 24, 32),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - 80),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: AppShadows.sticker,
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/logos/logo_sesuatu.jpg',
+                      fit: BoxFit.cover,
                     ),
-                    child: const Icon(Icons.brush, color: AppColors.onPrimary, size: 26),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text('Masuk ke akunmu', style: AppTextStyles.h1),
-              const SizedBox(height: 4),
-              Text('Senang melihatmu lagi di Kayutangan.',
-                  style: AppTextStyles.bodyMuted),
-              const SizedBox(height: 24),
-              TextField(
-                controller: _email,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.email_outlined),
+                const SizedBox(height: 16),
+                Text('Masuk ke akunmu', style: AppTextStyles.h1),
+                const SizedBox(height: 4),
+                Text('Senang melihatmu lagi di Kayutangan.',
+                    style: AppTextStyles.bodyMuted),
+                const SizedBox(height: 24),
+                AuthField(
+                  label: 'Email',
+                  controller: _email,
+                  icon: Icons.mail_outline,
+                  keyboardType: TextInputType.emailAddress,
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _pw,
-                obscureText: !_showPw,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon:
-                        Icon(_showPw ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () => setState(() => _showPw = !_showPw),
+                const SizedBox(height: 12),
+                AuthField(
+                  label: 'Password',
+                  controller: _pw,
+                  icon: Icons.lock_outline,
+                  obscureText: !_showPw,
+                  suffix: AuthEyeToggle(
+                    visible: _showPw,
+                    onTap: () => setState(() => _showPw = !_showPw),
                   ),
                 ),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => context.push('/lupa-password'),
-                  child: const Text('Lupa password?',
-                      style: TextStyle(fontSize: 12)),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => context.push('/lupa-password'),
+                    child: Text('Lupa password?',
+                        style: AppTextStyles.caption.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.foreground)),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Text('Masuk'),
+                const SizedBox(height: 8),
+                PrimaryButton(
+                  label: 'Masuk',
+                  loading: _isLoading,
+                  onPressed: _login,
                 ),
-              ),
-              const SizedBox(height: 16),
-              // ===== Masuk dengan Google =====
-              GoogleSignInButton(
-                onTap: _isLoading ? null : _loginWithGoogle,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Belum punya akun? ', style: AppTextStyles.bodyMuted),
-                  GestureDetector(
-                    onTap: () => context.push('/register'),
-                    child: const Text(
-                      'Daftar di sini',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
+                const SizedBox(height: 16),
+                // ===== Masuk dengan Google =====
+                GoogleSignInButton(
+                  onTap: _isLoading ? null : _loginWithGoogle,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Belum punya akun? ', style: AppTextStyles.bodyMuted),
+                    GestureDetector(
+                      onTap: () => context.push('/register'),
+                      child: const Text(
+                        'Daftar di sini',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              GestureDetector(
-                onTap: () => context.go('/'),
-                child: const Text(
-                  'Lanjut sebagai tamu',
-                  style: TextStyle(fontSize: 12, color: AppColors.muted),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: () => context.go('/'),
+                  child: const Text(
+                    'Lanjut sebagai tamu',
+                    style: TextStyle(fontSize: 12, color: AppColors.muted),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

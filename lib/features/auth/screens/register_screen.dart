@@ -5,7 +5,10 @@ import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/password_validator.dart';
+import '../../../core/widgets/primary_button.dart';
+import '../../../shared/app_scaffold.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/auth_field.dart';
 import '../widgets/password_criteria_checklist.dart';
 import '../widgets/google_sign_in_button.dart';
 
@@ -104,121 +107,108 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.asset(
-                  'assets/images/logos/logo_sesuatu.jpg',
-                  width: 52,
-                  height: 52,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
+    return AppScaffold(
+      showBottomNav: false,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 72,
+                height: 72,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 12,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/logos/logo_sesuatu.jpg',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text('Buat akun baru', style: AppTextStyles.h1),
+            const SizedBox(height: 4),
+            Text(
+              'Jadilah bagian dari komunitas artisan Kayutangan.',
+              style: AppTextStyles.bodyMuted,
+            ),
+            const SizedBox(height: 24),
+            AuthField(
+              label: 'Nama lengkap',
+              controller: _nama,
+              icon: Icons.person_outline,
+            ),
+            const SizedBox(height: 12),
+            AuthField(
+              label: 'Email',
+              controller: _email,
+              icon: Icons.mail_outline,
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 12),
+            AuthField(
+              label: 'Password',
+              controller: _pw,
+              icon: Icons.lock_outline,
+              obscureText: !_showPw,
+              onChanged: (_) => setState(() {}),
+              suffix: AuthEyeToggle(
+                visible: _showPw,
+                onTap: () => setState(() => _showPw = !_showPw),
+              ),
+            ),
+            const SizedBox(height: 12),
+            PasswordCriteriaChecklist(password: _pw.text, boxed: true),
+            const SizedBox(height: 12),
+            AuthField(
+              label: 'Konfirmasi password',
+              controller: _confirm,
+              icon: Icons.lock_outline,
+              obscureText: !_showPw,
+              suffix: AuthEyeToggle(
+                visible: _showPw,
+                onTap: () => setState(() => _showPw = !_showPw),
+              ),
+            ),
+            const SizedBox(height: 24),
+            PrimaryButton(
+              label: 'Daftar',
+              loading: _isLoading,
+              onPressed: _submit,
+            ),
+            const SizedBox(height: 16),
+            GoogleSignInButton(
+                label: 'Daftar dengan Google', onTap: _googleSignUp),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Sudah punya akun? ', style: AppTextStyles.bodyMuted),
+                GestureDetector(
+                  onTap: () => context.push('/login'),
+                  child: const Text(
+                    'Masuk',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(Icons.brush, color: AppColors.onPrimary, size: 26),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text('Buat akun baru', style: AppTextStyles.h1),
-              const SizedBox(height: 4),
-              Text(
-                'Jadilah bagian dari komunitas artisan Kayutangan.',
-                style: AppTextStyles.bodyMuted,
-              ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: _nama,
-                decoration: const InputDecoration(
-                  labelText: 'Nama lengkap',
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _email,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.email_outlined),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _pw,
-                obscureText: !_showPw,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon:
-                        Icon(_showPw ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () => setState(() => _showPw = !_showPw),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              PasswordCriteriaChecklist(password: _pw.text),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _confirm,
-                obscureText: !_showPw,
-                decoration: const InputDecoration(
-                  labelText: 'Konfirmasi password',
-                  prefixIcon: Icon(Icons.lock_outline),
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _submit,
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Text('Daftar'),
-                ),
-              ),
-              const SizedBox(height: 16),
-              GoogleSignInButton(
-                  label: 'Daftar dengan Google', onTap: _googleSignUp),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Sudah punya akun? ', style: AppTextStyles.bodyMuted),
-                  GestureDetector(
-                    onTap: () => context.push('/login'),
-                    child: const Text(
-                      'Masuk',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
                     ),
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
