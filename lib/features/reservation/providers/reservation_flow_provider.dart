@@ -8,13 +8,16 @@ enum ReservationStep { schedule, payment, result }
 enum PaymentMethod { midtrans, cod }
 
 /// Satu slot pickup dari GET /api/slots?date=YYYY-MM-DD.
-/// Backend adalah sumber kebenaran: [isPast] dan [bookable] dihitung di server (WIB).
+/// Backend adalah sumber kebenaran: [isPast], [isClosed], dan [bookable] dihitung di server (WIB).
+/// [isPast]: jam mulai sudah lewat. [isClosed]: pemesanan sudah ditutup (jam mulai lewat ATAU sudah
+/// masuk jeda minimal sebelum jam mulai, default 30 menit).
 class PickupSlot {
   final String time;
   final int capacity;
   final int booked;
   final int available;
   final bool isPast;
+  final bool isClosed;
   final bool bookable;
 
   const PickupSlot({
@@ -23,16 +26,23 @@ class PickupSlot {
     required this.booked,
     required this.available,
     required this.isPast,
+    required this.isClosed,
     required this.bookable,
   });
 
-  factory PickupSlot.fromJson(Map<String, dynamic> j, {DateTime? selectedDate}) {
+  factory PickupSlot.fromJson(
+    Map<String, dynamic> j, {
+    DateTime? selectedDate,
+    int leadMinutes = 30,
+  }) {
     final available = (j['available'] as num?)?.toInt() ?? 0;
     final timeStr = (j['time'] ?? '').toString();
-    
-    // Hitung isPast: jika backend mengirim boolean, pakai itu.
-    // Jika backend tidak mengirim field `isPast`, hitung di client (WIB).
+
+    // Normalnya status slot datang dari backend (`isPast`, `isClosed`, `bookable`).
+    // Blok fallback di bawah HANYA dipakai bila server belum mengirim `isPast` (backend lama) dan
+    // boleh dihapus setelah backend baru ter-deploy: jam perangkat bukan sumber kebenaran.
     bool isPast = j['isPast'] == true;
+    bool isClosed = j['isClosed'] is bool ? j['isClosed'] as bool : isPast;
     if (j['isPast'] == null && selectedDate != null && timeStr.isNotEmpty) {
       final nowWib = DateTime.now().toUtc().add(const Duration(hours: 7));
       final dateWib = selectedDate.toUtc().add(const Duration(hours: 7));
@@ -47,9 +57,14 @@ class PickupSlot {
           if (slotMinutes <= nowMinutes) {
             isPast = true;
           }
+          // Sudah masuk jeda minimal sebelum jam mulai: pemesanan ditutup.
+          if (slotMinutes - leadMinutes <= nowMinutes) {
+            isClosed = true;
+          }
         }
       }
     }
+    if (isPast) isClosed = true; // lewat selalu berarti ditutup
 
     return PickupSlot(
       time: timeStr,
@@ -57,7 +72,9 @@ class PickupSlot {
       booked: (j['booked'] as num?)?.toInt() ?? 0,
       available: available,
       isPast: isPast,
-      bookable: j['bookable'] is bool ? j['bookable'] as bool : (!isPast && available > 0),
+      isClosed: isClosed,
+      // Pakai field backend; fallback bila server lama belum mengirim `bookable`.
+      bookable: j['bookable'] is bool ? j['bookable'] as bool : (!isClosed && available > 0),
     );
   }
 }
@@ -77,6 +94,7 @@ class ReservationFlowProvider extends ChangeNotifier {
   OrderModel? _createdOrder;
 
   List<PickupSlot> _slots = const [];
+  int _leadMinutes = 30; // diperbarui dari respons GET /slots (leadMinutes)
   bool _slotsLoading = false;
   String? _slotsError;
   int _slotsRequestId = 0;
@@ -99,6 +117,8 @@ class ReservationFlowProvider extends ChangeNotifier {
   OrderModel? get createdOrder => _createdOrder;
 
   List<PickupSlot> get slots => _slots;
+  /// Jeda minimal (menit) sebelum jam slot ketika pemesanan ditutup; dari backend.
+  int get leadMinutes => _leadMinutes;
   bool get slotsLoading => _slotsLoading;
   String? get slotsError => _slotsError;
 
@@ -143,7 +163,13 @@ class ReservationFlowProvider extends ChangeNotifier {
       final res = await ApiClient.get('/slots', queryParameters: {'date': dateToApi(date)});
       if (requestId != _slotsRequestId) return; // respons usang (tanggal sudah berganti)
       final list = (res is Map && res['slots'] is List) ? res['slots'] as List : <dynamic>[];
-      _slots = list.whereType<Map>().map((e) => PickupSlot.fromJson(Map<String, dynamic>.from(e), selectedDate: date)).toList();
+      if (res is Map && res['leadMinutes'] is num) {
+        _leadMinutes = (res['leadMinutes'] as num).toInt();
+      }
+      _slots = list
+          .whereType<Map>()
+          .map((e) => PickupSlot.fromJson(Map<String, dynamic>.from(e), selectedDate: date, leadMinutes: _leadMinutes))
+          .toList();
       // Slot terpilih yang sekarang tidak bisa dipesan harus dilepas.
       if (_selectedSlot != null && !(_selectedSlotInfo?.bookable ?? false)) {
         _selectedSlot = null;

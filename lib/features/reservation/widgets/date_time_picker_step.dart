@@ -30,7 +30,7 @@ class DateTimePickerStep extends StatelessWidget {
       Text('Pilih Tanggal Ambil', style: AppTextStyles.h3),
       const SizedBox(height: 4),
       Text(
-        'Toko buka setiap hari, termasuk Minggu. Ambil hari ini selama slotnya belum lewat, atau pilih sampai ${ReservationFlowProvider.maxAdvanceDays} hari ke depan.',
+        'Toko buka setiap hari, termasuk Minggu. Ambil hari ini selama slotnya belum ditutup, atau pilih sampai ${ReservationFlowProvider.maxAdvanceDays} hari ke depan.',
         style: AppTextStyles.caption,
       ),
       const SizedBox(height: 8),
@@ -83,7 +83,9 @@ class _SlotSection extends StatelessWidget {
         children: provider.slots.map((s) {
           final active = provider.selectedSlot == s.time;
           final disabled = !s.bookable;
-          final label = s.isPast ? '${s.time} (Lewat)' : (s.available <= 0 ? '${s.time} (Penuh)' : s.time);
+          final label = s.isPast
+              ? '${s.time} (Lewat)'
+              : (s.isClosed ? '${s.time} (Ditutup)' : (s.available <= 0 ? '${s.time} (Penuh)' : s.time));
           return GestureDetector(
             onTap: disabled ? null : () => provider.setSlot(s.time),
             child: Container(
@@ -106,6 +108,13 @@ class _SlotSection extends StatelessWidget {
           );
         }).toList(),
       ),
+      if (provider.leadMinutes > 0) ...[
+        const SizedBox(height: 8),
+        Text(
+          'Pemesanan slot ditutup ${provider.leadMinutes} menit sebelum jam pickup.',
+          style: AppTextStyles.caption,
+        ),
+      ],
     ]);
   }
 }
