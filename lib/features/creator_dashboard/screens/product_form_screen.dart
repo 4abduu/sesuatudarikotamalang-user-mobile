@@ -28,6 +28,7 @@ import '../widgets/variant_builder.dart';
 /// from the matching product in [dummyProducts]. Save shows a SnackBar
 /// and pops the screen.
 import 'package:provider/provider.dart';
+import '../../../core/network/api_client.dart';
 import '../../../features/catalog/providers/products_provider.dart';
 import '../providers/creator_dashboard_provider.dart';
 
@@ -113,6 +114,57 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     setState(() => _isSaving = true);
     try {
       final dashboard = context.read<CreatorDashboardProvider>();
+
+      // 1. Unggah foto produk jika ada foto lokal baru yang dipilih
+      List<String> imageUrls = [];
+      if (_photoPath != null && _photoPath!.isNotEmpty) {
+        if (_photoPath!.startsWith('http://') || _photoPath!.startsWith('https://')) {
+          imageUrls.add(_photoPath!);
+        } else {
+          try {
+            final uploadRes = await ApiClient.uploadMultipart(
+              path: '/upload/single',
+              fileField: 'file',
+              filePath: _photoPath!,
+            );
+            if (uploadRes != null && uploadRes['url'] != null) {
+              imageUrls.add(uploadRes['url'] as String);
+            }
+          } catch (uploadErr) {
+            // Jika upload gagal, tetap lanjut atau beri info
+            debugPrint('Upload gambar gagal: $uploadErr');
+          }
+        }
+      }
+
+      // 2. Siapkan opsi varian & kombinasi stok
+      List<Map<String, dynamic>>? variantOptionsPayload;
+      List<Map<String, dynamic>>? variantStocksPayload;
+
+      final validOpts = _opts.where((o) => o.name.trim().isNotEmpty && o.values.isNotEmpty).toList();
+      if (validOpts.isNotEmpty) {
+        variantOptionsPayload = validOpts.map((o) => {
+          'name': o.name.trim(),
+          'values': o.values,
+        }).toList();
+
+        // Buat kombinasi Cartesian dari opsi yang valid
+        var combos = [[]];
+        for (final o in validOpts) {
+          combos = combos.expand((r) => o.values.map((v) => [...r, v])).toList();
+        }
+
+        variantStocksPayload = combos.map((c) {
+          final comboList = c.cast<String>();
+          final key = comboList.join(' / ');
+          final stockVal = _stocks[key] ?? 0;
+          return {
+            'combination': comboList,
+            'stock': stockVal,
+          };
+        }).toList();
+      }
+
       if (_isEdit) {
         await dashboard.updateProduct(
           id: widget.productId,
@@ -120,6 +172,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           categoryId: _category,
           description: _deskripsi.text.trim(),
           price: price,
+          images: imageUrls.isNotEmpty ? imageUrls : null,
           isLimited: _limited,
         );
       } else {
@@ -128,8 +181,11 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           categoryId: _category!,
           price: price,
           description: _deskripsi.text.trim(),
+          images: imageUrls,
           isLimited: _limited,
-          stock: 10,
+          stock: variantStocksPayload != null && variantStocksPayload.isNotEmpty ? null : 10,
+          variantOptions: variantOptionsPayload,
+          variantStocks: variantStocksPayload,
         );
       }
       if (mounted) {

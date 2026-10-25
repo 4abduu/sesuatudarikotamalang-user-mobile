@@ -43,7 +43,10 @@ class CreatorDashboardScreen extends StatelessWidget {
               Text('Halo, ${artisan?.name ?? auth.user!.name}!', style: AppTextStyles.h1.copyWith(fontSize: 26)),
               Text(artisan?.bio.isNotEmpty == true ? artisan!.bio : (artisan?.name ?? 'Kreator Mitra Kota Malang'), style: AppTextStyles.bodyMuted),
               const SizedBox(height: 16),
-              _StatRow(products: products),
+              _StatRow(
+                products: products,
+                rating: artisan?.rating ?? (products.isNotEmpty ? (products.fold<double>(0, (s, p) => s + p.rating) / products.length) : 0.0),
+              ),
               const SizedBox(height: 16),
               MenuCard(
                 icon: Icons.inventory_2_outlined,
@@ -76,13 +79,15 @@ class CreatorDashboardScreen extends StatelessWidget {
 
 class _StatRow extends StatelessWidget {
   final List products;
-  const _StatRow({required this.products});
+  final double rating;
+  const _StatRow({required this.products, required this.rating});
   @override
   Widget build(BuildContext context) {
+    final ratingText = rating > 0 ? rating.toStringAsFixed(1) : '-';
     return Row(children: [
       Expanded(child: StatChipCard(icon: Icons.inventory_2_outlined, label: 'Produk', value: products.length.toString())),
       const SizedBox(width: 8),
-      const Expanded(child: StatChipCard(icon: Icons.star, label: 'Rating', value: '4.9')),
+      Expanded(child: StatChipCard(icon: Icons.star, label: 'Rating', value: ratingText)),
       const SizedBox(width: 8),
       Expanded(child: StatChipCard(icon: Icons.sell_outlined, label: 'Terjual', value: products.fold<int>(0, (sum, product) => sum + (product.soldCount as int)).toString())),
     ]);

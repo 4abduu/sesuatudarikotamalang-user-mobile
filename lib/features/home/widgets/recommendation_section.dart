@@ -12,7 +12,7 @@ class RecommendationSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final products = context.watch<ProductsProvider>().products;
+    final products = context.watch<ProductsProvider>().allProducts;
     final recommended = [...products]..sort((a, b) => b.soldCount.compareTo(a.soldCount));
     final top = recommended.take(4).toList();
 

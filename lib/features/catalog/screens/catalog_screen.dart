@@ -115,10 +115,10 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              if (productsProvider.isLoading && allProducts.isEmpty)
+              if (productsProvider.isLoading)
                 const Center(
                   child: Padding(
-                    padding: EdgeInsets.all(32),
+                    padding: EdgeInsets.all(40),
                     child: CircularProgressIndicator(),
                   ),
                 )

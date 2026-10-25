@@ -5,12 +5,14 @@ import '../../../data/models/category_model.dart';
 
 class ProductsProvider extends ChangeNotifier {
   List<ProductModel> _products = [];
+  List<ProductModel> _allProducts = [];
   List<CategoryModel> _categories = [];
   String _whatsappAdminNumber = '6281234567890';
   bool _isLoading = false;
   String? _errorMessage;
 
   List<ProductModel> get products => _products;
+  List<ProductModel> get allProducts => _allProducts.isNotEmpty ? _allProducts : _products;
   List<CategoryModel> get categories => _categories;
   String get whatsappAdminNumber => _whatsappAdminNumber;
   bool get isLoading => _isLoading;
@@ -80,6 +82,9 @@ class ProductsProvider extends ChangeNotifier {
             .map((e) => ProductModel.fromJson(e as Map<String, dynamic>))
             .toList();
         _products = list;
+        if (categoryId == null || categoryId.isEmpty) {
+          _allProducts = list;
+        }
       }
     } catch (e) {
       _errorMessage = e.toString();
