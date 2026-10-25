@@ -30,7 +30,7 @@ class ProductActionButtons extends StatelessWidget {
     return Column(children: [
       PrimaryButton(
         label: isOutOfStock ? 'Stok Habis' : 'Pesan untuk Pick-up di Toko',
-        icon: isOutOfStock ? null : const Icon(Icons.store, size: 18),
+        icon: isOutOfStock ? null : const Icon(Icons.storefront_outlined, size: 16),
         onPressed: isOutOfStock
             ? null
             : (isOwn
@@ -61,13 +61,13 @@ class ProductActionButtons extends StatelessWidget {
       ),
       const SizedBox(height: 8),
       Row(children: [
-        Expanded(child: SecondaryButton(fullWidth: true, label: 'WhatsApp', icon: const Icon(Icons.chat, size: 16, color: AppColors.moss), onPressed: () {
+        Expanded(child: SecondaryButton(fullWidth: true, compact: true, borderColor: AppColors.moss, label: 'WhatsApp', icon: const Icon(Icons.chat_bubble_outline, size: 16, color: AppColors.moss), onPressed: () {
           final waNumber = context.read<ProductsProvider>().whatsappAdminNumber;
           final text = 'Halo, saya mau tanya stok untuk $productName (varian: ${variantProvider.variantLabel}). Apakah masih tersedia?';
           launchUrl(Uri.parse('https://wa.me/$waNumber?text=${Uri.encodeComponent(text)}'));
         })),
         const SizedBox(width: 8),
-        Expanded(child: SecondaryButton(fullWidth: true, label: 'Shopee', icon: const Icon(Icons.shopping_bag, size: 16, color: AppColors.primary), onPressed: () {
+        Expanded(child: SecondaryButton(fullWidth: true, compact: true, label: 'Shopee', icon: const Icon(Icons.shopping_bag_outlined, size: 16, color: AppColors.primary), onPressed: () {
           launchUrl(Uri.parse('https://shopee.co.id/sesuatu-darikota-malang'));
         })),
       ]),

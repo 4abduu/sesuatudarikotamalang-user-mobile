@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../data/models/product_model.dart';
@@ -7,7 +8,11 @@ import '../providers/variant_selection_provider.dart';
 class VariantPicker extends StatelessWidget {
   final ProductModel product;
   final VariantSelectionProvider provider;
-  const VariantPicker({super.key, required this.product, required this.provider});
+
+  /// Sembunyikan baris judul "Pilih Varian" + label stok (mis. di langkah
+  /// Jadwal reservasi, yang punya kartu varian tanpa judul di TSX).
+  final bool showHeader;
+  const VariantPicker({super.key, required this.product, required this.provider, this.showHeader = true});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +32,7 @@ class VariantPicker extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        if (showHeader) Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('Pilih Varian', style: AppTextStyles.h3),
@@ -36,12 +41,12 @@ class VariantPicker extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: isLimited ? const Color(0xFFC27803) : AppColors.muted,
+                color: isLimited ? AppColors.mustard : AppColors.muted,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        if (showHeader) const SizedBox(height: 12),
         ...product.variantOptions.asMap().entries.map((entry) {
           final i = entry.key;
           final opt = entry.value;
@@ -55,7 +60,7 @@ class VariantPicker extends StatelessWidget {
                   Text(provider.selected[i] ?? 'Pilih dulu', style: AppTextStyles.caption),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -79,7 +84,7 @@ class VariantPicker extends StatelessWidget {
                       ),
                       child: Text(
                         v,
-                        style: TextStyle(
+                        style: GoogleFonts.poppins(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: active
@@ -96,13 +101,9 @@ class VariantPicker extends StatelessWidget {
             ],
           );
         }),
-        const SizedBox(height: 4),
         Text(
           'Varian terpilih: ${provider.variantLabel}',
-          style: const TextStyle(
-            fontSize: 12,
-            color: AppColors.muted,
-          ),
+          style: AppTextStyles.caption,
         ),
       ],
     );

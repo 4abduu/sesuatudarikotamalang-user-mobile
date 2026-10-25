@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_shadows.dart';
 import '../../data/models/product_model.dart';
 import '../../features/catalog/providers/products_provider.dart';
+import 'art_image.dart';
 import 'badge_chip.dart';
 import 'rating_stars.dart';
 import '../utils/currency_formatter.dart';
@@ -20,13 +22,27 @@ class ProductCard extends StatelessWidget {
     final catName = catMatch.isNotEmpty ? catMatch.first.name : '';
     return GestureDetector(
       onTap: onTap,
-      child: Card(
+      // Kartu: radius 20, latar surface, border 1px, bayangan soft (TSX ProductCardMini).
+      child: Container(
         clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border),
+          boxShadow: AppShadows.soft,
+        ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(
             child: Stack(children: [
-              Positioned.fill(child: _ArtPlaceholder(seed: product.id)),
-              if (product.badge != BadgeType.none) Positioned(top: 8, left: 8, child: BadgeChip(badge: product.badge)),
+              Positioned.fill(
+                child: ArtImage(
+                  seed: product.id,
+                  categoryId: product.categoryId,
+                  label: product.name,
+                ),
+              ),
+              if (product.badge != BadgeType.none)
+                Positioned(top: 8, left: 8, child: BadgeChip(badge: product.badge, compact: true)),
               if (catName.isNotEmpty)
                 Positioned(
                   bottom: 8,
@@ -50,7 +66,7 @@ class ProductCard extends StatelessWidget {
             ]),
           ),
           Padding(padding: const EdgeInsets.all(10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(product.name, style: GoogleFonts.baloo2(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.foreground), maxLines: 2, overflow: TextOverflow.ellipsis),
+            Text(product.name, style: GoogleFonts.baloo2(fontSize: 13, fontWeight: FontWeight.w700, height: 1.375, color: AppColors.foreground), maxLines: 2, overflow: TextOverflow.ellipsis),
             const SizedBox(height: 2),
             Text(product.shortDesc, style: GoogleFonts.poppins(fontSize: 11, color: AppColors.muted), maxLines: 1, overflow: TextOverflow.ellipsis),
             const SizedBox(height: 6),
@@ -63,35 +79,6 @@ class ProductCard extends StatelessWidget {
           ])),
         ]),
       ),
-    );
-  }
-}
-
-/// Deterministic gradient + motif placeholder (padanan ArtImage di web).
-class _ArtPlaceholder extends StatelessWidget {
-  final String seed;
-  const _ArtPlaceholder({required this.seed});
-
-  int get _hash {
-    int h = 0;
-    for (int i = 0; i < seed.length; i++) {
-      h = (h << 5) - h + seed.codeUnitAt(i);
-    }
-    return h.abs();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const palettes = [
-      [Color(0xFFA8452B), Color(0xFFC45A3A)],
-      [Color(0xFF6B7A3D), Color(0xFF8A9D52)],
-      [Color(0xFFC99A2E), Color(0xFFE0B85A)],
-      [Color(0xFF8A6A3A), Color(0xFFA8855A)],
-    ];
-    final p = palettes[_hash % palettes.length];
-    return Container(
-      decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: p)),
-      child: Center(child: Icon(Icons.brush_outlined, size: 36, color: AppColors.onPrimary.withValues(alpha: 0.3))),
     );
   }
 }

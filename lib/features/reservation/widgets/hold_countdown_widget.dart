@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/utils/date_formatter.dart';
 
 class HoldCountdownWidget extends StatefulWidget {
   final DateTime expiresAt;
@@ -49,14 +52,24 @@ class _HoldCountdownWidgetState extends State<HoldCountdownWidget> {
     final h = _remaining.inHours;
     final m = _remaining.inMinutes.remainder(60);
     final s = _remaining.inSeconds.remainder(60);
-    return Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: AppColors.mustard.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+    // Batas hold ditampilkan dalam WIB (sama dengan formatter tanggal di aplikasi).
+    final until = DateFormat('HH:mm').format(toWib(widget.expiresAt));
+    // Kartu: radius 16, surface, border 1px, soft shadow, p-4, isi rata tengah (TSX).
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.soft,
+      ),
       child: Column(children: [
-        const Icon(Icons.hourglass_top, color: AppColors.mustard),
-        const SizedBox(height: 8),
-        Text('Stok di-hold sampai', style: GoogleFonts.poppins(fontSize: 12, color: AppColors.muted)),
-        Text('${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}', style: GoogleFonts.baloo2(fontSize: 32, fontWeight: FontWeight.w800, color: AppColors.mustard)),
+        Text('SISA WAKTU HOLD', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.55, color: AppColors.mustard)),
         const SizedBox(height: 4),
-        Text('Harap datang sebelum waktu ini.', style: GoogleFonts.poppins(fontSize: 11, color: AppColors.muted)),
+        Text('${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}', style: GoogleFonts.baloo2(fontSize: 36, fontWeight: FontWeight.w800, color: AppColors.foreground)),
+        const SizedBox(height: 4),
+        Text('Berlaku sampai ± $until WIB', style: GoogleFonts.poppins(fontSize: 12, color: AppColors.muted)),
         const SizedBox(height: 12),
         InkWell(
           onTap: _openWhatsApp,

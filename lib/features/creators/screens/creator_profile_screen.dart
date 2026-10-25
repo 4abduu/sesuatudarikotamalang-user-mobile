@@ -3,7 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/primary_button.dart';
+import '../../../core/widgets/secondary_button.dart';
 import '../../../core/widgets/product_card.dart';
 import '../../../core/widgets/rating_stars.dart';
 import '../../../data/models/creator_model.dart';
@@ -64,14 +67,19 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
         onPressed: () => context.pop(),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        // px-4 pt-4 pb-6
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         child: Column(
           children: [
             Container(
               width: 80,
               height: 80,
               decoration: const BoxDecoration(
-                gradient: LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.primary, AppColors.primaryLight],
+                ),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -86,7 +94,7 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Text(creator.name, style: AppTextStyles.h1),
+            Text(creator.name, style: AppTextStyles.h1.copyWith(height: 1.25), textAlign: TextAlign.center),
             Text('@${creator.handle}', style: AppTextStyles.bodyMuted),
             const SizedBox(height: 8),
             Row(
@@ -98,39 +106,42 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text(
-                  creator.bio.isNotEmpty ? creator.bio : 'Kreator resmi Kayutangan.',
-                  style: AppTextStyles.body,
-                  textAlign: TextAlign.center,
-                ),
+            // Kartu bio: radius 20, surface, border 1px, soft shadow, p-3.
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.border),
+                boxShadow: AppShadows.soft,
+              ),
+              child: Text(
+                creator.bio.isNotEmpty ? creator.bio : 'Kreator resmi Kayutangan.',
+                style: AppTextStyles.body.copyWith(height: 1.375),
+                textAlign: TextAlign.center,
               ),
             ),
             const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: _following
-                  ? OutlinedButton(
-                      onPressed: () {
-                        setState(() => _following = false);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Berhenti mengikuti ${creator.name}')),
-                        );
-                      },
-                      child: const Text('Mengikuti'),
-                    )
-                  : ElevatedButton(
-                      onPressed: () {
-                        setState(() => _following = true);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Kamu mengikuti ${creator.name}')),
-                        );
-                      },
-                      child: const Text('Ikuti Kreator'),
-                    ),
-            ),
+            _following
+                ? SecondaryButton(
+                    label: 'Mengikuti',
+                    onPressed: () {
+                      setState(() => _following = false);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Berhenti mengikuti ${creator.name}')),
+                      );
+                    },
+                  )
+                : PrimaryButton(
+                    label: 'Ikuti Kreator',
+                    onPressed: () {
+                      setState(() => _following = true);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Kamu mengikuti ${creator.name}')),
+                      );
+                    },
+                  ),
             const SizedBox(height: 24),
             Align(
               alignment: Alignment.centerLeft,
@@ -150,7 +161,7 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
                   crossAxisCount: 2,
                   mainAxisSpacing: 8,
                   crossAxisSpacing: 8,
-                  childAspectRatio: 0.72,
+                  childAspectRatio: 0.6,
                 ),
                 itemCount: _products.length,
                 itemBuilder: (_, i) => ProductCard(

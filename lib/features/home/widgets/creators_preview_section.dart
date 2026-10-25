@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../creators/providers/artisans_provider.dart';
@@ -33,10 +34,14 @@ class CreatorsPreviewSection extends StatelessWidget {
               ),
             ),
           ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         Center(
           child: OutlinedButton(
             onPressed: () => context.push('/kreator'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              textStyle: GoogleFonts.baloo2(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
             child: const Text('Kenal semua kreator'),
           ),
         ),

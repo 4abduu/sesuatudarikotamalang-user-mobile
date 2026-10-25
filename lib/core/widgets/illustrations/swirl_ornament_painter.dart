@@ -1,10 +1,9 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 
-/// Paints a simple swirl ornament — a graceful S-curve spiral used as
-/// a decorative divider or corner flourish. Drawn as a single Path
-/// so it can be reused in many places without perf concerns.
+/// Line-art swirl ornament — port dari `Swirl` di referensi TSX
+/// (`_line-art.tsx`, viewBox 120×120). Koordinat & stroke width diskalakan
+/// mengikuti ukuran widget, sama seperti perilaku SVG.
 class SwirlOrnamentPainter extends CustomPainter {
   final Color color;
   final double strokeWidth;
@@ -12,45 +11,59 @@ class SwirlOrnamentPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final s = size.shortestSide / 120;
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+      ..strokeWidth = strokeWidth * s
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
-    // Spiral: two revolutions tightening inward.
     final path = Path();
-    final cx = size.width * 0.5;
-    final cy = size.height * 0.5;
-    final maxR = size.shortestSide * 0.45;
-    const twoPi = 2 * math.pi;
-    path.moveTo(cx + maxR, cy);
-    for (var t = 0.0; t <= 2 * twoPi; t += 0.1) {
-      final r = maxR * (1.0 - (t / (2 * twoPi)) * 0.7);
-      final x = cx + r * math.cos(t);
-      final y = cy + r * math.sin(t);
-      path.lineTo(x, y);
-    }
+    void m(double x, double y) => path.moveTo(x * s, y * s);
+    void c(double x1, double y1, double x2, double y2, double x3, double y3) =>
+        path.cubicTo(x1 * s, y1 * s, x2 * s, y2 * s, x3 * s, y3 * s);
+
+    // Spiral utama.
+    m(60, 18);
+    c(30, 18, 18, 42, 30, 66);
+    c(40, 86, 64, 84, 70, 64);
+    c(74, 50, 60, 42, 50, 50);
+    c(44, 55, 46, 66, 56, 66);
+    // Lengkung pendamping.
+    m(84, 40);
+    c(96, 52, 96, 74, 80, 86);
+
     canvas.drawPath(path, paint);
+    canvas.drawCircle(Offset(60 * s, 60 * s), 3 * s, paint);
   }
 
   @override
   bool shouldRepaint(covariant SwirlOrnamentPainter old) =>
-    old.color != color || old.strokeWidth != strokeWidth;
+      old.color != color || old.strokeWidth != strokeWidth;
 }
 
 /// Convenience widget wrapping [SwirlOrnamentPainter] in a [CustomPaint].
 class SwirlOrnament extends StatelessWidget {
   final double size;
   final Color color;
-  const SwirlOrnament({super.key, this.size = 32, this.color = AppColors.primary});
+  final double strokeWidth;
+  const SwirlOrnament({
+    super.key,
+    this.size = 32,
+    this.color = AppColors.primary,
+    this.strokeWidth = 2,
+  });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: size,
       height: size,
-      child: CustomPaint(painter: SwirlOrnamentPainter(color: color), size: Size.square(size)),
+      child: CustomPaint(
+        painter: SwirlOrnamentPainter(color: color, strokeWidth: strokeWidth),
+        size: Size.square(size),
+      ),
     );
   }
 }

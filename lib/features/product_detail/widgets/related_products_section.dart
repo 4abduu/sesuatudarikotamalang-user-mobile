@@ -17,7 +17,7 @@ class RelatedProductsSection extends StatelessWidget {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text('Produk Serupa', style: AppTextStyles.h2),
       const SizedBox(height: 12),
-      GridView.builder(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 0.72),
+      GridView.builder(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 0.6),
         itemCount: related.length,
         itemBuilder: (_, i) => ProductCard(product: related[i], onTap: () => context.push('/produk/${related[i].id}')),
       ),

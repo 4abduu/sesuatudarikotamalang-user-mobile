@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_dimens.dart';
 import '../../../shared/app_scaffold.dart';
 import '../widgets/hero_section.dart';
 import '../widgets/category_grid.dart';
@@ -12,17 +11,16 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
   @override
   Widget build(BuildContext context) {
+    // Jarak antar-section mengikuti 01-mhome-guest.tsx:
+    // kategori pt-4, rekomendasi pt-5, kreator/ulasan pt-6, CTA pt-6 + pb-6.
     return const AppScaffold(
-      body: SingleChildScrollView(padding: EdgeInsets.only(bottom: AppDimens.spaceLg), child: Column(children: [
+      body: SingleChildScrollView(child: Column(children: [
         HeroSection(),
-        Padding(padding: EdgeInsets.all(16), child: CategoryGrid()),
-        Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: RecommendationSection()),
-        SizedBox(height: 24),
-        Padding(padding: EdgeInsets.all(16), child: CreatorsPreviewSection()),
-        SizedBox(height: 24),
-        Padding(padding: EdgeInsets.all(16), child: ReviewSummarySection()),
-        SizedBox(height: 24),
-        Padding(padding: EdgeInsets.all(16), child: BecomeCreatorCtaBanner()),
+        Padding(padding: EdgeInsets.fromLTRB(16, 16, 16, 0), child: CategoryGrid()),
+        Padding(padding: EdgeInsets.fromLTRB(16, 20, 16, 0), child: RecommendationSection()),
+        Padding(padding: EdgeInsets.fromLTRB(16, 24, 16, 0), child: CreatorsPreviewSection()),
+        Padding(padding: EdgeInsets.fromLTRB(16, 24, 16, 0), child: ReviewSummarySection()),
+        Padding(padding: EdgeInsets.fromLTRB(16, 24, 16, 24), child: BecomeCreatorCtaBanner()),
       ])),
     );
   }

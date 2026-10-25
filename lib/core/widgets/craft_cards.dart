@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_shadows.dart';
 import '../theme/app_text_styles.dart';
@@ -39,7 +40,8 @@ class StatChipCard extends StatelessWidget {
             child: Icon(icon, color: fg, size: 18),
           ),
           const SizedBox(height: 8),
-          Text(value, style: AppTextStyles.h3),
+          Text(value, style: AppTextStyles.h3.copyWith(height: 1.0)),
+          const SizedBox(height: 4),
           Text(label, style: const TextStyle(fontSize: 11, color: AppColors.muted)),
         ],
       ),
@@ -87,7 +89,7 @@ class MenuCard extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(color: fg.withValues(alpha: 0.12), shape: BoxShape.circle),
-              child: Icon(icon, color: fg, size: 20),
+              child: Icon(icon, color: fg, size: 18),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -95,7 +97,7 @@ class MenuCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(title, style: AppTextStyles.label),
+                  Text(title, style: GoogleFonts.baloo2(fontSize: 14, fontWeight: FontWeight.w700, height: 1.25, color: AppColors.foreground)),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
                     Text(subtitle!, style: AppTextStyles.caption),

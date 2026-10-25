@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
+import '../../../core/utils/date_formatter.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/loading_indicator.dart';
 import '../../../features/auth/providers/auth_provider.dart';
@@ -131,19 +132,8 @@ class _ReservationBody extends StatelessWidget {
                     p.nextStep();
 
                     if (p.paymentMethod == PaymentMethod.midtrans) {
-                      final snapError = created.snap?['error'] as String?;
                       final redirectUrl = created.snap?['redirect_url'] as String?;
-
-                      if (snapError != null && snapError.isNotEmpty) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Sistem pembayaran Midtrans sedang sibuk. Silakan coba bayar ulang nanti di menu Pesanan.'),
-                              duration: Duration(seconds: 4),
-                            ),
-                          );
-                        }
-                      } else if (redirectUrl != null && redirectUrl.isNotEmpty) {
+                      if (redirectUrl != null && redirectUrl.isNotEmpty) {
                         if (context.mounted) {
                           await Navigator.of(context).push(
                             MaterialPageRoute(
@@ -180,14 +170,15 @@ class _ReservationBody extends StatelessWidget {
                     }
                   } on ApiException catch (e) {
                     if (context.mounted) {
-                      String msg = e.message;
-                      if (e.status == 409) {
-                        msg = 'Maaf, stok produk ini baru saja habis. Silakan pilih varian lain.';
-                        p.restart();
-                      } else if (e.status == 403) {
-                        msg = 'Tidak dapat memesan produk milik sendiri.';
-                      }
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                      // Pesan error selalu dari backend; mobile tidak mengganti dengan teks buatan sendiri.
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+                    }
+                    if (e.code == 'SLOT_FULL' || e.code == 'SLOT_PASSED') {
+                      // Slot penuh atau sudah lewat: kembali ke pilihan jadwal dengan data slot terbaru.
+                      p.backToSchedule();
+                    } else if (e.status == 409) {
+                      // Konflik stok: mulai ulang alur agar varian dan stok dipilih kembali.
+                      p.restart();
                     }
                   } catch (e) {
                     if (context.mounted) {
@@ -240,18 +231,25 @@ class _ResultSection extends StatelessWidget {
         ),
       ]);
     } else {
-      // COD countdown
-      final holdExpiry = provider.createdOrder?.holdExpiresAt != null
-          ? DateTime.tryParse(provider.createdOrder!.holdExpiresAt!) ?? DateTime.now().add(const Duration(hours: 2))
-          : DateTime.now().add(const Duration(hours: 2));
+      // COD: batas hold berasal dari backend (holdExpiresAt), bukan angka tetap di aplikasi.
+      final holdRaw = provider.createdOrder?.holdExpiresAt;
+      final holdExpiry = holdRaw != null ? DateTime.tryParse(holdRaw)?.toLocal() : null;
       return Column(children: [
         const Icon(Icons.hourglass_top, size: 48, color: AppColors.mustard),
         const SizedBox(height: 12),
-        Text('Stok di-hold selama 2 jam', style: AppTextStyles.h1),
+        Text('Stok ditahan untukmu', style: AppTextStyles.h1),
         const SizedBox(height: 8),
-        Text('Harap datang sebelum waktu tersebut untuk mengambil barang.', style: AppTextStyles.bodyMuted, textAlign: TextAlign.center),
-        const SizedBox(height: 16),
-        HoldCountdownWidget(expiresAt: holdExpiry),
+        Text(
+          holdExpiry != null
+              ? 'Datang ke toko dan selesaikan pembayaran sebelum ${formatDateTimeWib(holdRaw ?? '')}.'
+              : 'Datang ke toko dan selesaikan pembayaran sebelum batas waktu penahanan stok. Lihat batasnya di detail pesanan.',
+          style: AppTextStyles.bodyMuted,
+          textAlign: TextAlign.center,
+        ),
+        if (holdExpiry != null) ...[
+          const SizedBox(height: 16),
+          HoldCountdownWidget(expiresAt: holdExpiry),
+        ],
         const SizedBox(height: 24),
         PrimaryButton(
           label: 'Lihat Tiket Reservasi',

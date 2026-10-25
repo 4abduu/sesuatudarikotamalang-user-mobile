@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/rating_stars.dart';
 import '../../../data/models/product_model.dart';
@@ -54,12 +55,22 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
       else if (_reviews.isEmpty)
         Text('Belum ada ulasan untuk produk ini.', style: AppTextStyles.bodyMuted)
       else
-        ..._reviews.map((r) => Card(
-          child: Padding(
+        // Kartu ulasan: radius 20, surface, border 1px, soft shadow, p-3, jarak antar kartu 8.
+        ..._reviews.map((r) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.border),
+              boxShadow: AppShadows.soft,
+            ),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Icon(Icons.format_quote, size: 16, color: AppColors.border),
-              Text(r.comment, style: AppTextStyles.body),
+              const SizedBox(height: 4),
+              Text(r.comment, style: AppTextStyles.body.copyWith(height: 1.375)),
               const SizedBox(height: 8),
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 Column(

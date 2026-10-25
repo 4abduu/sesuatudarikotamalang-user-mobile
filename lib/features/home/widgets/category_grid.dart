@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../catalog/providers/products_provider.dart';
 
@@ -28,7 +29,8 @@ class CategoryGrid extends StatelessWidget {
             crossAxisCount: 4,
             mainAxisSpacing: 8,
             crossAxisSpacing: 8,
-            childAspectRatio: 0.85,
+            // Tinggi tile mengikuti TSX: py-2 + ikon 36 + gap 6 + 1 baris label.
+            mainAxisExtent: 80,
           ),
           itemCount: categories.length,
           itemBuilder: (_, i) {
@@ -40,10 +42,12 @@ class CategoryGrid extends StatelessWidget {
               // OPTION 1 (UTAMA): Kodingan Awal (Menggunakan Icon & Text)
               // ===============================================================
               child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border, width: 0.5),
+                  border: Border.all(color: AppColors.border),
+                  boxShadow: AppShadows.soft,
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -62,10 +66,16 @@ class CategoryGrid extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text(
-                      c.name,
-                      style: AppTextStyles.label,
-                      textAlign: TextAlign.center,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          c.name,
+                          style: AppTextStyles.label,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                     ),
                   ],
                 ),

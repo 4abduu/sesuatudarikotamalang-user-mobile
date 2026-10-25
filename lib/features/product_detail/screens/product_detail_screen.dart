@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/badge_chip.dart';
@@ -78,30 +80,33 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       key: ValueKey(product.id),
       create: (_) => VariantSelectionProvider(product),
       child: AppScaffold(
+        title: 'Detail Produk',
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          // px-4 pt-4 pb-6
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ProductGallery(seed: product.id),
               const SizedBox(height: 16),
-              if (product.badge != BadgeType.none) BadgeChip(badge: product.badge),
-              const SizedBox(height: 8),
-              Text(product.name, style: AppTextStyles.h1),
+              if (product.badge != BadgeType.none) ...[
+                BadgeChip(badge: product.badge, large: true),
+                const SizedBox(height: 8),
+              ],
+              Text(product.name, style: AppTextStyles.h1.copyWith(height: 1.25)),
               const SizedBox(height: 4),
               Text(product.shortDesc, style: AppTextStyles.bodyMuted),
               const SizedBox(height: 8),
               Text(
                 formatRupiah(product.price),
-                style: const TextStyle(
+                style: GoogleFonts.baloo2(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
                   color: AppColors.primary,
-                  fontFamily: 'Baloo 2',
                 ),
               ),
               const SizedBox(height: 8),
@@ -122,7 +127,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: product.totalStock <= 10 ? const Color(0xFFC27803) : AppColors.muted,
+                      color: product.totalStock <= 10 ? AppColors.mustard : AppColors.muted,
                     ),
                   ),
                 ],
@@ -140,43 +145,50 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               const SizedBox(height: 24),
               Text('Tentang Karya Ini', style: AppTextStyles.h2),
               const SizedBox(height: 8),
-              Text(product.description, style: AppTextStyles.body),
+              Text(product.description, style: AppTextStyles.body.copyWith(height: 1.375)),
               const SizedBox(height: 24),
               ProductReviewsSection(product: product),
               const SizedBox(height: 24),
               RelatedProductsSection(product: product),
               if (creator != null) ...[
+                const SizedBox(height: 16),
                 GestureDetector(
                   onTap: () => context.push('/kreator/${creator.id}'),
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: AppColors.primary,
-                            child: Text(
-                              creator.name.isNotEmpty ? creator.name.substring(0, 1) : 'K',
-                              style: const TextStyle(color: AppColors.onPrimary),
-                            ),
+                  // Kartu "Dibuat oleh": radius 20, surface, border 1px, soft shadow, p-3.
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.border),
+                      boxShadow: AppShadows.soft,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(creator.name, style: AppTextStyles.title),
-                                Text(creator.specialty, style: AppTextStyles.caption),
-                              ],
-                            ),
+                          child: const Icon(Icons.person_outline, size: 20, color: AppColors.onPrimary),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Dibuat oleh', style: AppTextStyles.caption),
+                              Text(creator.name, style: AppTextStyles.h3.copyWith(height: 1.25)),
+                            ],
                           ),
-                          const Icon(Icons.chevron_right),
-                        ],
-                      ),
+                        ),
+                        const Icon(Icons.chevron_right, size: 16, color: AppColors.muted),
+                      ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
               ],
             ],
           ),
@@ -194,11 +206,17 @@ class _VariantCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!product.hasVariants) return const SizedBox.shrink();
     final provider = context.watch<VariantSelectionProvider>();
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: VariantPicker(product: product, provider: provider),
+    // Kartu varian: radius 20, surface, border 1px, soft shadow, p-4.
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.soft,
       ),
+      child: VariantPicker(product: product, provider: provider),
     );
   }
 }

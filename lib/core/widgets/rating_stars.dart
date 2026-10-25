@@ -16,7 +16,7 @@ class RatingStars extends StatelessWidget {
       }),
       if (showValue) ...[
         const SizedBox(width: 4),
-        Text(value.toStringAsFixed(1), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.foreground)),
+        Text(value.toStringAsFixed(1), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.foreground.withValues(alpha: 0.8))),
       ],
     ]);
   }

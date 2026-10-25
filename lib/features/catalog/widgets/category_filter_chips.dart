@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../providers/products_provider.dart';
@@ -11,8 +12,9 @@ class CategoryFilterChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final categories = context.watch<ProductsProvider>().categories;
+    // Tinggi 42 = chip (±38) + pb-1 (4) di TSX.
     return SizedBox(
-      height: 40,
+      height: 42,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
@@ -32,7 +34,11 @@ class CategoryFilterChips extends StatelessWidget {
   Widget _chip(String label, bool active, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: GestureDetector(
+      // Align: chip setinggi isinya (tidak melar mengikuti tinggi ListView).
+      child: Align(
+        alignment: Alignment.topLeft,
+        widthFactor: 1,
+        child: GestureDetector(
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -43,12 +49,13 @@ class CategoryFilterChips extends StatelessWidget {
           ),
           child: Text(
             label,
-            style: TextStyle(
+            style: GoogleFonts.poppins(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: active ? AppColors.onPrimary : AppColors.foreground,
             ),
           ),
+        ),
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_colors.dart';
 import '../features/auth/providers/auth_provider.dart';
 
@@ -73,31 +74,99 @@ class BottomNavBar extends StatelessWidget {
     final activeId = _activeTabId(location, tabs);
     final activeIndex = activeId == null ? -1 : tabs.indexWhere((t) => t.id == activeId);
 
-    return BottomNavigationBar(
-      currentIndex: activeIndex < 0 ? 0 : activeIndex,
-      // Saat di layar login (activeIndex < 0), tidak ada tab yang terlihat
-      // terpilih — tetap di indeks 0 tapi currentIndex dipaksa tidak match.
-      onTap: (i) {
-        final tab = tabs[i];
-        if (tab.id == 'masuk') {
-          // Guest menekan "Masuk" → buka login dengan next = lokasi asal.
-          final next = location.isEmpty || location == '/login' ? '/' : location;
-          context.push('/login?next=$next');
-          return;
-        }
-        context.go(tab.route);
-      },
-      items: tabs
-          .map((t) => BottomNavigationBarItem(
-                icon: Icon(t.icon),
-                activeIcon: Icon(t.activeIcon),
-                label: t.label,
-              ))
-          .toList(),
-      // Saat tidak ada tab aktif (layar login), paksa tidak ada yang
-      // terlihat terpilih dengan selectedItemColor sama dengan unselectedColor.
-      selectedItemColor: activeIndex < 0 ? AppColors.muted : AppColors.primary,
-      unselectedItemColor: AppColors.muted,
+    // Logika tap TIDAK diubah — hanya dipindah dari BottomNavigationBar.onTap
+    // ke closure ini supaya tampilan bisa dibuat custom (sesuai _frame.tsx).
+    void onTap(int i) {
+      final tab = tabs[i];
+      if (tab.id == 'masuk') {
+        // Guest menekan "Masuk" → buka login dengan next = lokasi asal.
+        final next = location.isEmpty || location == '/login' ? '/' : location;
+        context.push('/login?next=$next');
+        return;
+      }
+      context.go(tab.route);
+    }
+
+    // Visual: border atas tipis, latar surface, px 4 / pt 6 / pb 8.
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border(
+          top: BorderSide(color: AppColors.border.withValues(alpha: 0.6)),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.only(bottom: 8),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(4, 6, 4, 0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              for (var i = 0; i < tabs.length; i++)
+                Expanded(
+                  child: _NavItem(
+                    tab: tabs[i],
+                    // activeIndex < 0 (layar login) → tidak ada tab terpilih.
+                    active: i == activeIndex,
+                    onTap: () => onTap(i),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Satu item tab: lingkaran 32px (tinted primary 10% saat aktif) berisi ikon
+/// 20px, lalu label Poppins 11px medium.
+class _NavItem extends StatelessWidget {
+  final _TabDef tab;
+  final bool active;
+  final VoidCallback onTap;
+  const _NavItem({required this.tab, required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = active ? AppColors.primary : AppColors.muted;
+    return Semantics(
+      button: true,
+      selected: active,
+      label: tab.label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: active
+                      ? AppColors.primary.withValues(alpha: 0.10)
+                      : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(active ? tab.activeIcon : tab.icon, size: 20, color: color),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                tab.label,
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

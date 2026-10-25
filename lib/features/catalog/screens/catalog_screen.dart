@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/search_helper.dart';
+import '../../../core/widgets/app_search_decoration.dart';
 import '../../../shared/app_scaffold.dart';
 import '../../../data/models/product_model.dart';
 import '../providers/products_provider.dart';
@@ -78,18 +79,15 @@ class _CatalogScreenState extends State<CatalogScreen> {
         onRefresh: () => productsProvider.fetchProducts(categoryId: _category),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
+          // px-4 pt-4 pb-6
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextField(
                 onChanged: (v) => setState(() => _search = v),
-                decoration: const InputDecoration(
-                  hintText: 'Cari dalam katalog...',
-                  prefixIcon: Icon(Icons.search),
-                  isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
+                style: appSearchTextStyle,
+                decoration: appSearchDecoration('Cari dalam katalog...'),
               ),
               const SizedBox(height: 12),
               CategoryFilterChips(
@@ -107,7 +105,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                   Text('Menampilkan ${filtered.length} produk', style: AppTextStyles.caption),
                   Row(
                     children: [
-                      const Text('Urut: ', style: TextStyle(fontSize: 12)),
+                      Text('Urut: ', style: AppTextStyles.caption),
                       SortDropdown(
                         value: _sort,
                         onChanged: (v) => setState(() => _sort = v ?? SortOption.terbaru),

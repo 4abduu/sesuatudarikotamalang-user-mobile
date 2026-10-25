@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/search_helper.dart';
+import '../../../core/widgets/app_search_decoration.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/section_title.dart';
 import '../../../data/models/creator_model.dart';
@@ -49,12 +50,8 @@ class _CreatorsListScreenState extends State<CreatorsListScreen> {
               const SizedBox(height: 16),
               TextField(
                 onChanged: (v) => setState(() => _search = v),
-                decoration: const InputDecoration(
-                  hintText: 'Cari nama kreator...',
-                  prefixIcon: Icon(Icons.search),
-                  isDense: true,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
+                style: appSearchTextStyle,
+                decoration: appSearchDecoration('Cari nama kreator...'),
               ),
               const SizedBox(height: 16),
               if (artisansProvider.isLoading && allArtisans.isEmpty)

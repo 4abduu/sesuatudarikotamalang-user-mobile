@@ -148,7 +148,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     // Sesuai Bagian 4 API_CONTRACT:
     // Tampilkan QR untuk order yang bisa diambil: lunas dan cod berstatus menunggu_bayar.
-    final bool shouldShowQr = isPaid || (isWaitingPayment && o.paymentMethod.toLowerCase().contains('cod') || o.paymentMethod.toLowerCase().contains('cash'));
+    final bool isCod = o.paymentMethod.toLowerCase().contains('cod') || o.paymentMethod.toLowerCase().contains('cash');
+    final bool shouldShowQr = isPaid || (isWaitingPayment && isCod);
 
     return AppScaffold(
       title: o.orderNumber,
@@ -162,6 +163,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
+                    if (isWaitingPayment && o.holdExpiresAt != null) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: HoldCountdownWidget(
+                          expiresAt: DateTime.tryParse(o.holdExpiresAt!)?.toLocal() ?? DateTime.now().add(const Duration(hours: 1)),
+                        ),
+                      ),
+                    ],
                     if (shouldShowQr) ...[
                       QrTicketCard(code: o.orderNumber),
                       const SizedBox(height: 16),

@@ -9,7 +9,7 @@ class ProductGridView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (products.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(32), child: Text('Tidak ada produk yang cocok.')));
-    return GridView.builder(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 0.72),
+    return GridView.builder(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 0.6),
       itemCount: products.length,
       itemBuilder: (_, i) => ProductCard(product: products[i], onTap: () => context.push('/produk/${products[i].id}')),
     );
