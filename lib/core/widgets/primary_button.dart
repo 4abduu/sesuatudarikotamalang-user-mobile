@@ -11,7 +11,30 @@ class PrimaryButton extends StatelessWidget {
   final Widget? icon;
   final bool fullWidth;
   final bool loading;
-  const PrimaryButton({super.key, required this.label, this.onPressed, this.icon, this.fullWidth = true, this.loading = false});
+
+  /// Warna latar opsional (default terracotta). Mis. moss untuk "Buat Draft" AI.
+  final Color? color;
+
+  /// Override opsional untuk tombol ringkas (Baloo 2 13 bold, padding vertikal
+  /// 10) seperti "Simpan Nama" / "Buka Dashboard Kreator" pada referensi TSX.
+  /// Saat [verticalPadding] diisi dan [fullWidth] false, padding horizontal 16.
+  final double? verticalPadding;
+  final double? fontSize;
+
+  /// Tampilkan bayangan sticker saat aktif (default true).
+  final bool showShadow;
+  const PrimaryButton({
+    super.key,
+    required this.label,
+    this.onPressed,
+    this.icon,
+    this.fullWidth = true,
+    this.loading = false,
+    this.color,
+    this.verticalPadding,
+    this.fontSize,
+    this.showShadow = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,16 +44,23 @@ class PrimaryButton extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
-          boxShadow: enabled ? AppShadows.sticker : null,
+          boxShadow: (enabled && showShadow)
+              ? (color == null
+                  ? AppShadows.sticker
+                  : [BoxShadow(color: color!.withValues(alpha: 0.15), blurRadius: 8, offset: const Offset(0, 3))])
+              : null,
         ),
         child: ElevatedButton(
           onPressed: loading ? null : onPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary, foregroundColor: AppColors.onPrimary,
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            backgroundColor: color ?? AppColors.primary, foregroundColor: AppColors.onPrimary,
+            padding: EdgeInsets.symmetric(
+              vertical: verticalPadding ?? 14,
+              horizontal: (verticalPadding != null && !fullWidth) ? 16 : 0,
+            ),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
             elevation: 0,
-            textStyle: GoogleFonts.baloo2(fontSize: 14, fontWeight: FontWeight.w700),
+            textStyle: GoogleFonts.baloo2(fontSize: fontSize ?? 14, fontWeight: FontWeight.w700),
           ),
           child: loading
             ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.onPrimary))

@@ -14,6 +14,11 @@ class SecondaryButton extends StatelessWidget {
   /// Varian ringkas: teks Poppins 13 semibold, padding vertikal 12, jarak
   /// ikon 6 (tombol WhatsApp/Shopee di detail produk pada TSX).
   final bool compact;
+
+  /// Override opsional untuk tombol Baloo 2 bold dengan padding vertikal 12
+  /// (mis. "Batal" / "Buat Ulang" pada referensi TSX form cerita).
+  final double? verticalPadding;
+  final double? fontSize;
   const SecondaryButton({
     super.key,
     required this.label,
@@ -22,6 +27,8 @@ class SecondaryButton extends StatelessWidget {
     this.fullWidth = true,
     this.borderColor = AppColors.primary,
     this.compact = false,
+    this.verticalPadding,
+    this.fontSize,
   });
 
   @override
@@ -31,11 +38,17 @@ class SecondaryButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.foreground,
+          foregroundColor: fontSize != null ? borderColor : AppColors.foreground,
           side: BorderSide(color: borderColor, width: 1.5),
-          padding: EdgeInsets.symmetric(vertical: compact ? 12 : 14),
+          backgroundColor: fontSize != null ? AppColors.surface : null,
+          padding: EdgeInsets.symmetric(
+            vertical: verticalPadding ?? (compact ? 12 : 14),
+            horizontal: (verticalPadding != null && !fullWidth) ? 16 : 0,
+          ),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-          textStyle: compact ? GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600) : null,
+          textStyle: fontSize != null
+              ? GoogleFonts.baloo2(fontSize: fontSize, fontWeight: FontWeight.w700)
+              : (compact ? GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600) : null),
         ),
         child: Row(mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.center, children: [
           if (icon != null) ...[icon!, SizedBox(width: compact ? 6 : 8)],

@@ -64,18 +64,29 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   Widget build(BuildContext context) {
     return AppScaffold(
       title: 'Tulis Ulasan',
-      body: SingleChildScrollView(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      body: SingleChildScrollView(padding: const EdgeInsets.fromLTRB(16, 16, 16, 24), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('Beri Rating', style: AppTextStyles.h3),
         const SizedBox(height: 8),
-        Row(children: List.generate(5, (i) => GestureDetector(onTap: () => setState(() => _rating = i + 1), child: Icon(Icons.star, size: 36, color: i < _rating ? AppColors.mustard : AppColors.border)))),
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: List.generate(5, (i) => GestureDetector(onTap: () => setState(() => _rating = i + 1), child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Icon(Icons.star, size: 36, color: i < _rating ? AppColors.mustard : AppColors.border))))),
         const SizedBox(height: 16),
         Text('Komentar', style: AppTextStyles.h3),
         const SizedBox(height: 8),
-        TextField(controller: _comment, maxLines: 4, decoration: const InputDecoration(alignLabelWithHint: true, hintText: 'Ceritakan pengalamanmu dengan produk ini...')),
-        const SizedBox(height: 24),
+        TextField(
+          controller: _comment,
+          minLines: 4,
+          maxLines: 4,
+          style: AppTextStyles.body,
+          decoration: InputDecoration(
+            alignLabelWithHint: true,
+            hintText: 'Ceritakan pengalamanmu dengan produk ini...',
+            hintStyle: AppTextStyles.bodyMuted,
+            contentPadding: const EdgeInsets.all(12),
+          ),
+        ),
+        const SizedBox(height: 16),
         PrimaryButton(
           label: _isSubmitting ? 'Mengirim...' : 'Kirim Ulasan',
-          icon: const Icon(Icons.send, size: 16),
+          icon: const Icon(Icons.send_outlined, size: 16),
           onPressed: _isSubmitting ? null : _submit,
         ),
       ])),

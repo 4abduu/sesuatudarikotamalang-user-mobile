@@ -9,12 +9,27 @@ class AppScaffold extends StatelessWidget {
   final bool showBottomNav;
   final List<Widget>? actions;
   final Widget? leading;
-  const AppScaffold({super.key, this.title, required this.body, this.floatingActionButton, this.showBottomNav = true, this.actions, this.leading});
+  final bool showSearchAction;
+  const AppScaffold({
+    super.key,
+    this.title,
+    required this.body,
+    this.floatingActionButton,
+    this.showBottomNav = true,
+    this.actions,
+    this.leading,
+    this.showSearchAction = true,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: BrandAppBar(title: title, leading: leading, actions: actions),
+      appBar: BrandAppBar(
+        title: title,
+        leading: leading,
+        actions: actions,
+        showSearchAction: showSearchAction,
+      ),
       body: body,
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: showBottomNav ? const BottomNavBar() : null,

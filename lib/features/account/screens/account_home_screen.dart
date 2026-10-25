@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/image_helper.dart';
+import '../../../core/widgets/illustrations/swirl_ornament_painter.dart';
 import '../../../core/widgets/craft_cards.dart';
 import '../../../data/models/user_model.dart';
 import '../../../features/auth/providers/auth_provider.dart';
@@ -96,7 +98,7 @@ class _LoggedInBody extends StatelessWidget {
     final user = auth.user!;
     final isCreator = auth.isCreator;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -115,7 +117,7 @@ class _LoggedInBody extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           MenuCard(
-            icon: Icons.star_outline,
+            icon: Icons.star,
             title: 'Ulasan Saya',
             subtitle: 'Kelola ulasan yang kamu berikan',
             onTap: () => context.push('/akun/ulasan'),
@@ -161,7 +163,11 @@ class _LoggedInBody extends StatelessWidget {
               },
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.destructive,
+                backgroundColor: AppColors.surface,
                 side: const BorderSide(color: AppColors.destructive, width: 1.5),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                textStyle: GoogleFonts.baloo2(fontSize: 13, fontWeight: FontWeight.w700),
               ),
               icon: const Icon(Icons.logout, size: 18),
               label: const Text('Keluar'),
@@ -187,6 +193,7 @@ class _ProfileHeader extends StatelessWidget {
     final hasAvatar = avatarUrl != null && avatarUrl!.isNotEmpty;
     return Container(
       width: double.infinity,
+      clipBehavior: Clip.antiAlias,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -197,13 +204,24 @@ class _ProfileHeader extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: AppShadows.sticker,
       ),
-      child: Row(children: [
+      child: Stack(clipBehavior: Clip.none, children: [
+        // Ornamen swirl di pojok kanan atas (TSX: -right-3 -top-3, 80x80, 15%)
+        Positioned(
+          right: -32,
+          top: -32,
+          child: SwirlOrnament(
+            size: 80,
+            color: AppColors.onPrimary.withValues(alpha: 0.15),
+            strokeWidth: 2,
+          ),
+        ),
+        Row(children: [
         CircleAvatar(
           radius: 32,
           backgroundColor: AppColors.onPrimary,
           backgroundImage: safeImageProvider(avatarUrl),
           child: !hasAvatar
-            ? Text(initials.isEmpty ? '?' : initials, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.primary, fontFamily: 'Baloo 2'))
+            ? Text(initials.isEmpty ? '?' : initials, style: AppTextStyles.display.copyWith(fontSize: 20, color: AppColors.primary))
             : null,
         ),
         const SizedBox(width: 16),
@@ -211,14 +229,15 @@ class _ProfileHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(name, style: AppTextStyles.h3.copyWith(color: AppColors.onPrimary)),
+              Text(name, style: AppTextStyles.h3.copyWith(fontWeight: FontWeight.w800, height: 1.2, color: AppColors.onPrimary)),
               const SizedBox(height: 2),
               Text(email, style: AppTextStyles.caption.copyWith(color: AppColors.onPrimary.withValues(alpha: 0.85))),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               _RoleBadge(role: role),
             ],
           ),
         ),
+      ]),
       ]),
     );
   }
@@ -236,7 +255,7 @@ class _RoleBadge extends StatelessWidget {
       Role.admin => 'Admin',
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       decoration: BoxDecoration(
         color: AppColors.onPrimary.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(999),

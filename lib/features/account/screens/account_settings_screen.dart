@@ -4,7 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../core/theme/app_colors.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/primary_button.dart';
 import '../../../core/utils/password_validator.dart';
 import '../../../core/network/api_client.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -18,7 +21,7 @@ class AccountSettingsScreen extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     return AppScaffold(
       title: 'Pengaturan',
-      body: SingleChildScrollView(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      body: SingleChildScrollView(padding: const EdgeInsets.fromLTRB(16, 16, 16, 24), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('Profil', style: AppTextStyles.h3),
         const SizedBox(height: 12),
         _ProfileSection(),
@@ -31,11 +34,65 @@ class AccountSettingsScreen extends StatelessWidget {
         const SizedBox(height: 12),
         _ChangePasswordSection(),
         const SizedBox(height: 24),
-        OutlinedButton(onPressed: () async { await auth.logout(); if (context.mounted) context.go('/'); }, style: OutlinedButton.styleFrom(foregroundColor: AppColors.destructive), child: const Text('Keluar')),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () async { await auth.logout(); if (context.mounted) context.go('/'); },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.destructive,
+              backgroundColor: AppColors.surface,
+              side: const BorderSide(color: AppColors.destructive),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: const StadiumBorder(),
+              textStyle: GoogleFonts.baloo2(fontSize: 13, fontWeight: FontWeight.w700),
+            ),
+            child: const Text('Keluar'),
+          ),
+        ),
       ])),
     );
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Style helpers (visual only) — sesuai 27-makunpengaturan.tsx         */
+/* ------------------------------------------------------------------ */
+
+/// SectionCard: surface, radius 20, border 1, shadow soft, padding 16.
+class _SectionCard extends StatelessWidget {
+  final Widget child;
+  const _SectionCard({required this.child});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.soft,
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Field: label 13 medium di atas input (mb 4), input padding 12, hint muted.
+Widget _labeledField(String label, Widget field) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: AppTextStyles.label),
+        const SizedBox(height: 4),
+        field,
+      ],
+    );
+
+InputDecoration _fieldDecoration([String? hint]) => InputDecoration(
+      hintText: hint,
+      hintStyle: AppTextStyles.bodyMuted,
+      contentPadding: const EdgeInsets.all(12),
+    );
 
 class _ProfileSection extends StatefulWidget {
   @override
@@ -105,7 +162,7 @@ class _ProfileSectionState extends State<_ProfileSection> {
       }
     }
 
-    return Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
+    return _SectionCard(child: Column(children: [
       GestureDetector(
         onTap: _isUploadingAvatar ? null : _pickImage,
         child: Stack(
@@ -116,7 +173,7 @@ class _ProfileSectionState extends State<_ProfileSection> {
               backgroundColor: AppColors.primary,
               backgroundImage: imageProvider,
               child: imageProvider == null
-                  ? const Icon(Icons.person, color: AppColors.onPrimary, size: 32)
+                  ? const Icon(Icons.person_outline, color: AppColors.onPrimary, size: 32)
                   : null,
             ),
             if (_isUploadingAvatar)
@@ -124,22 +181,32 @@ class _ProfileSectionState extends State<_ProfileSection> {
           ],
         ),
       ),
-      const SizedBox(height: 8),
+      const SizedBox(height: 4),
       TextButton(
         onPressed: _isUploadingAvatar ? null : _pickImage,
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          textStyle: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500),
+        ),
         child: const Text('Ganti foto profil'),
       ),
+      const SizedBox(height: 8),
+      SizedBox(width: double.infinity, child: _labeledField('Nama', TextField(controller: _name, style: AppTextStyles.body, decoration: _fieldDecoration()))),
       const SizedBox(height: 12),
-      TextField(controller: _name, decoration: const InputDecoration(labelText: 'Nama')),
-      const SizedBox(height: 12),
-      ElevatedButton(
+      PrimaryButton(
+        label: 'Simpan Nama',
+        verticalPadding: 10,
+        fontSize: 13,
+        showShadow: false,
         onPressed: () {
           context.read<AuthProvider>().updateProfile(name: _name.text);
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nama disimpan')));
         },
-        child: const Text('Simpan Nama'),
       ),
-    ])));
+    ]));
   }
 }
 
@@ -151,6 +218,7 @@ class _ChangeEmailOtpSection extends StatefulWidget {
 class _ChangeEmailOtpSectionState extends State<_ChangeEmailOtpSection> {
   final _email = TextEditingController();
   final _otp = TextEditingController();
+  final _otpFocus = FocusNode(); // hanya untuk tampilan kotak OTP
   bool _otpSent = false;
   bool _isLoading = false;
   late String _oldEmail;
@@ -163,7 +231,7 @@ class _ChangeEmailOtpSectionState extends State<_ChangeEmailOtpSection> {
   }
 
   @override
-  void dispose() { _email.dispose(); _otp.dispose(); super.dispose(); }
+  void dispose() { _email.dispose(); _otp.dispose(); _otpFocus.dispose(); super.dispose(); }
 
   Future<void> _sendOtp() async {
     final newEmail = _email.text.trim();
@@ -228,44 +296,150 @@ class _ChangeEmailOtpSectionState extends State<_ChangeEmailOtpSection> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return _SectionCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Container(
         width: double.infinity,
         padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: AppColors.moss.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(color: AppColors.moss.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
         child: Row(children: [
           const Icon(Icons.info_outline, size: 16, color: AppColors.moss),
           const SizedBox(width: 8),
-          Expanded(child: Text('Email saat ini: $_oldEmail', style: AppTextStyles.caption.copyWith(color: AppColors.moss))),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                style: AppTextStyles.caption.copyWith(color: AppColors.moss),
+                children: [
+                  const TextSpan(text: 'Email sekarang: '),
+                  TextSpan(text: _oldEmail, style: const TextStyle(fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+          ),
         ]),
       ),
       const SizedBox(height: 12),
-      TextField(controller: _email, enabled: !_otpSent && !_isLoading, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email baru', hintText: 'nama@domain.com')),
+      _labeledField(
+        'Email baru',
+        TextField(
+          controller: _email,
+          enabled: !_otpSent && !_isLoading,
+          keyboardType: TextInputType.emailAddress,
+          style: AppTextStyles.body,
+          decoration: _fieldDecoration('email-baru@email.com'),
+        ),
+      ),
+      if (!_otpSent) ...[
+        const SizedBox(height: 6),
+        Text('Kode OTP akan dikirim ke email lama kamu untuk verifikasi.', style: AppTextStyles.caption.copyWith(fontSize: 11)),
+      ],
       if (_otpSent) ...[
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(color: AppColors.mustard.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-          child: Row(children: [
-            const Icon(Icons.mark_email_read_outlined, size: 16, color: AppColors.mustard),
-            const SizedBox(width: 8),
-            Expanded(child: Text('Kode verifikasi telah dikirim ke email Anda saat ini: $_oldEmail', style: AppTextStyles.caption.copyWith(color: AppColors.mustard, fontWeight: FontWeight.w600))),
-          ]),
+        const SizedBox(height: 16),
+        Center(
+          child: Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: const Icon(Icons.mail_outline, size: 28, color: AppColors.primary),
+          ),
         ),
-        const SizedBox(height: 12),
-        TextField(controller: _otp, enabled: !_isLoading, keyboardType: TextInputType.number, maxLength: 6, decoration: const InputDecoration(labelText: 'Kode OTP (6 digit)')),
-        const SizedBox(height: 8),
-        ElevatedButton(
+        const SizedBox(height: 16),
+        Center(child: Text('Verifikasi Email', style: AppTextStyles.h3)),
+        const SizedBox(height: 4),
+        Center(
+          child: Text(
+            'Masukkan 6 digit kode yang kami kirim ke $_oldEmail (email lamamu)',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodyMuted.copyWith(fontSize: 13),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _OtpBoxes(controller: _otp, focusNode: _otpFocus, enabled: !_isLoading),
+        const SizedBox(height: 16),
+        PrimaryButton(
+          label: 'Verifikasi',
+          loading: _isLoading,
+          verticalPadding: 12,
+          fontSize: 13,
+          showShadow: false,
           onPressed: _isLoading ? null : _verify,
-          child: _isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Verifikasi Email Baru'),
         ),
-      ] else
-        ElevatedButton(
+      ] else ...[
+        const SizedBox(height: 12),
+        PrimaryButton(
+          label: 'Kirim Kode',
+          loading: _isLoading,
+          verticalPadding: 10,
+          fontSize: 13,
+          showShadow: false,
           onPressed: _isLoading ? null : _sendOtp,
-          child: _isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Kirim Kode Verifikasi'),
         ),
-    ])));
+      ],
+    ]));
+  }
+}
+
+/// 6 kotak OTP (tampilan saja). Input tetap lewat satu [TextEditingController]
+/// yang sama dengan sebelumnya; TextField transparan menangkap ketikan.
+class _OtpBoxes extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final bool enabled;
+  const _OtpBoxes({required this.controller, required this.focusNode, required this.enabled});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => focusNode.requestFocus(),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          AnimatedBuilder(
+            animation: Listenable.merge([controller, focusNode]),
+            builder: (_, __) {
+              final text = controller.text;
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(6, (i) {
+                  final focused = focusNode.hasFocus && i == (text.length < 6 ? text.length : 5);
+                  return Container(
+                    width: 44,
+                    height: 44,
+                    margin: EdgeInsets.only(left: i == 0 ? 0 : 8),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: focused ? AppColors.primary : AppColors.border),
+                      boxShadow: focused
+                          ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), spreadRadius: 2)]
+                          : null,
+                    ),
+                    child: Text(
+                      i < text.length ? text[i] : '',
+                      style: AppTextStyles.title.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  );
+                }),
+              );
+            },
+          ),
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0,
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                enabled: enabled,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                showCursor: false,
+                enableInteractiveSelection: false,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -320,19 +494,23 @@ class _ChangePasswordSectionState extends State<_ChangePasswordSection> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
-      TextField(controller: _old, obscureText: true, enabled: !_isLoading, decoration: const InputDecoration(labelText: 'Password lama')),
+    return _SectionCard(child: Column(children: [
+      _labeledField('Password lama', TextField(controller: _old, obscureText: true, enabled: !_isLoading, style: AppTextStyles.body, decoration: _fieldDecoration('••••••••'))),
       const SizedBox(height: 12),
-      TextField(controller: _new, obscureText: true, enabled: !_isLoading, onChanged: (_) => setState(() {}), decoration: const InputDecoration(labelText: 'Password baru')),
-      const SizedBox(height: 8),
-      PasswordCriteriaChecklist(password: _new.text),
+      _labeledField('Password baru', TextField(controller: _new, obscureText: true, enabled: !_isLoading, onChanged: (_) => setState(() {}), style: AppTextStyles.body, decoration: _fieldDecoration('••••••••'))),
       const SizedBox(height: 12),
-      TextField(controller: _confirm, obscureText: true, enabled: !_isLoading, decoration: const InputDecoration(labelText: 'Konfirmasi password')),
+      Align(alignment: Alignment.centerLeft, child: PasswordCriteriaChecklist(password: _new.text)),
       const SizedBox(height: 12),
-      ElevatedButton(
+      _labeledField('Konfirmasi password', TextField(controller: _confirm, obscureText: true, enabled: !_isLoading, style: AppTextStyles.body, decoration: _fieldDecoration('••••••••'))),
+      const SizedBox(height: 12),
+      PrimaryButton(
+        label: 'Simpan Password Baru',
+        loading: _isLoading,
+        verticalPadding: 10,
+        fontSize: 13,
+        showShadow: false,
         onPressed: _isLoading ? null : _save,
-        child: _isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Simpan Password Baru'),
       ),
-    ])));
+    ]));
   }
 }

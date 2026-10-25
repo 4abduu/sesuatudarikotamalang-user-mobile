@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/rating_stars.dart';
 import '../../../features/account/providers/reviews_provider.dart';
@@ -46,7 +48,7 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
                   )
                 : ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                     itemCount: mine.length,
                     itemBuilder: (_, i) {
                       final r = mine[i];
@@ -56,17 +58,25 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
                       );
                       final displayName = r.productName ?? prod?.name ?? 'Produk DariKota Malang';
 
-                      return Card(
-                        child: Padding(
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Container(
+                          width: double.infinity,
                           padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: AppColors.border),
+                            boxShadow: AppShadows.soft,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(displayName, style: AppTextStyles.h3),
+                              Text(displayName, style: AppTextStyles.h3.copyWith(height: 1.2)),
                               const SizedBox(height: 4),
                               RatingStars(value: r.rating.toDouble(), size: 14),
                               const SizedBox(height: 8),
-                              Text(r.comment, style: AppTextStyles.body),
+                              Text(r.comment, style: AppTextStyles.body.copyWith(height: 1.375)),
                               const SizedBox(height: 4),
                               Text(r.date, style: AppTextStyles.caption),
                             ],

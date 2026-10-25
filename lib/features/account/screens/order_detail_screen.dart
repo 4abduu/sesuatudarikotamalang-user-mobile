@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../core/utils/currency_formatter.dart';
@@ -160,7 +161,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               onRefresh: _loadOrder,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                 child: Column(
                   children: [
                     if (isWaitingPayment && o.holdExpiresAt != null) ...[
@@ -208,10 +209,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       const SizedBox(height: 16),
                     ],
 
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.border),
+                        boxShadow: AppShadows.soft,
+                      ),
+                      child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Detail Pesanan', style: AppTextStyles.h3),
@@ -227,12 +234,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF9B3320).withValues(alpha: 0.1),
+                                  color: AppColors.destructive.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Text(
                                   'Toko tidak lagi menjamin penyimpanan barang ini. Hubungi admin untuk konfirmasi.',
-                                  style: TextStyle(fontSize: 12, color: Color(0xFF9B3320)),
+                                  style: TextStyle(fontSize: 12, color: AppColors.destructive),
                                 ),
                               ),
                             ],
@@ -251,7 +258,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                               ),
                             ],
                           ],
-                        ),
                       ),
                     ),
 
@@ -260,11 +266,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     if (isCompleted && !o.reviewed) ...[
                       PrimaryButton(
                         label: 'Beri Ulasan',
-                        icon: const Icon(Icons.star, size: 16),
+                        icon: const Icon(Icons.star_outline, size: 16),
                         onPressed: () => context.push('/akun/ulasan/write?order=${widget.orderId}'),
                       ),
                     ] else if (isCompleted && o.reviewed) ...[
-                      const Text('Sudah diulas', style: TextStyle(fontSize: 13, color: Color(0xFF6B7A3D))),
+                      const Text('Sudah diulas', style: TextStyle(fontSize: 13, color: AppColors.moss)),
                     ],
 
                     if (isWaitingPayment) ...[
@@ -330,6 +336,6 @@ class _Row extends StatelessWidget {
   const _Row({required this.label, required this.value});
   @override
   Widget build(BuildContext context) {
-    return Padding(padding: const EdgeInsets.only(bottom: 6), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [SizedBox(width: 100, child: Text(label, style: AppTextStyles.caption)), Expanded(child: Text(value, style: AppTextStyles.body))]));
+    return Padding(padding: const EdgeInsets.only(bottom: 6), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [SizedBox(width: 100, child: Text(label, style: AppTextStyles.caption)), const SizedBox(width: 8), Expanded(child: Text(value, textAlign: TextAlign.right, style: AppTextStyles.body))]));
   }
 }

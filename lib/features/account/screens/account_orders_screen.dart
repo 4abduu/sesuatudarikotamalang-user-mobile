@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/utils/date_formatter.dart';
@@ -64,16 +65,24 @@ class _AccountOrdersScreenState extends State<AccountOrdersScreen> {
                   )
                 : ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                     itemCount: mine.length,
                     itemBuilder: (_, i) {
                       final o = mine[i];
                       final status = effectiveStatus(o);
-                      return GestureDetector(
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: GestureDetector(
                         onTap: () => context.push('/akun/pesanan/${o.id}'),
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: AppColors.border),
+                            boxShadow: AppShadows.soft,
+                          ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -97,7 +106,7 @@ class _AccountOrdersScreenState extends State<AccountOrdersScreen> {
                                 ),
                               ],
                             ),
-                          ),
+                        ),
                         ),
                       );
                     },

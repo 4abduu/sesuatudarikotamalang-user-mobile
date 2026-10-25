@@ -151,7 +151,20 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
                 child: Row(children: [
                   const Icon(Icons.inventory_2_outlined, size: 18, color: AppColors.moss),
                   const SizedBox(width: 8),
-                  Expanded(child: Text('Untuk produk: $_productName', style: AppTextStyles.caption)),
+                  Expanded(
+                    child: Text.rich(
+                      TextSpan(
+                        style: AppTextStyles.caption,
+                        children: [
+                          const TextSpan(text: 'Untuk produk: '),
+                          TextSpan(
+                            text: _productName,
+                            style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.moss),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ]),
               ),
               const SizedBox(height: 16),
@@ -161,44 +174,46 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
             _AiHelpCard(onTap: _openAiHelper),
             const SizedBox(height: 16),
 
-            Text('Judul Cerita', style: AppTextStyles.label),
+            Text('Judul Cerita', style: _formLabel),
             const SizedBox(height: 6),
             TextField(
               controller: _judul,
-              decoration: const InputDecoration(hintText: 'cth: Jendela yang Nggak Pernah Ketutup'),
+              style: AppTextStyles.body,
+              decoration: _fieldDecoration('cth: Jendela yang Nggak Pernah Ketutup'),
             ),
             const SizedBox(height: 16),
-            Text('Isi Cerita', style: AppTextStyles.label),
+            Text('Isi Cerita', style: _formLabel),
             const SizedBox(height: 6),
             TextField(
               controller: _isi,
+              minLines: 6,
               maxLines: 8,
-              decoration: const InputDecoration(
-                hintText: 'Ceritakan inspirasi di balik karya ini...',
-                alignLabelWithHint: true,
-              ),
+              style: AppTextStyles.body.copyWith(height: 1.3),
+              decoration: _fieldDecoration('Ceritakan inspirasi di balik karya ini...').copyWith(alignLabelWithHint: true),
             ),
             const SizedBox(height: 16),
-            Text('Foto Proses Pembuatan', style: AppTextStyles.label),
-            const SizedBox(height: 6),
+            Text('Foto Proses Pembuatan', style: _formLabel),
+            const SizedBox(height: 4),
             Text('Unggah beberapa foto proses (opsional)', style: AppTextStyles.caption),
             const SizedBox(height: 8),
             _PhotoGallery(photos: _photos, onPick: _pickPhoto, onRemove: (i) => setState(() => _photos.removeAt(i))),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             PrimaryButton(
               label: _isSaving
                   ? 'Menyimpan...'
                   : (_isEdit ? 'Simpan Perubahan' : 'Tambah Cerita'),
               onPressed: _isSaving ? null : _save,
-              icon: const Icon(Icons.save_outlined, size: 18),
+              icon: const Icon(Icons.check, size: 16),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: SecondaryButton(
                 label: 'Batal',
                 onPressed: () => context.pop(),
                 icon: const Icon(Icons.close, size: 16),
+                verticalPadding: 12,
+                fontSize: 14,
               ),
             ),
             const SizedBox(height: 24),
@@ -208,6 +223,21 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
     );
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Style helpers (visual only) — sesuai 19-mformcerita.tsx            */
+/* ------------------------------------------------------------------ */
+
+/// Label field: Baloo 2 14 semibold (font-display text-[14px] font-semibold).
+TextStyle get _formLabel =>
+    AppTextStyles.title.copyWith(fontSize: 14, fontWeight: FontWeight.w600);
+
+/// Field: fill surface, border 1px, radius 12, padding 12, hint muted.
+InputDecoration _fieldDecoration(String hint) => InputDecoration(
+      hintText: hint,
+      hintStyle: AppTextStyles.bodyMuted,
+      contentPadding: const EdgeInsets.all(12),
+    );
 
 /* ------------------------------------------------------------------ */
 /* AI Help Card — tombol opsional di atas Judul Cerita                */
@@ -248,7 +278,7 @@ class _AiHelpCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Bantu Tulis dengan AI', style: AppTextStyles.title.copyWith(color: AppColors.moss)),
+                    Text('Bantu Tulis dengan AI', style: AppTextStyles.title.copyWith(fontSize: 14, color: AppColors.moss)),
                     const SizedBox(height: 2),
                     Text('Isi poin singkat, AI susun draft ceritanya.', style: AppTextStyles.caption),
                   ],
@@ -410,11 +440,11 @@ class _AiHelperSheetState extends State<_AiHelperSheet> {
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text('Bantu Tulis dengan AI', style: AppTextStyles.h3),
+                      child: Text('Bantu Tulis dengan AI', style: AppTextStyles.title.copyWith(fontSize: 14, fontWeight: FontWeight.w700)),
                     ),
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.close, size: 20),
+                      icon: const Icon(Icons.close, size: 16, color: AppColors.muted),
                       tooltip: 'Tutup',
                     ),
                   ],
@@ -424,7 +454,7 @@ class _AiHelperSheetState extends State<_AiHelperSheet> {
                   'AI hanya memakai poin yang kamu tulis, tidak mengarang fakta.',
                   style: AppTextStyles.caption,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 Flexible(
                   child: SingleChildScrollView(
                     child: _buildBodyForState(),
@@ -476,13 +506,11 @@ class _AiHelperSheetState extends State<_AiHelperSheet> {
           label: 'Buat Draft',
           onPressed: _canGenerate ? _generate : null,
           icon: const Icon(Icons.auto_awesome, size: 16),
+          color: AppColors.moss,
         );
       case StoryAiState.loading:
-        return const PrimaryButton(
-          label: 'AI lagi merangkai ceritamu…',
-          onPressed: null,
-          loading: true,
-        );
+        // TSX state "loading": hanya spinner + skeleton, tanpa tombol.
+        return const SizedBox.shrink();
       case StoryAiState.result:
       case StoryAiState.error:
         return const SizedBox.shrink();
@@ -522,14 +550,14 @@ class _InputForm extends StatelessWidget {
           placeholder: 'singa dengan latar bangunan heritage',
           onChanged: onChanged,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         _PointField(
           label: 'Proses pembuatan',
           controller: process,
           placeholder: 'sketsa tangan lalu didigitalkan, dicetak enamel',
           onChanged: onChanged,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         _PointField(
           label: 'Inspirasi di baliknya',
           controller: inspiration,
@@ -549,6 +577,11 @@ class _InputForm extends StatelessWidget {
     );
   }
 }
+
+OutlineInputBorder _pointBorder(Color color, {double width = 1}) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: BorderSide(color: color, width: width),
+    );
 
 class _PointField extends StatelessWidget {
   final String label;
@@ -576,6 +609,7 @@ class _PointField extends StatelessWidget {
               builder: (_, v, __) => Text(
                 '${v.text.length}/300',
                 style: AppTextStyles.caption.copyWith(
+                  fontSize: 11,
                   color: v.text.length > 300 ? AppColors.destructive : AppColors.muted,
                 ),
               ),
@@ -589,9 +623,15 @@ class _PointField extends StatelessWidget {
           maxLines: 3,
           minLines: 2,
           onChanged: (_) => onChanged(),
+          style: AppTextStyles.label.copyWith(fontWeight: FontWeight.w400),
           decoration: InputDecoration(
             hintText: placeholder,
+            hintStyle: AppTextStyles.label.copyWith(fontWeight: FontWeight.w400, color: AppColors.muted),
             counterText: '', // pakai counter custom di atas
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            border: _pointBorder(AppColors.border),
+            enabledBorder: _pointBorder(AppColors.border),
+            focusedBorder: _pointBorder(AppColors.primary, width: 1.5),
           ),
         ),
       ],
@@ -618,24 +658,24 @@ class _LoadingView extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.moss),
             ),
             const SizedBox(width: 10),
-            Text('AI lagi merangkai ceritamu…', style: AppTextStyles.title.copyWith(color: AppColors.moss)),
+            Text('AI lagi merangkai ceritamu…', style: AppTextStyles.title.copyWith(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.moss)),
           ],
         ),
-        const SizedBox(height: 16),
-        // Skeleton shimmer Judul
-        const _ShimmerBlock(width: 140, height: 14),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
+        // Skeleton shimmer (lebar mengikuti TSX: 128 / 100% / 92% / 85% ...)
+        const _ShimmerBlock(width: 128, height: 14),
+        const SizedBox(height: 8),
         const _ShimmerBlock(width: double.infinity, height: 10),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
+        const _ShimmerBlock(width: double.infinity, widthFactor: 0.92, height: 10),
+        const SizedBox(height: 8),
+        const _ShimmerBlock(width: double.infinity, widthFactor: 0.85, height: 10),
+        const SizedBox(height: 20),
+        const _ShimmerBlock(width: 112, height: 14),
+        const SizedBox(height: 8),
         const _ShimmerBlock(width: double.infinity, height: 10),
-        const SizedBox(height: 6),
-        const _ShimmerBlock(width: double.infinity, height: 10),
-        const SizedBox(height: 14),
-        const _ShimmerBlock(width: 120, height: 14),
-        const SizedBox(height: 10),
-        const _ShimmerBlock(width: double.infinity, height: 10),
-        const SizedBox(height: 6),
-        const _ShimmerBlock(width: double.infinity, height: 10),
+        const SizedBox(height: 8),
+        const _ShimmerBlock(width: double.infinity, widthFactor: 0.90, height: 10),
       ],
     );
   }
@@ -644,7 +684,8 @@ class _LoadingView extends StatelessWidget {
 class _ShimmerBlock extends StatefulWidget {
   final double width;
   final double height;
-  const _ShimmerBlock({required this.width, required this.height});
+  final double widthFactor;
+  const _ShimmerBlock({required this.width, required this.height, this.widthFactor = 1});
 
   @override
   State<_ShimmerBlock> createState() => _ShimmerBlockState();
@@ -674,12 +715,20 @@ class _ShimmerBlockState extends State<_ShimmerBlock> with SingleTickerProviderS
       animation: _c,
       builder: (_, __) {
         final alpha = 0.55 + 0.35 * _c.value;
-        return Container(
+        final block = Container(
           width: effectiveWidth,
           height: widget.height,
           decoration: BoxDecoration(
             color: AppColors.border.withValues(alpha: alpha),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        );
+        if (widget.widthFactor == 1) return block;
+        return Align(
+          alignment: Alignment.centerLeft,
+          child: FractionallySizedBox(
+            widthFactor: widget.widthFactor,
+            child: SizedBox(height: widget.height, child: block),
           ),
         );
       },
@@ -728,8 +777,8 @@ class _ResultView extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 14),
-        Text('Judul Cerita', style: AppTextStyles.label),
+        const SizedBox(height: 12),
+        Text('Judul Cerita', style: AppTextStyles.label.copyWith(fontSize: 12)),
         const SizedBox(height: 6),
         Container(
           width: double.infinity,
@@ -739,10 +788,10 @@ class _ResultView extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AppColors.border),
           ),
-          child: Text(draft.title, style: AppTextStyles.title),
+          child: Text(draft.title, style: AppTextStyles.title.copyWith(fontSize: 14, fontWeight: FontWeight.w700)),
         ),
         const SizedBox(height: 12),
-        Text('Isi Cerita', style: AppTextStyles.label),
+        Text('Isi Cerita', style: AppTextStyles.label.copyWith(fontSize: 12)),
         const SizedBox(height: 6),
         Container(
           width: double.infinity,
@@ -752,15 +801,15 @@ class _ResultView extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AppColors.border),
           ),
-          child: Text(draft.body, style: AppTextStyles.body.copyWith(height: 1.5)),
+          child: Text(draft.body, style: AppTextStyles.body.copyWith(fontSize: 13, height: 1.625)),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         PrimaryButton(
           label: 'Gunakan Draft Ini',
           onPressed: onUseDraft,
           icon: const Icon(Icons.check_circle_outline, size: 18),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
@@ -768,14 +817,18 @@ class _ResultView extends StatelessWidget {
                 label: 'Buat Ulang',
                 onPressed: onRegenerate,
                 icon: const Icon(Icons.refresh, size: 16),
+                verticalPadding: 12,
+                fontSize: 13,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Expanded(
               child: SecondaryButton(
                 label: 'Tulis Sendiri',
                 onPressed: onWriteSelf,
                 icon: const Icon(Icons.edit_outlined, size: 16),
+                verticalPadding: 12,
+                fontSize: 13,
               ),
             ),
           ],
@@ -805,8 +858,9 @@ class _ErrorView extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.destructive.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.destructive.withValues(alpha: 0.25)),
+        boxShadow: AppShadows.soft,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -820,24 +874,26 @@ class _ErrorView extends StatelessWidget {
             child: const Icon(Icons.cloud_off_outlined, size: 22, color: AppColors.destructive),
           ),
           const SizedBox(height: 12),
-          Text('Yah, ada kendala', style: AppTextStyles.h3),
-          const SizedBox(height: 6),
+          Text('Yah, ada kendala', style: AppTextStyles.title.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
           Text(
             error.message,
             textAlign: TextAlign.center,
-            style: AppTextStyles.bodyMuted,
+            style: AppTextStyles.bodyMuted.copyWith(fontSize: 13),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           PrimaryButton(
             label: 'Coba Lagi',
             onPressed: onRetry,
             icon: const Icon(Icons.refresh, size: 16),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 4),
           SecondaryButton(
             label: 'Tulis Sendiri',
             onPressed: onWriteSelf,
             icon: const Icon(Icons.edit_outlined, size: 16),
+            verticalPadding: 12,
+            fontSize: 14,
           ),
         ],
       ),
@@ -879,9 +935,10 @@ class _PhotoGallery extends StatelessWidget {
                 child: GestureDetector(
                   onTap: () => onRemove(e.key),
                   child: Container(
-                    padding: const EdgeInsets.all(2),
+                    width: 20,
+                    height: 20,
                     decoration: const BoxDecoration(color: AppColors.destructive, shape: BoxShape.circle),
-                    child: const Icon(Icons.close, size: 14, color: AppColors.onPrimary),
+                    child: const Icon(Icons.close, size: 12, color: AppColors.onPrimary),
                   ),
                 ),
               ),
@@ -890,13 +947,14 @@ class _PhotoGallery extends StatelessWidget {
         }),
         GestureDetector(
           onTap: onPick,
-          child: Container(
+          child: CustomPaint(
+            foregroundPainter: const _DashedRRectPainter(color: AppColors.border, radius: 12, strokeWidth: 1.5),
+            child: Container(
             width: 88,
             height: 88,
             decoration: BoxDecoration(
               color: AppColors.surfaceAlt,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border, style: BorderStyle.solid, width: 1.5),
             ),
             child: const Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -907,8 +965,43 @@ class _PhotoGallery extends StatelessWidget {
               ],
             ),
           ),
+          ),
         ),
       ],
     );
   }
+}
+
+/// Border putus-putus (dashed) untuk tile "Tambah" — hanya visual.
+class _DashedRRectPainter extends CustomPainter {
+  final Color color;
+  final double radius;
+  final double strokeWidth;
+  const _DashedRRectPainter({required this.color, required this.radius, required this.strokeWidth});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(strokeWidth / 2, strokeWidth / 2, size.width - strokeWidth, size.height - strokeWidth),
+      Radius.circular(radius),
+    );
+    final path = Path()..addRRect(rrect);
+    const dash = 5.0;
+    const gap = 4.0;
+    for (final metric in path.computeMetrics()) {
+      double d = 0;
+      while (d < metric.length) {
+        canvas.drawPath(metric.extractPath(d, (d + dash).clamp(0, metric.length)), paint);
+        d += dash + gap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedRRectPainter old) =>
+      old.color != color || old.radius != radius || old.strokeWidth != strokeWidth;
 }

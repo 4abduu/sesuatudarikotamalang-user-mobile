@@ -65,9 +65,20 @@ class MyStoriesScreen extends StatelessWidget {
                   )
                 : ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
-                    itemCount: products.length,
-                    itemBuilder: (_, i) {
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                    itemCount: products.length + 1,
+                    itemBuilder: (_, index) {
+                      // Caption pembuka (sesuai TSX)
+                      if (index == 0) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Text(
+                            'Kelola cerita di balik desain untuk setiap produkmu.',
+                            style: AppTextStyles.bodyMuted,
+                          ),
+                        );
+                      }
+                      final i = index - 1;
                       final p = products[i];
                       final hasStory = p.hasStory;
                       return Padding(
@@ -86,7 +97,11 @@ class MyStoriesScreen extends StatelessWidget {
                                 width: 56,
                                 height: 56,
                                 decoration: BoxDecoration(
-                                  gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]),
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [AppColors.primary, AppColors.primaryLight],
+                                  ),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Icon(Icons.brush, color: AppColors.onPrimary, size: 24),
@@ -96,7 +111,12 @@ class MyStoriesScreen extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(p.name, style: AppTextStyles.label, maxLines: 2, overflow: TextOverflow.ellipsis),
+                                    Text(
+                                      p.name,
+                                      style: AppTextStyles.title.copyWith(fontSize: 14, fontWeight: FontWeight.w700, height: 1.2),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                     const SizedBox(height: 2),
                                     Text(formatRupiah(p.price), style: AppTextStyles.caption),
                                     const SizedBox(height: 8),
@@ -110,7 +130,7 @@ class MyStoriesScreen extends StatelessWidget {
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const Icon(Icons.auto_stories, size: 12, color: AppColors.moss),
+                                            const Icon(Icons.menu_book_outlined, size: 12, color: AppColors.moss),
                                             const SizedBox(width: 4),
                                             Flexible(
                                               child: Text(
@@ -135,9 +155,11 @@ class MyStoriesScreen extends StatelessWidget {
                                   backgroundColor: hasStory ? AppColors.surfaceAlt : AppColors.primary.withValues(alpha: 0.12),
                                   foregroundColor: hasStory ? AppColors.foreground : AppColors.primary,
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
                                 ),
-                                child: Text(hasStory ? 'Edit' : 'Tambah Cerita', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                                child: Text(hasStory ? 'Edit' : 'Tambah Cerita', style: AppTextStyles.title.copyWith(fontSize: 12, fontWeight: FontWeight.w600, color: hasStory ? AppColors.foreground : AppColors.primary)),
                               ),
                             ],
                           ),

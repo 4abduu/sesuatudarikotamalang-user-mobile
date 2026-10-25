@@ -131,6 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return AppScaffold(
       showBottomNav: false,
+      showSearchAction: false,
       body: LayoutBuilder(
         builder: (context, constraints) => SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 48, 24, 32),

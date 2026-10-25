@@ -17,12 +17,14 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
   final Widget? leading;
   final List<Widget>? actions;
+  final bool showSearchAction;
 
   const BrandAppBar({
     super.key,
     this.title,
     this.leading,
     this.actions,
+    this.showSearchAction = true,
   });
 
   @override
@@ -161,17 +163,18 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
           ],
         ),
         actions: [
-          IconButton(
-            tooltip: 'Cari',
-            iconSize: 20,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-            icon: Icon(
-              Icons.search,
-              color: AppColors.foreground.withValues(alpha: 0.7),
+          if (showSearchAction)
+            IconButton(
+              tooltip: 'Cari',
+              iconSize: 20,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              icon: Icon(
+                Icons.search,
+                color: AppColors.foreground.withValues(alpha: 0.7),
+              ),
+              onPressed: () => context.push(RouteNames.pencarian),
             ),
-            onPressed: () => context.push(RouteNames.pencarian),
-          ),
           if (actions != null) ...actions!,
           const SizedBox(width: 12),
         ],
