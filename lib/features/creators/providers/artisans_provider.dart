@@ -5,10 +5,12 @@ import '../../../data/models/product_model.dart';
 
 class ArtisansProvider extends ChangeNotifier {
   List<CreatorModel> _artisans = [];
+  CreatorModel? _officialStore;
   bool _isLoading = false;
   String? _errorMessage;
 
   List<CreatorModel> get artisans => _artisans;
+  CreatorModel? get officialStore => _officialStore;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
@@ -24,12 +26,19 @@ class ArtisansProvider extends ChangeNotifier {
 
     try {
       final res = await ApiClient.get('/artisans');
-      if (res != null && res['artisans'] != null) {
-        final list = (res['artisans'] as List<dynamic>)
-            .map((e) => CreatorModel.fromJson(e as Map<String, dynamic>))
-            .where((a) => a.status == 'aktif')
-            .toList();
-        _artisans = list;
+      if (res != null) {
+        if (res['artisans'] != null) {
+          final list = (res['artisans'] as List<dynamic>)
+              .map((e) => CreatorModel.fromJson(e as Map<String, dynamic>))
+              .where((a) => a.status == 'aktif')
+              .toList();
+          _artisans = list;
+        }
+        if (res['officialStore'] != null && res['officialStore'] is Map<String, dynamic>) {
+          _officialStore = CreatorModel.fromJson(res['officialStore'] as Map<String, dynamic>);
+        } else {
+          _officialStore = null;
+        }
       }
     } catch (e) {
       _errorMessage = e.toString();

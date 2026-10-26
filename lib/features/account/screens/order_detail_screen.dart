@@ -273,6 +273,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       const Text('Sudah diulas', style: TextStyle(fontSize: 13, color: AppColors.moss)),
                     ],
 
+                    if (o.refund != null && o.refund!.shouldShowSection) ...[
+                      const SizedBox(height: 16),
+                      _RefundSection(order: o),
+                    ],
+
                     if (isWaitingPayment) ...[
                       const SizedBox(height: 12),
                       SizedBox(
@@ -281,45 +286,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           icon: const Icon(Icons.cancel_outlined, size: 16, color: AppColors.destructive),
                           label: const Text('Batalkan Reservasi', style: TextStyle(color: AppColors.destructive)),
                           onPressed: _isProcessingAction ? null : () => _handleCancel(o),
-                        ),
-                      ),
-                    ],
-
-                    if (status == OrderStatus.lunas) ...[
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Pesanan sudah dibayar. Pembatalan mandiri tidak dapat dilakukan.',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.foreground),
-                            ),
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              width: double.infinity,
-                              child: OutlinedButton.icon(
-                                icon: const Icon(Icons.chat_outlined, size: 16, color: AppColors.primary),
-                                label: const Text('Butuh Bantuan? Hubungi Admin via WhatsApp'),
-                                onPressed: () {
-                                  final waNumber = context.read<ProductsProvider>().whatsappAdminNumber;
-                                  final msg = Uri.encodeComponent(
-                                    'Halo Admin Sesuatu DariKota Malang, saya butuh bantuan untuk pesanan ${o.orderNumber} (${o.productName}).',
-                                  );
-                                  launchUrl(
-                                    Uri.parse('https://wa.me/$waNumber?text=$msg'),
-                                    mode: LaunchMode.externalApplication,
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ],
@@ -337,5 +303,135 @@ class _Row extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(padding: const EdgeInsets.only(bottom: 6), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [SizedBox(width: 100, child: Text(label, style: AppTextStyles.caption)), const SizedBox(width: 8), Expanded(child: Text(value, textAlign: TextAlign.right, style: AppTextStyles.body))]));
+  }
+}
+
+class _RefundSection extends StatelessWidget {
+  final OrderModel order;
+  const _RefundSection({required this.order});
+
+  void _openWhatsApp(BuildContext context, String template) {
+    final rawNumber = context.read<ProductsProvider>().whatsappAdminNumber;
+    // Normalisasi nomor: buang non-digit; jika diawali 0 ganti dengan 62
+    var cleaned = rawNumber.replaceAll(RegExp(r'\D'), '');
+    if (cleaned.startsWith('0')) {
+      cleaned = '62${cleaned.substring(1)}';
+    }
+    final encoded = Uri.encodeComponent(template);
+    launchUrl(
+      Uri.parse('https://wa.me/$cleaned?text=$encoded'),
+      mode: LaunchMode.externalApplication,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final refund = order.refund!;
+    final state = refund.state;
+    final eligibleUntil = refund.eligibleUntil != null ? formatDateTimeWib(refund.eligibleUntil!) : '-';
+    final refundedAt = refund.refundedAt != null ? formatDateTimeWib(refund.refundedAt!) : '-';
+    final paidAt = refund.paidAt != null ? formatDateTimeWib(refund.paidAt!) : '-';
+
+    String text;
+    Widget? actionWidget;
+
+    switch (state) {
+      case 'dalam_batas_waktu':
+        text = 'Kamu bisa mengajukan pembatalan sampai $eligibleUntil. Refund diproses manual oleh admin lewat WhatsApp.';
+        actionWidget = SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            icon: const Icon(Icons.chat_outlined, size: 16),
+            label: const Text('Ajukan pembatalan via WhatsApp'),
+            onPressed: () {
+              final tpl = 'Halo admin Sesuatu DariKota Malang, saya ingin mengajukan pembatalan dan refund untuk pesanan ${order.orderNumber} (total ${formatRupiah(order.total)}), dibayar pada $paidAt. Mohon diproses. Terima kasih.';
+              _openWhatsApp(context, tpl);
+            },
+          ),
+        );
+        break;
+
+      case 'lewat_batas_waktu':
+        text = 'Batas waktu pengajuan pembatalan sudah lewat ($eligibleUntil). Jika ada kendala dari pihak toko, hubungi admin.';
+        actionWidget = SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.chat_outlined, size: 16),
+            label: const Text('Hubungi admin via WhatsApp'),
+            onPressed: () {
+              final tpl = 'Halo admin Sesuatu DariKota Malang, saya ingin menanyakan pesanan ${order.orderNumber}. Terima kasih.';
+              _openWhatsApp(context, tpl);
+            },
+          ),
+        );
+        break;
+
+      case 'lewat_batas_pengambilan':
+        text = 'Pesanan ini melewati batas pengambilan, sehingga barang dianggap terjual. Jika ada kendala dari pihak toko, hubungi admin.';
+        actionWidget = SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.chat_outlined, size: 16),
+            label: const Text('Hubungi admin via WhatsApp'),
+            onPressed: () {
+              final tpl = 'Halo admin Sesuatu DariKota Malang, saya ingin menanyakan pesanan ${order.orderNumber}. Terima kasih.';
+              _openWhatsApp(context, tpl);
+            },
+          ),
+        );
+        break;
+
+      case 'menunggu_refund':
+        text = 'Refund sedang diproses admin. Kamu akan mendapat notifikasi saat dana dikembalikan.';
+        actionWidget = SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            icon: const Icon(Icons.chat_outlined, size: 16),
+            label: const Text('Tanya status refund via WhatsApp'),
+            onPressed: () {
+              final tpl = 'Halo admin Sesuatu DariKota Malang, saya ingin menanyakan status refund untuk pesanan ${order.orderNumber}. Terima kasih.';
+              _openWhatsApp(context, tpl);
+            },
+          ),
+        );
+        break;
+
+      case 'sudah_direfund':
+        text = 'Refund selesai pada $refundedAt.';
+        actionWidget = null;
+        break;
+
+      default:
+        return const SizedBox.shrink();
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.soft,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.currency_exchange, size: 18, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text('Pembatalan & Pengembalian Dana', style: AppTextStyles.h3),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(text, style: AppTextStyles.bodyMuted),
+          if (actionWidget != null) ...[
+            const SizedBox(height: 12),
+            actionWidget,
+          ],
+        ],
+      ),
+    );
   }
 }

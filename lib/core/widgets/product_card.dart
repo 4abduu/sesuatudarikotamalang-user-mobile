@@ -67,6 +67,14 @@ class ProductCard extends StatelessWidget {
           ),
           Padding(padding: const EdgeInsets.all(10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(product.name, style: GoogleFonts.baloo2(fontSize: 13, fontWeight: FontWeight.w700, height: 1.375, color: AppColors.foreground), maxLines: 2, overflow: TextOverflow.ellipsis),
+            if (product.isOfficial) ...[
+              const SizedBox(height: 3),
+              Row(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.check_circle, size: 11, color: AppColors.primary),
+                const SizedBox(width: 3),
+                Text('Official Store', style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.primary)),
+              ]),
+            ],
             const SizedBox(height: 2),
             Text(product.shortDesc, style: GoogleFonts.poppins(fontSize: 11, color: AppColors.muted), maxLines: 1, overflow: TextOverflow.ellipsis),
             const SizedBox(height: 6),

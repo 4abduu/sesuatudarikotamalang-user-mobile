@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/search_helper.dart';
 import '../../../core/widgets/app_search_decoration.dart';
@@ -61,22 +62,41 @@ class _CreatorsListScreenState extends State<CreatorsListScreen> {
                     child: CircularProgressIndicator(),
                   ),
                 )
-              else if (list.isEmpty)
-                const EmptyState(
-                  icon: Icons.person_search,
-                  title: 'Tidak ada kreator yang cocok',
-                  description: 'Coba kata kunci lain, atau jelajahi semua kreator.',
-                )
-              else
-                ...list.map(
-                  (c) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: CreatorCard(
-                      creator: c,
-                      onTap: () => context.push('/kreator/${c.id}'),
+              else ...[
+                if (_search.trim().isEmpty && artisansProvider.officialStore != null) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                      ),
+                      child: CreatorCard(
+                        creator: artisansProvider.officialStore!,
+                        onTap: () => context.push('/kreator/${artisansProvider.officialStore!.id}'),
+                      ),
                     ),
                   ),
-                ),
+                  const Divider(height: 24),
+                ],
+                if (list.isEmpty)
+                  const EmptyState(
+                    icon: Icons.person_search,
+                    title: 'Tidak ada kreator yang cocok',
+                    description: 'Coba kata kunci lain, atau jelajahi semua kreator.',
+                  )
+                else
+                  ...list.map(
+                    (c) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: CreatorCard(
+                        creator: c,
+                        onTap: () => context.push('/kreator/${c.id}'),
+                      ),
+                    ),
+                  ),
+              ],
             ],
           ),
         ),

@@ -47,8 +47,25 @@ class CreatorCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(creator.name, style: AppTextStyles.h3.copyWith(fontSize: 16, height: 1.25)),
-              Text('@${creator.handle}', style: caption11),
+              Row(
+                children: [
+                  Flexible(child: Text(creator.name, style: AppTextStyles.h3.copyWith(fontSize: 16, height: 1.25), overflow: TextOverflow.ellipsis)),
+                  if (creator.isOfficial) ...[
+                    const SizedBox(width: 4),
+                    const Icon(Icons.check_circle, size: 14, color: AppColors.primary),
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text('Official', style: GoogleFonts.poppins(fontSize: 9, fontWeight: FontWeight.w600, color: AppColors.primary)),
+                    ),
+                  ],
+                ],
+              ),
+              Text(creator.isOfficial ? 'Official Store' : '@${creator.handle}', style: caption11),
               const SizedBox(height: 2),
               Text(creator.bio, style: caption11, maxLines: 1, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 4),

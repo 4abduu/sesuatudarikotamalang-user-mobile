@@ -130,6 +130,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       color: product.totalStock <= 10 ? AppColors.mustard : AppColors.muted,
                     ),
                   ),
+                  if (product.isOfficial) ...[
+                    const SizedBox(width: 8),
+                    Text('•', style: AppTextStyles.caption),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        const Icon(Icons.check_circle, size: 12, color: AppColors.primary),
+                        const SizedBox(width: 3),
+                        Text('Official Store', style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.primary)),
+                      ]),
+                    ),
+                  ],
                 ],
               ),
               const SizedBox(height: 16),
@@ -164,7 +181,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       boxShadow: AppShadows.soft,
                     ),
                     child: Row(
-                      children: [
+                       children: [
                         Container(
                           width: 40,
                           height: 40,
@@ -172,15 +189,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             color: AppColors.primary,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.person_outline, size: 20, color: AppColors.onPrimary),
+                          child: Icon(creator.isOfficial ? Icons.verified : Icons.person_outline, size: 20, color: AppColors.onPrimary),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Dibuat oleh', style: AppTextStyles.caption),
-                              Text(creator.name, style: AppTextStyles.h3.copyWith(height: 1.25)),
+                              Text(creator.isOfficial ? 'Toko Resmi' : 'Dibuat oleh', style: AppTextStyles.caption),
+                              Row(
+                                children: [
+                                  Flexible(child: Text(creator.name, style: AppTextStyles.h3.copyWith(height: 1.25), overflow: TextOverflow.ellipsis)),
+                                  if (creator.isOfficial) ...[
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.check_circle, size: 14, color: AppColors.primary),
+                                  ],
+                                ],
+                              ),
                             ],
                           ),
                         ),

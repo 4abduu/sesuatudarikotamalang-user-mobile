@@ -90,7 +90,33 @@ class _AccountOrdersScreenState extends State<AccountOrdersScreen> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(o.orderNumber, style: AppTextStyles.h3),
-                                    _StatusBadge(status: status),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (o.refundStatus == 'menunggu') ...[
+                                          Container(
+                                            margin: const EdgeInsets.only(right: 6),
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.mustard.withValues(alpha: 0.15),
+                                              borderRadius: BorderRadius.circular(999),
+                                            ),
+                                            child: Text('Menunggu refund', style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF8A6A1A))),
+                                          ),
+                                        ] else if (o.refundStatus == 'selesai') ...[
+                                          Container(
+                                            margin: const EdgeInsets.only(right: 6),
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.moss.withValues(alpha: 0.15),
+                                              borderRadius: BorderRadius.circular(999),
+                                            ),
+                                            child: Text('Refund selesai', style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.moss)),
+                                          ),
+                                        ],
+                                        _StatusBadge(status: status),
+                                      ],
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 4),

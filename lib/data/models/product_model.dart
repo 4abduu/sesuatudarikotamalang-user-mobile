@@ -24,6 +24,8 @@ class ProductModel {
   final String shopeeUrl;
   final bool isLimited;
   final bool isActive;
+  final bool isOfficial;
+  final String artisanName;
 
   const ProductModel({
     required this.id,
@@ -45,6 +47,8 @@ class ProductModel {
     required this.shopeeUrl,
     this.isLimited = false,
     this.isActive = true,
+    this.isOfficial = false,
+    this.artisanName = '',
   });
 
   /// Menggunakan effectiveStock dari backend (stok mentah dikurangi order aktif)
@@ -85,12 +89,16 @@ class ProductModel {
 
     final imgs = (j['images'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
 
+    final artisanObj = j['artisan'] as Map<String, dynamic>?;
+    final isOfficial = j['isOfficial'] == true || artisanObj?['isOfficial'] == true;
+    final artisanName = artisanObj?['brandName'] ?? (artisanObj?['name'] ?? (j['artisanName'] ?? ''));
+
     return ProductModel(
       id: j['id'] ?? '',
       name: j['name'] ?? '',
       categoryId: j['categoryId'] ?? (j['category']?['id'] ?? ''),
       price: (j['price'] as num?)?.toInt() ?? 0,
-      creatorId: j['artisanId'] ?? (j['artisan']?['id'] ?? (j['creatorId'] ?? '')),
+      creatorId: j['artisanId'] ?? (artisanObj?['id'] ?? (j['creatorId'] ?? '')),
       shortDesc: j['shortDescription'] ?? (j['shortDesc'] ?? ''),
       description: j['description'] ?? '',
       images: imgs,
@@ -105,6 +113,8 @@ class ProductModel {
       shopeeUrl: j['shopeeUrl'] ?? '',
       isLimited: isLimited,
       isActive: j['isActive'] ?? true,
+      isOfficial: isOfficial,
+      artisanName: artisanName,
     );
   }
 

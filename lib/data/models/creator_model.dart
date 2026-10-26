@@ -11,6 +11,7 @@ class CreatorModel {
   final String accent; // hex for avatar gradient
   final String? avatarUrl;
   final String status;
+  final bool isOfficial;
 
   const CreatorModel({
     required this.id,
@@ -25,6 +26,7 @@ class CreatorModel {
     this.accent = '8B4513',
     this.avatarUrl,
     this.status = 'aktif',
+    this.isOfficial = false,
   });
 
   factory CreatorModel.fromJson(Map<String, dynamic> j) {
@@ -49,6 +51,7 @@ class CreatorModel {
       accent: j['accent'] ?? '8B4513',
       avatarUrl: j['avatarUrl'],
       status: j['status'] ?? 'aktif',
+      isOfficial: j['isOfficial'] == true,
     );
   }
 

@@ -1,3 +1,5 @@
+import 'refund_info_model.dart';
+
 enum OrderStatus {
   menungguBayar,
   lunas,
@@ -116,6 +118,10 @@ class OrderModel {
   final String? pickupDeadline;
   final List<OrderItemModel> items;
   final Map<String, dynamic>? snap;
+  final String refundStatus; // "tidak_ada" | "menunggu" | "selesai"
+  final String? refundedAt;
+  final String? cancelReason;
+  final RefundInfo? refund;
 
   const OrderModel({
     required this.id,
@@ -137,6 +143,10 @@ class OrderModel {
     this.pickupDeadline,
     this.items = const [],
     this.snap,
+    this.refundStatus = 'tidak_ada',
+    this.refundedAt,
+    this.cancelReason,
+    this.refund,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> j) {
@@ -155,6 +165,11 @@ class OrderModel {
       pName = rawItems.first.productName;
       vLabel = rawItems.first.variantLabel;
       vId = rawItems.first.variantId;
+    }
+
+    RefundInfo? rInfo;
+    if (j['refund'] != null && j['refund'] is Map<String, dynamic>) {
+      rInfo = RefundInfo.fromJson(j['refund'] as Map<String, dynamic>);
     }
 
     return OrderModel(
@@ -177,6 +192,10 @@ class OrderModel {
       pickupDeadline: j['pickupDeadline'],
       items: rawItems,
       snap: j['snap'] as Map<String, dynamic>?,
+      refundStatus: j['refundStatus'] ?? (rInfo?.refundStatus ?? 'tidak_ada'),
+      refundedAt: j['refundedAt'] ?? rInfo?.refundedAt,
+      cancelReason: j['cancelReason'],
+      refund: rInfo,
     );
   }
 
@@ -200,6 +219,10 @@ class OrderModel {
     'pickupDeadline': pickupDeadline,
     'items': items.map((e) => e.toJson()).toList(),
     if (snap != null) 'snap': snap,
+    'refundStatus': refundStatus,
+    if (refundedAt != null) 'refundedAt': refundedAt,
+    if (cancelReason != null) 'cancelReason': cancelReason,
+    if (refund != null) 'refund': refund!.toJson(),
   };
 
   OrderModel copyWith({
