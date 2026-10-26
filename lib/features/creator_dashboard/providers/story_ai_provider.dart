@@ -22,7 +22,8 @@ class StoryAiError {
 class StoryAiDraft {
   final String title;
   final String body;
-  StoryAiDraft({required this.title, required this.body});
+  final String process;
+  StoryAiDraft({required this.title, required this.body, this.process = ''});
 }
 
 /// Input poin singkat dari kreator.
@@ -93,6 +94,7 @@ class StoryAiProvider extends ChangeNotifier {
         _draft = StoryAiDraft(
           title: (draftData['judul'] ?? draftData['title'] ?? 'Behind the Design').toString(),
           body: (draftData['isi'] ?? draftData['body'] ?? '').toString(),
+          process: (draftData['proses'] ?? draftData['process'] ?? '').toString(),
         );
         _state = StoryAiState.result;
         notifyListeners();

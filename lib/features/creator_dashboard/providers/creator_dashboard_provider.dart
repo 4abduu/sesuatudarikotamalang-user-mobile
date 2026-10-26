@@ -130,12 +130,14 @@ class CreatorDashboardProvider extends ChangeNotifier {
     required String productId,
     required String title,
     required String content,
+    String? process,
     String? coverImageUrl,
     List<String> processImages = const [],
   }) async {
     final body = <String, dynamic>{
       'title': title,
       'content': content,
+      if (process != null && process.trim().isNotEmpty) 'process': process.trim(),
       if (coverImageUrl != null) 'coverImageUrl': coverImageUrl,
       'processImages': processImages,
     };

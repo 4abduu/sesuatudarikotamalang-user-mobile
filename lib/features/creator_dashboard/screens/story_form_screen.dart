@@ -35,6 +35,7 @@ class StoryFormScreen extends StatefulWidget {
 class _StoryFormScreenState extends State<StoryFormScreen> {
   final _judul = TextEditingController();
   final _isi = TextEditingController();
+  final _proses = TextEditingController();
   final List<String> _photos = [];
   String _productName = '';
   bool _isSaving = false;
@@ -54,6 +55,9 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
         if (p.hasStory) {
           _judul.text = p.story!.title;
           _isi.text = p.story!.body;
+          if (p.story!.process != null && p.story!.process!.isNotEmpty) {
+            _proses.text = p.story!.process!;
+          }
         }
       }
     }
@@ -63,6 +67,7 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
   void dispose() {
     _judul.dispose();
     _isi.dispose();
+    _proses.dispose();
     super.dispose();
   }
 
@@ -89,6 +94,7 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
         productId: widget.productId,
         title: _judul.text.trim(),
         content: _isi.text.trim(),
+        process: _proses.text.trim().isNotEmpty ? _proses.text.trim() : null,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -124,9 +130,12 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
           setState(() {
             _judul.text = draft.title;
             _isi.text = draft.body;
+            if (draft.process.isNotEmpty) {
+              _proses.text = draft.process;
+            }
           });
         },
-        hasExistingContent: _judul.text.isNotEmpty || _isi.text.isNotEmpty,
+        hasExistingContent: _judul.text.isNotEmpty || _isi.text.isNotEmpty || _proses.text.isNotEmpty,
       ),
     );
   }
@@ -190,6 +199,18 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
               maxLines: 8,
               style: AppTextStyles.body.copyWith(height: 1.3),
               decoration: _fieldDecoration('Ceritakan inspirasi di balik karya ini...').copyWith(alignLabelWithHint: true),
+            ),
+            const SizedBox(height: 16),
+            Text('Proses Pembuatan (ringkas)', style: _formLabel),
+            const SizedBox(height: 4),
+            Text('Opsional, jelaskan proses pembuatan karya', style: AppTextStyles.caption),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _proses,
+              maxLines: 3,
+              minLines: 2,
+              style: AppTextStyles.body.copyWith(height: 1.3),
+              decoration: _fieldDecoration('Contoh: Sketsa tangan lalu didigitalkan dan dicetak di kertas bertekstur'),
             ),
             const SizedBox(height: 16),
             Text('Foto Proses Pembuatan', style: _formLabel),
@@ -342,7 +363,25 @@ class _AiHelperSheetState extends State<_AiHelperSheet> {
 
   int get _totalLength =>
       _motif.text.length + _process.text.length + _inspiration.text.length;
-  bool get _canGenerate => _totalLength >= 30;
+  int get _motifPlusInspirationLength => _motif.text.length + _inspiration.text.length;
+
+  /// Aturan 2.2:
+  /// - Minimal salah satu dari Motif atau Inspirasi harus terisi;
+  /// - Gabungan karakter Motif + Inspirasi minimal 15 karakter (Proses saja belum cukup);
+  /// - Total karakter semua poin minimal 30;
+  bool get _canGenerate =>
+      _totalLength >= 30 && _motifPlusInspirationLength >= 15;
+
+  String? get _validationHint {
+    if (_totalLength == 0) return 'Isi minimal beberapa poin singkat ya';
+    if (_motifPlusInspirationLength < 15) {
+      return 'Isi Motif atau Inspirasi sebagai dasar cerita. Proses saja belum cukup.';
+    }
+    if (_totalLength < 30) {
+      return 'Total karakter dari semua poin minimal 30 ya (${30 - _totalLength} lagi)';
+    }
+    return null;
+  }
 
   void _generate() {
     if (!_canGenerate) return;
@@ -371,8 +410,11 @@ class _AiHelperSheetState extends State<_AiHelperSheet> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Isi cerita saat ini akan diganti', style: AppTextStyles.h3),
-        content: Text('Lanjut mengganti dengan draft dari AI?', style: AppTextStyles.body),
+        title: Text('Ganti isi cerita?', style: AppTextStyles.h3),
+        content: Text(
+          'Judul, isi cerita, dan proses (bila ada) akan diganti dengan draft dari AI. Lanjut?',
+          style: AppTextStyles.body,
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Batal')),
           FilledButton(
@@ -479,6 +521,7 @@ class _AiHelperSheetState extends State<_AiHelperSheet> {
           inspiration: _inspiration,
           onChanged: () => setState(() {}),
           canGenerate: _canGenerate,
+          validationHint: _validationHint,
           onGenerate: _generate,
         );
       case StoryAiState.loading:
@@ -529,6 +572,7 @@ class _InputForm extends StatelessWidget {
   final VoidCallback onChanged;
   final VoidCallback onGenerate;
   final bool canGenerate;
+  final String? validationHint;
 
   const _InputForm({
     required this.motif,
@@ -537,6 +581,7 @@ class _InputForm extends StatelessWidget {
     required this.onChanged,
     required this.onGenerate,
     required this.canGenerate,
+    this.validationHint,
   });
 
   @override
@@ -552,25 +597,27 @@ class _InputForm extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         _PointField(
-          label: 'Proses pembuatan',
+          label: 'Proses pembuatan (opsional)',
           controller: process,
           placeholder: 'sketsa tangan lalu didigitalkan, dicetak enamel',
           onChanged: onChanged,
         ),
         const SizedBox(height: 8),
         _PointField(
-          label: 'Inspirasi di baliknya',
+          label: 'Inspirasi di baliknya (opsional)',
           controller: inspiration,
           placeholder: 'jalan Basuki Rahmat sore hari',
           onChanged: onChanged,
         ),
         const SizedBox(height: 12),
-        if (!canGenerate)
+        if (validationHint != null)
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
-              'Isi minimal beberapa poin singkat ya',
-              style: AppTextStyles.caption.copyWith(color: AppColors.mustard),
+              validationHint!,
+              style: AppTextStyles.caption.copyWith(
+                color: canGenerate ? AppColors.moss : AppColors.mustard,
+              ),
             ),
           ),
       ],
@@ -803,6 +850,21 @@ class _ResultView extends StatelessWidget {
           ),
           child: Text(draft.body, style: AppTextStyles.body.copyWith(fontSize: 13, height: 1.625)),
         ),
+        if (draft.process.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Text('Proses Pembuatan', style: AppTextStyles.label.copyWith(fontSize: 12)),
+          const SizedBox(height: 6),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Text(draft.process, style: AppTextStyles.body.copyWith(fontSize: 13, height: 1.5)),
+          ),
+        ],
         const SizedBox(height: 12),
         PrimaryButton(
           label: 'Gunakan Draft Ini',

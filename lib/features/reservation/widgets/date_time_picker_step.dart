@@ -55,12 +55,6 @@ class _SlotSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (provider.slotsLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 16),
-        child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))),
-      );
-    }
     if (provider.slotsError != null) {
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(provider.slotsError!, style: AppTextStyles.caption),
@@ -72,36 +66,77 @@ class _SlotSection extends StatelessWidget {
         ),
       ]);
     }
+
+    // Gunakan daftar slot saat ini, atau fallback ke 6 jam operasional toko jika masih kosong awal
+    final slotsList = provider.slots.isNotEmpty
+        ? provider.slots
+        : const [
+            PickupSlot(time: '10:00', capacity: 5, booked: 0, available: 5, isPast: false, isClosed: false, bookable: true),
+            PickupSlot(time: '11:00', capacity: 5, booked: 0, available: 5, isPast: false, isClosed: false, bookable: true),
+            PickupSlot(time: '12:00', capacity: 5, booked: 0, available: 5, isPast: false, isClosed: false, bookable: true),
+            PickupSlot(time: '13:00', capacity: 5, booked: 0, available: 5, isPast: false, isClosed: false, bookable: true),
+            PickupSlot(time: '14:00', capacity: 5, booked: 0, available: 5, isPast: false, isClosed: false, bookable: true),
+            PickupSlot(time: '15:00', capacity: 5, booked: 0, available: 5, isPast: false, isClosed: false, bookable: true),
+          ];
+
+    final isLoading = provider.slotsLoading;
+
+    final bool isTrulyEmpty = !isLoading && provider.slots.isEmpty && provider.slotsError == null;
+
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      if (provider.noBookableSlot) ...[
+      if (isTrulyEmpty) ...[
+        Text(
+          'Saat ini tidak ada slot pengambilan yang tersedia. Silakan coba lagi nanti.',
+          style: AppTextStyles.caption.copyWith(color: AppColors.mustard),
+        ),
+        const SizedBox(height: 8),
+      ] else if (provider.noBookableSlot) ...[
         Text('Tidak ada slot yang tersedia di tanggal ini. Silakan pilih tanggal lain.', style: AppTextStyles.caption),
         const SizedBox(height: 8),
       ],
-      Wrap(
+      if (!isTrulyEmpty)
+        Wrap(
         spacing: 8,
         runSpacing: 8,
-        children: provider.slots.map((s) {
+        children: slotsList.map((s) {
           final active = provider.selectedSlot == s.time;
-          final disabled = !s.bookable;
+          final disabled = isLoading || !s.bookable;
           final label = s.isPast
               ? '${s.time} (Lewat)'
               : (s.isClosed ? '${s.time} (Ditutup)' : (s.available <= 0 ? '${s.time} (Penuh)' : s.time));
+
           return GestureDetector(
             onTap: disabled ? null : () => provider.setSlot(s.time),
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: active ? AppColors.primary : AppColors.surface,
+                color: active
+                    ? AppColors.primary
+                    : (isLoading ? AppColors.surface.withValues(alpha: 0.6) : AppColors.surface),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: active ? AppColors.primary : AppColors.border),
+                border: Border.all(
+                  color: active
+                      ? AppColors.primary
+                      : (isLoading ? AppColors.border.withValues(alpha: 0.4) : AppColors.border),
+                ),
               ),
-              child: Text(
-                label,
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: active ? AppColors.onPrimary : (disabled ? AppColors.muted : AppColors.foreground),
-                  decoration: disabled ? TextDecoration.lineThrough : TextDecoration.none,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 180),
+                opacity: isLoading ? 0.45 : 1.0,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      label,
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: active ? AppColors.onPrimary : (s.bookable ? AppColors.foreground : AppColors.muted),
+                        decoration: (!isLoading && !s.bookable) ? TextDecoration.lineThrough : TextDecoration.none,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
