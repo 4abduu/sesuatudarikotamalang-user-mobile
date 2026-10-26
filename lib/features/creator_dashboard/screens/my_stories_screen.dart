@@ -15,8 +15,23 @@ import '../providers/creator_dashboard_provider.dart';
 /// status for each. For products with a story → show story title +
 /// "Edit Cerita" button. For products without → "Tambah Cerita"
 /// button. Both buttons navigate to [StoryFormScreen] with `?productId=`.
-class MyStoriesScreen extends StatelessWidget {
+class MyStoriesScreen extends StatefulWidget {
   const MyStoriesScreen({super.key});
+
+  @override
+  State<MyStoriesScreen> createState() => _MyStoriesScreenState();
+}
+
+class _MyStoriesScreenState extends State<MyStoriesScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<CreatorDashboardProvider>().fetchDashboardData();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

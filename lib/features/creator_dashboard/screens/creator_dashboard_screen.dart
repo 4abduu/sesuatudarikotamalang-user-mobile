@@ -9,8 +9,24 @@ import '../../../shared/app_scaffold.dart';
 
 import '../providers/creator_dashboard_provider.dart';
 
-class CreatorDashboardScreen extends StatelessWidget {
+class CreatorDashboardScreen extends StatefulWidget {
   const CreatorDashboardScreen({super.key});
+
+  @override
+  State<CreatorDashboardScreen> createState() => _CreatorDashboardScreenState();
+}
+
+class _CreatorDashboardScreenState extends State<CreatorDashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<CreatorDashboardProvider>().fetchDashboardData();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();

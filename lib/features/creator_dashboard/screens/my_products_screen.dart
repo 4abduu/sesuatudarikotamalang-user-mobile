@@ -15,8 +15,23 @@ import '../providers/creator_dashboard_provider.dart';
 /// Creator dashboard → "Produk Saya" list.
 /// Shows products owned by the logged-in creator as shadowed cards
 /// (NOT ListTile) with edit affordance → /dashboard-kreator/product-form?id=.
-class MyProductsScreen extends StatelessWidget {
+class MyProductsScreen extends StatefulWidget {
   const MyProductsScreen({super.key});
+
+  @override
+  State<MyProductsScreen> createState() => _MyProductsScreenState();
+}
+
+class _MyProductsScreenState extends State<MyProductsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<CreatorDashboardProvider>().fetchDashboardData();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
