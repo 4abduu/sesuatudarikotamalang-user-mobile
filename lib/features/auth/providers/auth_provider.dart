@@ -150,28 +150,26 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Update Profile (PUT /api/auth/profile)
-  Future<void> updateProfile({String? name, String? avatarUrl}) async {
-    try {
-      final res = await ApiClient.put('/auth/profile', body: {
-        if (name != null) 'name': name,
-        if (avatarUrl != null) 'avatarUrl': avatarUrl,
-      });
-      if (res != null && res['user'] != null) {
-        _user = UserModel.fromJson(res['user']);
-        await _persist();
-        notifyListeners();
-        return;
-      }
-    } catch (_) {
-      // Jika offline / gagal, fallback perbarui lokal
+  Future<void> updateProfile({
+    String? name,
+    String? avatarUrl,
+    bool removeAvatar = false,
+  }) async {
+    final Map<String, dynamic> body = {};
+    if (name != null) body['name'] = name;
+    if (removeAvatar) {
+      body['avatarUrl'] = null;
+    } else if (avatarUrl != null) {
+      body['avatarUrl'] = avatarUrl;
     }
-    if (_user == null) return;
-    _user = _user!.copyWith(
-      name: name ?? _user!.name,
-      avatarUrl: avatarUrl ?? _user!.avatarUrl,
-    );
-    notifyListeners();
-    await _persist();
+
+    final res = await ApiClient.put('/auth/profile', body: body);
+    if (res != null && res['user'] != null) {
+      _user = UserModel.fromJson(res['user']);
+      await _persist();
+      notifyListeners();
+      return;
+    }
   }
 
   /// Request Forgot Password (POST /api/auth/forgot-password/request)

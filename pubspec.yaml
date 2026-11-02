@@ -21,6 +21,7 @@ dependencies:
   http: ^1.2.2
   google_sign_in: ^6.2.1
   webview_flutter: ^4.14.1
+  http_parser: ^4.1.2
 
 dev_dependencies:
   flutter_test:

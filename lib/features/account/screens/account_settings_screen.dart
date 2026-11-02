@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../core/theme/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,6 +9,8 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/utils/password_validator.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/utils/photo_rules.dart';
+import '../../../core/network/upload_api.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/widgets/password_criteria_checklist.dart';
 import '../../../shared/app_scaffold.dart';
@@ -117,37 +118,80 @@ class _ProfileSectionState extends State<_ProfileSection> {
   void dispose() { _name.dispose(); super.dispose(); }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final xfile = await picker.pickImage(source: ImageSource.gallery);
-    if (xfile != null) {
-      setState(() => _isUploadingAvatar = true);
-      try {
-        final res = await ApiClient.uploadMultipart(
-          path: '/upload/single',
-          fileField: 'image',
-          filePath: xfile.path,
-        );
-        final url = res['url'] as String?;
-        if (url != null && url.isNotEmpty) {
-          if (mounted) {
-            setState(() => _avatarPath = url);
-            await context.read<AuthProvider>().updateProfile(avatarUrl: url);
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Foto profil berhasil diperbarui!')),
-              );
-            }
-          }
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal mengunggah foto profil: $e')),
-          );
-        }
-      } finally {
-        if (mounted) setState(() => _isUploadingAvatar = false);
+    final picked = await PhotoRules.pickOne();
+    if (!mounted) return;
+    final msg = picked.summary;
+    if (msg != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    }
+    if (picked.accepted.isEmpty) return;
+    setState(() => _isUploadingAvatar = true);
+    String? uploaded;
+    try {
+      uploaded = await UploadApi.uploadOne(picked.accepted.first);
+      if (!mounted) return;
+      await context.read<AuthProvider>().updateProfile(avatarUrl: uploaded);
+      if (!mounted) return;
+      setState(() => _avatarPath = uploaded);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Foto profil berhasil diperbarui!')),
+      );
+    } on ApiException catch (e) {
+      if (uploaded != null) await UploadApi.deleteUrls([uploaded]);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
       }
+    } catch (_) {
+      if (uploaded != null) await UploadApi.deleteUrls([uploaded]);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tidak bisa terhubung ke server. Periksa koneksi lalu coba lagi.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploadingAvatar = false);
+    }
+  }
+
+  Future<void> _removeAvatar() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus foto profil?'),
+        content: const Text('Foto profil Anda akan dihapus dan kembali ke tampilan awal.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.destructive),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    setState(() => _isUploadingAvatar = true);
+    try {
+      await context.read<AuthProvider>().updateProfile(removeAvatar: true);
+      if (mounted) {
+        setState(() => _avatarPath = null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Foto profil berhasil dihapus')),
+        );
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gagal menghapus foto profil. Periksa koneksi Anda.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isUploadingAvatar = false);
     }
   }
 
@@ -182,16 +226,35 @@ class _ProfileSectionState extends State<_ProfileSection> {
         ),
       ),
       const SizedBox(height: 4),
-      TextButton(
-        onPressed: _isUploadingAvatar ? null : _pickImage,
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          textStyle: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500),
-        ),
-        child: const Text('Ganti foto profil'),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TextButton(
+            onPressed: _isUploadingAvatar ? null : _pickImage,
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              textStyle: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500),
+            ),
+            child: const Text('Ganti foto profil'),
+          ),
+          if (_avatarPath != null && _avatarPath!.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            TextButton(
+              onPressed: _isUploadingAvatar ? null : _removeAvatar,
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.destructive,
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                textStyle: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+              child: const Text('Hapus foto profil'),
+            ),
+          ],
+        ],
       ),
       const SizedBox(height: 8),
       SizedBox(width: double.infinity, child: _labeledField('Nama', TextField(controller: _name, style: AppTextStyles.body, decoration: _fieldDecoration()))),
