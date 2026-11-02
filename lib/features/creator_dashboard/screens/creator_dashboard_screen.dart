@@ -8,6 +8,7 @@ import '../../../features/auth/providers/auth_provider.dart';
 import '../../../shared/app_scaffold.dart';
 
 import '../providers/creator_dashboard_provider.dart';
+import '../widgets/creator_profile_header.dart';
 
 class CreatorDashboardScreen extends StatefulWidget {
   const CreatorDashboardScreen({super.key});
@@ -56,8 +57,11 @@ class _CreatorDashboardScreenState extends State<CreatorDashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Halo, ${artisan?.name ?? auth.user!.name}!', style: AppTextStyles.h1.copyWith(fontSize: 26)),
-              Text(artisan?.bio.isNotEmpty == true ? artisan!.bio : (artisan?.name ?? 'Kreator Mitra Kota Malang'), style: AppTextStyles.bodyMuted),
+              CreatorProfileHeader(
+                artisan: artisan,
+                fallbackName: auth.user!.name,
+                onEdit: () => context.push('/dashboard-kreator/profil-toko'),
+              ),
               const SizedBox(height: 16),
               _StatRow(
                 products: products,
@@ -76,6 +80,13 @@ class _CreatorDashboardScreenState extends State<CreatorDashboardScreen> {
                 title: 'Cerita Saya',
                 subtitle: '${products.where((p) => p.hasStory).length} cerita',
                 onTap: () => context.push('/dashboard-kreator/my-stories'),
+              ),
+              const SizedBox(height: 10),
+              MenuCard(
+                icon: Icons.storefront_outlined,
+                title: 'Profil Toko',
+                subtitle: 'Foto, nama brand, dan bio',
+                onTap: () => context.push('/dashboard-kreator/profil-toko'),
               ),
               const SizedBox(height: 10),
               MenuCard(

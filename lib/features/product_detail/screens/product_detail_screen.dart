@@ -19,6 +19,7 @@ import '../widgets/product_action_buttons.dart';
 import '../widgets/behind_the_design_section.dart';
 import '../widgets/product_reviews_section.dart';
 import '../widgets/related_products_section.dart';
+import '../../../core/widgets/creator_avatar.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String productId;
@@ -91,7 +92,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ProductGallery(seed: product.id),
+              Consumer<VariantSelectionProvider>(
+                builder: (context, sel, _) => ProductGallery(
+                  seed: product.id,
+                  images: product.images,
+                  links: product.imageVariants,
+                  optionNames: product.variantOptions.map((o) => o.name).toList(),
+                  selected: sel.selected,
+                ),
+              ),
               const SizedBox(height: 16),
               if (product.badge != BadgeType.none) ...[
                 BadgeChip(badge: product.badge, large: true),
@@ -182,14 +191,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     child: Row(
                        children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: const BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(creator.isOfficial ? Icons.verified : Icons.person_outline, size: 20, color: AppColors.onPrimary),
+                        CreatorAvatar(
+                          avatarUrl: creator.avatarUrl,
+                          name: creator.name,
+                          size: 40,
+                          isOfficial: creator.isOfficial,
                         ),
                         const SizedBox(width: 12),
                         Expanded(

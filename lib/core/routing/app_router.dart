@@ -19,6 +19,7 @@ import '../../features/creator_dashboard/screens/my_products_screen.dart';
 import '../../features/creator_dashboard/screens/product_form_screen.dart';
 import '../../features/creator_dashboard/screens/my_stories_screen.dart';
 import '../../features/creator_dashboard/screens/story_form_screen.dart';
+import '../../features/creator_dashboard/screens/edit_store_profile_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/account/screens/account_home_screen.dart';
 import '../../features/account/screens/account_orders_screen.dart';
@@ -71,6 +72,7 @@ GoRouter buildAppRouter(AuthProvider auth) {
       GoRoute(path: '/dashboard-kreator/product-form', builder: (_, s) => ProductFormScreen(productId: s.uri.queryParameters['id'] ?? '')),
       GoRoute(path: '/dashboard-kreator/my-stories', builder: (_, __) => const MyStoriesScreen()),
       GoRoute(path: '/dashboard-kreator/story-form', builder: (_, s) => StoryFormScreen(productId: s.uri.queryParameters['productId'] ?? '')),
+      GoRoute(path: '/dashboard-kreator/profil-toko', builder: (_, __) => const EditStoreProfileScreen()),
       GoRoute(path: RouteNames.notifications, builder: (_, __) => const NotificationsScreen()),
       GoRoute(path: RouteNames.account, builder: (_, __) => const AccountHomeScreen()),
       GoRoute(path: RouteNames.accountOrders, builder: (_, __) => const AccountOrdersScreen()),

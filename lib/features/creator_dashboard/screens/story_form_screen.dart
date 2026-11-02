@@ -1,7 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
+import '../../../core/network/upload_api.dart';
+import '../../../core/network/api_client.dart';
+import '../../../core/utils/photo_rules.dart';
+import '../../../core/widgets/photo_editor.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -36,7 +38,8 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
   final _judul = TextEditingController();
   final _isi = TextEditingController();
   final _proses = TextEditingController();
-  final List<String> _photos = [];
+  List<PhotoItem> _photos = [];
+  List<PhotoItem> _initialPhotos = [];
   String _productName = '';
   bool _isSaving = false;
   bool get _isEdit => _judul.text.isNotEmpty;
@@ -45,6 +48,9 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
   void initState() {
     super.initState();
     if (widget.productId.isNotEmpty) {
+      if (!mounted) return;
+      if (!mounted) return;
+      if (!mounted) return;
       final dashboard = context.read<CreatorDashboardProvider>();
       final p = dashboard.myProducts.cast<ProductModel?>().firstWhere(
         (x) => x?.id == widget.productId,
@@ -58,6 +64,8 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
           if (p.story!.process != null && p.story!.process!.isNotEmpty) {
             _proses.text = p.story!.process!;
           }
+          _initialPhotos = photoItemsFromServer(p.story!.processImages, const []);
+          _photos = List.of(_initialPhotos);
         }
       }
     }
@@ -71,13 +79,7 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
     super.dispose();
   }
 
-  Future<void> _pickPhoto() async {
-    final picker = ImagePicker();
-    final files = await picker.pickMultiImage(imageQuality: 80);
-    if (files.isNotEmpty) {
-      setState(() => _photos.addAll(files.map((f) => f.path)));
-    }
-  }
+
 
   Future<void> _save() async {
     if (_judul.text.trim().isEmpty || _isi.text.trim().isEmpty) {
@@ -88,13 +90,37 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
     }
 
     setState(() => _isSaving = true);
+    final photoChanged = !photoListsEqual(_photos, _initialPhotos);
+    PhotoSyncResult? sync;
+
+    final dashboard = context.read<CreatorDashboardProvider>();
     try {
-      final dashboard = context.read<CreatorDashboardProvider>();
+      if (photoChanged) {
+        try {
+          sync = await syncPhotos(_photos);
+        } on ApiException catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Foto gagal diunggah: ${e.message}')),
+            );
+          }
+          return;
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Foto gagal diunggah: $e')),
+            );
+          }
+          return;
+        }
+      }
+
       await dashboard.saveStory(
         productId: widget.productId,
         title: _judul.text.trim(),
         content: _isi.text.trim(),
         process: _proses.text.trim().isNotEmpty ? _proses.text.trim() : null,
+        processImages: photoChanged ? sync!.images : null,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -103,6 +129,9 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
         context.pop();
       }
     } catch (e) {
+      if (sync != null && sync.newlyUploaded.isNotEmpty) {
+        await UploadApi.deleteUrls(sync.newlyUploaded);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Gagal menyimpan cerita: $e')),
@@ -213,11 +242,14 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
               decoration: _fieldDecoration('Contoh: Sketsa tangan lalu didigitalkan dan dicetak di kertas bertekstur'),
             ),
             const SizedBox(height: 16),
-            Text('Foto Proses Pembuatan', style: _formLabel),
-            const SizedBox(height: 4),
-            Text('Unggah beberapa foto proses (opsional)', style: AppTextStyles.caption),
-            const SizedBox(height: 8),
-            _PhotoGallery(photos: _photos, onPick: _pickPhoto, onRemove: (i) => setState(() => _photos.removeAt(i))),
+            PhotoEditor(
+              items: _photos,
+              onChanged: (v) => setState(() => _photos = v),
+              maxPhotos: PhotoRules.maxStoryProcessPhotos,
+              label: 'Foto proses',
+              dirty: !photoListsEqual(_photos, _initialPhotos),
+              onReset: () => setState(() => _photos = List.of(_initialPhotos)),
+            ),
             const SizedBox(height: 16),
             PrimaryButton(
               label: _isSaving
@@ -964,106 +996,3 @@ class _ErrorView extends StatelessWidget {
 }
 
 /* ------------------------------------------------------------------ */
-/* Photo Gallery (tidak diubah dari versi sebelumnya)                   */
-/* ------------------------------------------------------------------ */
-
-class _PhotoGallery extends StatelessWidget {
-  final List<String> photos;
-  final VoidCallback onPick;
-  final ValueChanged<int> onRemove;
-  const _PhotoGallery({required this.photos, required this.onPick, required this.onRemove});
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        ...photos.asMap().entries.map((e) {
-          return Stack(
-            children: [
-              Container(
-                width: 88,
-                height: 88,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  image: DecorationImage(image: FileImage(File(e.value)), fit: BoxFit.cover),
-                  boxShadow: AppShadows.soft,
-                ),
-              ),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: GestureDetector(
-                  onTap: () => onRemove(e.key),
-                  child: Container(
-                    width: 20,
-                    height: 20,
-                    decoration: const BoxDecoration(color: AppColors.destructive, shape: BoxShape.circle),
-                    child: const Icon(Icons.close, size: 12, color: AppColors.onPrimary),
-                  ),
-                ),
-              ),
-            ],
-          );
-        }),
-        GestureDetector(
-          onTap: onPick,
-          child: CustomPaint(
-            foregroundPainter: const _DashedRRectPainter(color: AppColors.border, radius: 12, strokeWidth: 1.5),
-            child: Container(
-            width: 88,
-            height: 88,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceAlt,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.add_photo_alternate_outlined, size: 24, color: AppColors.muted),
-                SizedBox(height: 4),
-                Text('Tambah', style: TextStyle(fontSize: 10, color: AppColors.muted)),
-              ],
-            ),
-          ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Border putus-putus (dashed) untuk tile "Tambah" — hanya visual.
-class _DashedRRectPainter extends CustomPainter {
-  final Color color;
-  final double radius;
-  final double strokeWidth;
-  const _DashedRRectPainter({required this.color, required this.radius, required this.strokeWidth});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth;
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(strokeWidth / 2, strokeWidth / 2, size.width - strokeWidth, size.height - strokeWidth),
-      Radius.circular(radius),
-    );
-    final path = Path()..addRRect(rrect);
-    const dash = 5.0;
-    const gap = 4.0;
-    for (final metric in path.computeMetrics()) {
-      double d = 0;
-      while (d < metric.length) {
-        canvas.drawPath(metric.extractPath(d, (d + dash).clamp(0, metric.length)), paint);
-        d += dash + gap;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedRRectPainter old) =>
-      old.color != color || old.radius != radius || old.strokeWidth != strokeWidth;
-}

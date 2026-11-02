@@ -1,6 +1,7 @@
 import 'variant_option_model.dart';
 import 'variant_model.dart';
 import 'product_story_model.dart';
+import 'image_variant_link.dart';
 
 enum BadgeType { limited, story, bestseller, none }
 
@@ -13,6 +14,7 @@ class ProductModel {
   final String shortDesc;
   final String description;
   final List<String> images;
+  final List<ImageVariantLink> imageVariants; // tautan foto ke nilai varian
   final List<VariantOptionModel> variantOptions;
   final List<VariantModel> variants;
   final BadgeType badge;
@@ -36,6 +38,7 @@ class ProductModel {
     required this.shortDesc,
     required this.description,
     this.images = const [],
+    this.imageVariants = const [],
     required this.variantOptions,
     required this.variants,
     required this.badge,
@@ -88,6 +91,12 @@ class ProductModel {
     }
 
     final imgs = (j['images'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+    final imgLinks = (j['imageVariants'] as List<dynamic>?)
+            ?.whereType<Map<String, dynamic>>()
+            .map(ImageVariantLink.fromJson)
+            .where((l) => l.url.isNotEmpty && l.option.isNotEmpty && l.value.isNotEmpty)
+            .toList() ??
+        <ImageVariantLink>[];
 
     final artisanObj = j['artisan'] as Map<String, dynamic>?;
     final isOfficial = j['isOfficial'] == true || artisanObj?['isOfficial'] == true;
@@ -102,6 +111,7 @@ class ProductModel {
       shortDesc: j['shortDescription'] ?? (j['shortDesc'] ?? ''),
       description: j['description'] ?? '',
       images: imgs,
+      imageVariants: imgLinks,
       variantOptions: vOptions,
       variants: vVariants,
       badge: b,
@@ -127,6 +137,7 @@ class ProductModel {
     'shortDescription': shortDesc,
     'description': description,
     'images': images,
+    'imageVariants': imageVariants.map((e) => e.toJson()).toList(),
     'variantOptions': variantOptions.map((e) => e.toJson()).toList(),
     'variants': variants.map((e) => e.toJson()).toList(),
     if (story != null) 'story': story!.toJson(),

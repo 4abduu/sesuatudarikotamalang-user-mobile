@@ -12,12 +12,23 @@ class CreatorApplicationModel {
   final String submittedAt;
   final ApplicationStatus status;
   final String? rejectReason;
+  final String? sampleFileUrl;
+  final List<String> samplePhotos;
 
   const CreatorApplicationModel({
-    required this.id, required this.userId, required this.applicantName,
-    required this.contact, required this.email, required this.brandName,
-    required this.description, required this.category, required this.submittedAt,
-    required this.status, this.rejectReason,
+    required this.id,
+    required this.userId,
+    required this.applicantName,
+    required this.contact,
+    required this.email,
+    required this.brandName,
+    required this.description,
+    required this.category,
+    required this.submittedAt,
+    required this.status,
+    this.rejectReason,
+    this.sampleFileUrl,
+    this.samplePhotos = const [],
   });
 
   factory CreatorApplicationModel.fromJson(Map<String, dynamic> j) {
@@ -31,6 +42,11 @@ class CreatorApplicationModel {
       parsedStatus = ApplicationStatus.pending;
     }
 
+    final rawPhotos = j['samplePhotos'];
+    final List<String> photos = rawPhotos is List
+        ? rawPhotos.map((e) => e.toString()).toList()
+        : <String>[];
+
     return CreatorApplicationModel(
       id: (j['id'] ?? '').toString(),
       userId: (j['userId'] ?? '').toString(),
@@ -43,6 +59,8 @@ class CreatorApplicationModel {
       submittedAt: (j['submittedAt'] ?? '').toString(),
       status: parsedStatus,
       rejectReason: j['rejectReason'] as String?,
+      sampleFileUrl: j['sampleFileUrl'] as String?,
+      samplePhotos: photos,
     );
   }
 
@@ -61,6 +79,8 @@ class CreatorApplicationModel {
         : status == ApplicationStatus.rejected
             ? 'ditolak'
             : 'pending',
-    'rejectReason': rejectReason,
+    if (rejectReason != null) 'rejectReason': rejectReason,
+    if (sampleFileUrl != null) 'sampleFileUrl': sampleFileUrl,
+    'samplePhotos': samplePhotos,
   };
 }

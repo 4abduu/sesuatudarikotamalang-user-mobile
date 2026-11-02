@@ -41,18 +41,20 @@ class ApplicationsProvider extends ChangeNotifier {
   Future<CreatorApplicationModel> apply({
     required String applicantName,
     required String contact,
-    required String brandName,
+    String? brandName,
     required String description,
     String? categoryId,
     String? sampleFileUrl,
+    List<String>? samplePhotos,
   }) async {
     final body = <String, dynamic>{
       'applicantName': applicantName,
       'contact': contact,
-      'brandName': brandName,
+      if (brandName != null && brandName.trim().isNotEmpty) 'brandName': brandName.trim(),
       'description': description,
       if (categoryId != null && categoryId.isNotEmpty) 'categoryId': categoryId,
       if (sampleFileUrl != null && sampleFileUrl.isNotEmpty) 'sampleFileUrl': sampleFileUrl,
+      if (samplePhotos != null && samplePhotos.isNotEmpty) 'samplePhotos': samplePhotos,
     };
 
     final res = await ApiClient.post('/artisans/apply', body: body);
@@ -78,23 +80,36 @@ class ApplicationsProvider extends ChangeNotifier {
   }
 
   /// Updates the status of an existing application locally
-  Future<void> updateStatus(String id, ApplicationStatus status, {String? rejectReason}) async {
+  void updateStatus(String id, ApplicationStatus newStatus, {String? rejectReason}) {
     final idx = _apps.indexWhere((a) => a.id == id);
-    if (idx < 0) return;
-    final a = _apps[idx];
-    _apps[idx] = CreatorApplicationModel(
-      id: a.id,
-      userId: a.userId,
-      applicantName: a.applicantName,
-      contact: a.contact,
-      email: a.email,
-      brandName: a.brandName,
-      description: a.description,
-      category: a.category,
-      submittedAt: a.submittedAt,
-      status: status,
-      rejectReason: status == ApplicationStatus.rejected ? (rejectReason ?? a.rejectReason) : null,
-    );
+    if (idx != -1) {
+      final existing = _apps[idx];
+      _apps[idx] = CreatorApplicationModel(
+        id: existing.id,
+        userId: existing.userId,
+        applicantName: existing.applicantName,
+        contact: existing.contact,
+        email: existing.email,
+        brandName: existing.brandName,
+        description: existing.description,
+        category: existing.category,
+        submittedAt: existing.submittedAt,
+        status: newStatus,
+        rejectReason: rejectReason ?? existing.rejectReason,
+        sampleFileUrl: existing.sampleFileUrl,
+        samplePhotos: existing.samplePhotos,
+      );
+      notifyListeners();
+    }
+  }
+
+  void setApplication(CreatorApplicationModel app) {
+    final idx = _apps.indexWhere((a) => a.id == app.id);
+    if (idx != -1) {
+      _apps[idx] = app;
+    } else {
+      _apps.insert(0, app);
+    }
     notifyListeners();
   }
 }

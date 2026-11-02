@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
@@ -9,6 +8,7 @@ import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/secondary_button.dart';
 import '../../../core/widgets/product_card.dart';
 import '../../../core/widgets/rating_stars.dart';
+import '../../../core/widgets/creator_avatar.dart';
 import '../../../data/models/creator_model.dart';
 import '../../../data/models/product_model.dart';
 import '../../../shared/app_scaffold.dart';
@@ -71,27 +71,11 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         child: Column(
           children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AppColors.primary, AppColors.primaryLight],
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  creator.name.split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join(),
-                  style: GoogleFonts.baloo2(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.onPrimary,
-                  ),
-                ),
-              ),
+            CreatorAvatar(
+              avatarUrl: creator.avatarUrl,
+              name: creator.name,
+              size: 80,
+              isOfficial: creator.isOfficial,
             ),
             const SizedBox(height: 12),
             Text(creator.name, style: AppTextStyles.h1.copyWith(height: 1.25), textAlign: TextAlign.center),

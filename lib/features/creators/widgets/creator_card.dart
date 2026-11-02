@@ -5,6 +5,7 @@ import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/rating_stars.dart';
 import '../../../data/models/creator_model.dart';
+import '../../../core/widgets/creator_avatar.dart';
 
 class CreatorCard extends StatelessWidget {
   final CreatorModel creator;
@@ -26,23 +27,11 @@ class CreatorCard extends StatelessWidget {
           boxShadow: AppShadows.soft,
         ),
         child: Row(children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppColors.primary, AppColors.primaryLight],
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                creator.name.split(' ').map((w) => w[0]).take(2).join(),
-                style: GoogleFonts.baloo2(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.onPrimary),
-              ),
-            ),
+          CreatorAvatar(
+            avatarUrl: creator.avatarUrl,
+            name: creator.name,
+            size: 48,
+            isOfficial: creator.isOfficial,
           ),
           const SizedBox(width: 12),
           Expanded(

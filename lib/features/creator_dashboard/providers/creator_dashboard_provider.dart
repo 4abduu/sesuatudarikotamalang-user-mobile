@@ -57,6 +57,7 @@ class CreatorDashboardProvider extends ChangeNotifier {
     required String description,
     String? shortDescription,
     List<String> images = const [],
+    List<Map<String, String>>? imageVariants,
     bool isLimited = false,
     String? shopeeUrl,
     int? stock,
@@ -70,6 +71,7 @@ class CreatorDashboardProvider extends ChangeNotifier {
       'description': description,
       if (shortDescription != null) 'shortDescription': shortDescription,
       'images': images,
+      if (imageVariants != null && imageVariants.isNotEmpty) 'imageVariants': imageVariants,
       'isLimited': isLimited,
       if (shopeeUrl != null) 'shopeeUrl': shopeeUrl,
       if (stock != null) 'stock': stock,
@@ -96,6 +98,7 @@ class CreatorDashboardProvider extends ChangeNotifier {
     String? description,
     int? price,
     List<String>? images,
+    List<Map<String, String>>? imageVariants,
     bool? isLimited,
     String? shopeeUrl,
     List<Map<String, dynamic>>? variantStocks,
@@ -107,6 +110,7 @@ class CreatorDashboardProvider extends ChangeNotifier {
       if (description != null) 'description': description,
       if (price != null) 'price': price,
       if (images != null) 'images': images,
+      if (imageVariants != null) 'imageVariants': imageVariants,
       if (isLimited != null) 'isLimited': isLimited,
       if (shopeeUrl != null) 'shopeeUrl': shopeeUrl,
       if (variantStocks != null) 'variantStocks': variantStocks,
@@ -132,14 +136,14 @@ class CreatorDashboardProvider extends ChangeNotifier {
     required String content,
     String? process,
     String? coverImageUrl,
-    List<String> processImages = const [],
+    List<String>? processImages,
   }) async {
     final body = <String, dynamic>{
       'title': title,
       'content': content,
       if (process != null && process.trim().isNotEmpty) 'process': process.trim(),
       if (coverImageUrl != null) 'coverImageUrl': coverImageUrl,
-      'processImages': processImages,
+      if (processImages != null) 'processImages': processImages,
     };
 
     final res = await ApiClient.post('/products/$productId/story', body: body);

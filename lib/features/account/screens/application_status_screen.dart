@@ -111,7 +111,7 @@ class _ApplicationStatusScreenState extends State<ApplicationStatusScreen> {
         // Handler dipindahkan apa adanya (tanpa perubahan logika).
         Future<void> onReject() async {
               const reason = 'Maaf, karya belum memenuhi kriteria kurasi kami saat ini. Silakan ajukan ulang dengan referensi yang lebih matang.';
-              await context.read<ApplicationsProvider>().updateStatus(
+              context.read<ApplicationsProvider>().updateStatus(
                 app.id,
                 ApplicationStatus.rejected,
                 rejectReason: reason,
@@ -138,7 +138,7 @@ class _ApplicationStatusScreenState extends State<ApplicationStatusScreen> {
 
         Future<void> onApprove() async {
               final auth = context.read<AuthProvider>();
-              await context.read<ApplicationsProvider>().updateStatus(
+              context.read<ApplicationsProvider>().updateStatus(
                 app.id,
                 ApplicationStatus.approved,
               );
