@@ -18,9 +18,36 @@ class SesuatuApp extends StatefulWidget {
   State<SesuatuApp> createState() => _SesuatuAppState();
 }
 
-class _SesuatuAppState extends State<SesuatuApp> {
+class _SesuatuAppState extends State<SesuatuApp> with WidgetsBindingObserver {
   bool _initialized = false;
   GoRouter? _router;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _initialized) {
+      final auth = context.read<AuthProvider>();
+      auth.refreshMeThrottled().then((roleChanged) {
+        if (roleChanged && auth.isCreator && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Selamat! Akunmu sekarang berperan sebagai kreator.')),
+          );
+        }
+      });
+    }
+  }
+
 
   Future<void> _initProviders() async {
     // Baca semua provider sebelum await pertama untuk menghindari

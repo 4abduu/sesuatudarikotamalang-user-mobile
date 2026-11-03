@@ -23,6 +23,46 @@ class AuthProvider extends ChangeNotifier {
 
   static const _key = 'sdkm-user-auth';
 
+  DateTime? _lastRefreshMeTime;
+
+  /// Memperbarui data pengguna dari backend (GET /auth/me).
+  /// Mengembalikan true bila role pengguna berubah, false bila tidak / gagal.
+  Future<bool> refreshMe() async {
+    final token = await ApiClient.getToken();
+    if (token == null || token.isEmpty) return false;
+
+    final oldRole = _user?.role;
+    try {
+      final res = await ApiClient.get('/auth/me');
+      if (res != null && res['user'] != null) {
+        _user = UserModel.fromJson(res['user'] as Map<String, dynamic>);
+        await _persist();
+        notifyListeners();
+        return oldRole != null && _user?.role != oldRole;
+      }
+    } catch (e) {
+      if (e is ApiException && e.status == 401) {
+        _user = null;
+        final sp = await SharedPreferences.getInstance();
+        await sp.remove(_key);
+        notifyListeners();
+      }
+      // Kegagalan jaringan lain ditelan
+    }
+    return false;
+  }
+
+  /// Cek refreshMe dengan batas throttle 30 detik untuk lifecycle app
+  Future<bool> refreshMeThrottled() async {
+    if (!isAuthenticated) return false;
+    final now = DateTime.now();
+    if (_lastRefreshMeTime != null && now.difference(_lastRefreshMeTime!).inSeconds < 30) {
+      return false;
+    }
+    _lastRefreshMeTime = now;
+    return await refreshMe();
+  }
+
   Future<void> init() async {
     try {
       final sp = await SharedPreferences.getInstance();
@@ -32,21 +72,7 @@ class AuthProvider extends ChangeNotifier {
       }
       
       // Ambil profil terbaru dari backend bila ada token
-      final token = await ApiClient.getToken();
-      if (token != null && token.isNotEmpty) {
-        try {
-          final res = await ApiClient.get('/auth/me');
-          if (res != null && res['user'] != null) {
-            _user = UserModel.fromJson(res['user']);
-            await _persist();
-          }
-        } catch (e) {
-          if (e is ApiException && e.status == 401) {
-            _user = null;
-            await sp.remove(_key);
-          }
-        }
-      }
+      await refreshMe();
     } catch (_) {}
     _hydrated = true;
     notifyListeners();

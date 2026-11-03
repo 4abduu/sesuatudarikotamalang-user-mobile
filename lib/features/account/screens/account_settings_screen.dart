@@ -197,6 +197,10 @@ class _ProfileSectionState extends State<_ProfileSection> {
 
   @override
   Widget build(BuildContext context) {
+    final currentAvatar = context.watch<AuthProvider>().user?.avatarUrl;
+    if (!_isUploadingAvatar && _avatarPath != currentAvatar) {
+      _avatarPath = currentAvatar;
+    }
     ImageProvider? imageProvider;
     if (_avatarPath != null && _avatarPath!.isNotEmpty) {
       if (_avatarPath!.startsWith('http')) {

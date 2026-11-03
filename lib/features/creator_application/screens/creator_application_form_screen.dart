@@ -11,6 +11,7 @@ import '../../../../core/utils/photo_rules.dart';
 import '../../../../core/widgets/photo_editor.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../features/account/providers/applications_provider.dart';
+import '../../../../data/models/creator_application_model.dart';
 import '../../../../features/auth/providers/auth_provider.dart';
 import '../../../../features/auth/widgets/auth_field.dart';
 import '../../../../features/auth/widgets/auth_gate_bottom_sheet.dart';
@@ -39,6 +40,16 @@ class _CreatorApplicationFormScreenState extends State<CreatorApplicationFormScr
     final auth = context.read<AuthProvider>();
     _nama.text = auth.user?.name ?? '';
     _wa.text = auth.user?.email ?? '';
+
+    // Bila sudah ada pengajuan pending, langsung arahkan ke layar status
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final apps = context.read<ApplicationsProvider>();
+      final latest = apps.latestForUser(auth.user?.id ?? '');
+      if (latest != null && latest.status == ApplicationStatus.pending) {
+        context.go('/pengajuan-kreator');
+      }
+    });
   }
 
   @override
