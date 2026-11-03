@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -338,12 +339,17 @@ class _EditStoreProfileScreenState extends State<EditStoreProfileScreen> {
             spacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              SecondaryButton(
-                label: 'Ganti foto',
-                fullWidth: false,
-                compact: true,
-                icon: const Icon(Icons.photo_camera_outlined, size: 16),
+              OutlinedButton.icon(
                 onPressed: _saving ? null : _pickPhoto,
+                icon: const Icon(Icons.photo_camera_outlined, size: 18),
+                label: const Text('Ganti foto'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: const BorderSide(color: AppColors.primary, width: 1.5),
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 18),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                  textStyle: GoogleFonts.baloo2(fontSize: 13, fontWeight: FontWeight.w700),
+                ),
               ),
               if (_newPhoto != null)
                 TextButton(
