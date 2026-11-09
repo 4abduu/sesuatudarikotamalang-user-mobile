@@ -56,7 +56,10 @@ class _EditStoreProfileScreenState extends State<EditStoreProfileScreen> {
     super.initState();
     _nameCtrl.addListener(_onTyping);
     _bioCtrl.addListener(_onTyping);
-    _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = context.read<AuthProvider>();
+      if (mounted && auth.isAuthenticated && auth.isCreator) _load();
+    });
   }
 
   @override
@@ -299,6 +302,24 @@ class _EditStoreProfileScreenState extends State<EditStoreProfileScreen> {
   }
 
   Widget _buildBody() {
+    final auth = context.watch<AuthProvider>();
+    if (!auth.isAuthenticated || !auth.isCreator) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.lock_outline, size: 48, color: AppColors.muted),
+              const SizedBox(height: 12),
+              Text('Akses khusus kreator', style: AppTextStyles.h2, textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              ElevatedButton(onPressed: () => context.go('/akun'), child: const Text('Kembali ke Akun')),
+            ],
+          ),
+        ),
+      );
+    }
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_loadError != null) {
       return Center(

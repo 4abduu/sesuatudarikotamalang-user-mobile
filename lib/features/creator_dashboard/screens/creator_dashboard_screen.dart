@@ -22,7 +22,8 @@ class _CreatorDashboardScreenState extends State<CreatorDashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
+      final auth = context.read<AuthProvider>();
+      if (mounted && auth.isAuthenticated && auth.isCreator) {
         context.read<CreatorDashboardProvider>().fetchDashboardData();
       }
     });
@@ -80,6 +81,14 @@ class _CreatorDashboardScreenState extends State<CreatorDashboardScreen> {
                 title: 'Cerita Saya',
                 subtitle: '${products.where((p) => p.hasStory).length} cerita',
                 onTap: () => context.push('/dashboard-kreator/my-stories'),
+              ),
+              const SizedBox(height: 10),
+              MenuCard(
+                icon: Icons.bar_chart_outlined,
+                iconColor: AppColors.moss,
+                title: 'Laporan Saya',
+                subtitle: 'Ringkasan penjualan bulanan',
+                onTap: () => context.push('/dashboard-kreator/laporan'),
               ),
               const SizedBox(height: 10),
               MenuCard(

@@ -27,7 +27,8 @@ class _MyStoriesScreenState extends State<MyStoriesScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
+      final auth = context.read<AuthProvider>();
+      if (mounted && auth.isAuthenticated && auth.isCreator) {
         context.read<CreatorDashboardProvider>().fetchDashboardData();
       }
     });

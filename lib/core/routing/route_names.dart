@@ -12,6 +12,7 @@ class RouteNames {
   static const register = '/register';
   static const forgotPassword = '/lupa-password';
   static const creatorDashboard = '/dashboard-kreator';
+  static const creatorReports = '/dashboard-kreator/laporan';
   static const notifications = '/notifikasi';
   static const account = '/akun';
   static const accountOrders = '/akun/pesanan';

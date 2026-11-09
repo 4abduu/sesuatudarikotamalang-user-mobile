@@ -20,6 +20,8 @@ import '../../features/creator_dashboard/screens/product_form_screen.dart';
 import '../../features/creator_dashboard/screens/my_stories_screen.dart';
 import '../../features/creator_dashboard/screens/story_form_screen.dart';
 import '../../features/creator_dashboard/screens/edit_store_profile_screen.dart';
+import '../../features/creator_dashboard/screens/creator_report_screen.dart';
+import '../../features/creator_dashboard/screens/creator_report_detail_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/account/screens/account_home_screen.dart';
 import '../../features/account/screens/account_orders_screen.dart';
@@ -68,8 +70,13 @@ GoRouter buildAppRouter(AuthProvider auth) {
       GoRoute(path: RouteNames.register, builder: (_, __) => const RegisterScreen()),
       GoRoute(path: RouteNames.forgotPassword, builder: (_, __) => const ForgotPasswordScreen()),
       GoRoute(path: RouteNames.creatorDashboard, builder: (_, __) => const CreatorDashboardScreen()),
+      GoRoute(path: RouteNames.creatorReports, builder: (_, __) => const CreatorReportScreen()),
+      GoRoute(path: '${RouteNames.creatorReports}/:month', builder: (_, s) => CreatorReportDetailScreen(month: s.pathParameters['month']!)),
       GoRoute(path: '/dashboard-kreator/my-products', builder: (_, __) => const MyProductsScreen()),
-      GoRoute(path: '/dashboard-kreator/product-form', builder: (_, s) => ProductFormScreen(productId: s.uri.queryParameters['id'] ?? '')),
+      GoRoute(path: '/dashboard-kreator/product-form', builder: (_, s) => ProductFormScreen(
+        productId: s.uri.queryParameters['id'] ?? '',
+        replaceOf: s.uri.queryParameters['replaceOf'] ?? '',
+      )),
       GoRoute(path: '/dashboard-kreator/my-stories', builder: (_, __) => const MyStoriesScreen()),
       GoRoute(path: '/dashboard-kreator/story-form', builder: (_, s) => StoryFormScreen(productId: s.uri.queryParameters['productId'] ?? '')),
       GoRoute(path: '/dashboard-kreator/profil-toko', builder: (_, __) => const EditStoreProfileScreen()),
