@@ -146,6 +146,22 @@ class _NotificationCard extends StatelessWidget {
       case NotificationType.pengajuanDiterima:
       case NotificationType.pengajuanDitolak:
         return Icons.schedule;
+      case NotificationType.stokMenipis:
+        return Icons.inventory_2_outlined;
+      case NotificationType.produkMendekatiBatas:
+        return Icons.hourglass_bottom;
+      case NotificationType.produkDitarik:
+        return Icons.unpublished_outlined;
+      case NotificationType.produkDisetujui:
+        return Icons.check_circle_outline;
+      case NotificationType.produkDitolak:
+        return Icons.cancel_outlined;
+      case NotificationType.produkDisembunyikan:
+        return Icons.visibility_off_outlined;
+      case NotificationType.liburTerdampak:
+        return Icons.event_busy;
+      case NotificationType.laporanFinal:
+        return Icons.bar_chart;
       case NotificationType.system:
       case NotificationType.umum:
         return Icons.notifications_none;

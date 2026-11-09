@@ -7,6 +7,14 @@ enum NotificationType {
   pengajuanDitolak,
   ulasanBaru,
   pesananUpdate,
+  stokMenipis,
+  produkMendekatiBatas,
+  produkDitarik,
+  produkDisetujui,
+  produkDitolak,
+  produkDisembunyikan,
+  liburTerdampak,
+  laporanFinal,
   umum,
 }
 
@@ -47,6 +55,30 @@ class NotificationModel {
         break;
       case 'creator':
         nType = NotificationType.creator;
+        break;
+      case 'stok_menipis':
+        nType = NotificationType.stokMenipis;
+        break;
+      case 'produk_mendekati_batas':
+        nType = NotificationType.produkMendekatiBatas;
+        break;
+      case 'produk_ditarik':
+        nType = NotificationType.produkDitarik;
+        break;
+      case 'produk_disetujui':
+        nType = NotificationType.produkDisetujui;
+        break;
+      case 'produk_ditolak':
+        nType = NotificationType.produkDitolak;
+        break;
+      case 'produk_disembunyikan':
+        nType = NotificationType.produkDisembunyikan;
+        break;
+      case 'libur_terdampak':
+        nType = NotificationType.liburTerdampak;
+        break;
+      case 'laporan_final':
+        nType = NotificationType.laporanFinal;
         break;
       default:
         nType = NotificationType.umum;
