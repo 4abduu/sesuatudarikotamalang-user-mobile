@@ -63,6 +63,7 @@ class CreatorDashboardProvider extends ChangeNotifier {
     int? stock,
     List<Map<String, dynamic>>? variantOptions,
     List<Map<String, dynamic>>? variantStocks,
+    String? replacesProductId,
   }) async {
     final body = <String, dynamic>{
       'name': name,
@@ -77,6 +78,7 @@ class CreatorDashboardProvider extends ChangeNotifier {
       if (stock != null) 'stock': stock,
       if (variantOptions != null && variantOptions.isNotEmpty) 'variantOptions': variantOptions,
       if (variantStocks != null && variantStocks.isNotEmpty) 'variantStocks': variantStocks,
+      if (replacesProductId != null && replacesProductId.isNotEmpty) 'replacesProductId': replacesProductId,
     };
 
     final res = await ApiClient.post('/products', body: body);

@@ -1,3 +1,5 @@
+import '../widgets/product_status_badge.dart';
+import '../widgets/product_status_notice.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -27,7 +29,8 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
+      final auth = context.read<AuthProvider>();
+      if (mounted && auth.isAuthenticated && auth.isCreator) {
         context.read<CreatorDashboardProvider>().fetchDashboardData();
       }
     });
@@ -117,42 +120,62 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
                             border: Border.all(color: AppColors.border),
                             boxShadow: AppShadows.soft,
                           ),
-                          child: Row(children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [AppColors.primary, AppColors.primaryLight],
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [AppColors.primary, AppColors.primaryLight],
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(Icons.brush, color: AppColors.onPrimary, size: 16),
                                 ),
-                                borderRadius: BorderRadius.circular(8),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(p.name, style: GoogleFonts.baloo2(fontSize: 13, fontWeight: FontWeight.w500, height: 1.25, color: AppColors.foreground), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ProductStatusBadge(displayStatus: p.displayStatus),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text('${formatRupiah(p.price)} · Stok ${p.totalStock}', style: AppTextStyles.caption),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: AppColors.background,
+                                    fixedSize: const Size(32, 32),
+                                    minimumSize: const Size(32, 32),
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                  iconSize: 16,
+                                  icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
+                                  onPressed: () => context.push('/dashboard-kreator/product-form?id=${p.id}'),
+                                ),
+                              ]),
+                              ProductStatusNotice(
+                                displayStatus: p.displayStatus,
+                                note: p.statusNote,
+                                onSubmitNew: () => context.push('/dashboard-kreator/product-form?replaceOf=${p.id}'),
                               ),
-                              child: const Icon(Icons.brush, color: AppColors.onPrimary, size: 16),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(p.name, style: GoogleFonts.baloo2(fontSize: 13, fontWeight: FontWeight.w500, height: 1.25, color: AppColors.foreground), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                  Text('${formatRupiah(p.price)} · Stok ${p.totalStock}', style: AppTextStyles.caption),
-                                ],
-                              ),
-                            ),
-                            IconButton(
-                              style: IconButton.styleFrom(
-                                backgroundColor: AppColors.background,
-                                fixedSize: const Size(32, 32),
-                                minimumSize: const Size(32, 32),
-                                padding: EdgeInsets.zero,
-                              ),
-                              iconSize: 16,
-                              icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
-                              onPressed: () => context.push('/dashboard-kreator/product-form?id=${p.id}'),
-                            ),
-                          ]),
+                            ],
+                          ),
                         ),
                       );
                     },

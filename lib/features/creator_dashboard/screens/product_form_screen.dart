@@ -20,7 +20,8 @@ import '../widgets/variant_builder.dart';
 
 class ProductFormScreen extends StatefulWidget {
   final String productId;
-  const ProductFormScreen({super.key, this.productId = ''});
+  final String replaceOf;
+  const ProductFormScreen({super.key, this.productId = '', this.replaceOf = ''});
 
   @override
   State<ProductFormScreen> createState() => _ProductFormScreenState();
@@ -229,14 +230,25 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           stock: variantStocksPayload != null && variantStocksPayload.isNotEmpty ? null : 10,
           variantOptions: variantOptionsPayload,
           variantStocks: variantStocksPayload,
+          replacesProductId: widget.replaceOf.isEmpty ? null : widget.replaceOf,
         );
       }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_isEdit ? 'Produk "${_nama.text}" diperbarui' : 'Produk "${_nama.text}" ditambahkan')),
+          SnackBar(content: Text(_isEdit ? 'Produk "${_nama.text}" diperbarui' : 'Produk terkirim dan menunggu persetujuan admin.')),
         );
         context.pop();
+      }
+    } on ApiException catch (e) {
+      if (sync != null && sync.newlyUploaded.isNotEmpty) {
+        await UploadApi.deleteUrls(sync.newlyUploaded);
+      }
+      if (mounted) {
+        final msg = e.code == 'PRODUCT_LOCKED'
+            ? (e.message.isNotEmpty ? e.message : 'Produk ini terkunci dan tidak dapat diubah lagi.')
+            : (e.message.isNotEmpty ? e.message : 'Gagal menyimpan produk');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (e) {
       if (sync != null && sync.newlyUploaded.isNotEmpty) {

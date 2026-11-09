@@ -28,6 +28,8 @@ class ProductModel {
   final bool isActive;
   final bool isOfficial;
   final String artisanName;
+  final String displayStatus;
+  final String? statusNote;
 
   const ProductModel({
     required this.id,
@@ -52,6 +54,8 @@ class ProductModel {
     this.isActive = true,
     this.isOfficial = false,
     this.artisanName = '',
+    this.displayStatus = 'aktif',
+    this.statusNote,
   });
 
   /// Menggunakan effectiveStock dari backend (stok mentah dikurangi order aktif)
@@ -125,6 +129,8 @@ class ProductModel {
       isActive: j['isActive'] ?? true,
       isOfficial: isOfficial,
       artisanName: artisanName,
+      displayStatus: (j['displayStatus'] ?? 'aktif').toString(),
+      statusNote: j['statusNote']?.toString(),
     );
   }
 
@@ -148,5 +154,7 @@ class ProductModel {
     'shopeeUrl': shopeeUrl,
     'isLimited': isLimited,
     'isActive': isActive,
+    'displayStatus': displayStatus,
+    if (statusNote != null) 'statusNote': statusNote,
   };
 }
