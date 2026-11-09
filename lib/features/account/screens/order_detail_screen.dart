@@ -1,3 +1,4 @@
+import '../widgets/holiday_affected_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -209,6 +210,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       const SizedBox(height: 16),
                     ],
 
+                    if (o.affectedByHoliday) ...[
+                      HolidayAffectedBanner(reason: o.holidayReason, pickupDate: o.pickupDate),
+                      const SizedBox(height: 16),
+                    ],
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),

@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../product_detail/widgets/variant_picker.dart';
 import '../providers/reservation_flow_provider.dart';
+import 'pickup_calendar.dart';
 
 class DateTimePickerStep extends StatelessWidget {
   final ReservationFlowProvider provider;
@@ -30,11 +31,11 @@ class DateTimePickerStep extends StatelessWidget {
       Text('Pilih Tanggal Ambil', style: AppTextStyles.h3),
       const SizedBox(height: 4),
       Text(
-        'Toko buka setiap hari, termasuk Minggu. Ambil hari ini selama slotnya belum ditutup, atau pilih sampai ${ReservationFlowProvider.maxAdvanceDays} hari ke depan.',
+        'Pilih tanggal pickup yang tersedia sampai ${ReservationFlowProvider.maxAdvanceDays} hari ke depan. Hari libur toko ditandai merah dan tidak dapat dipilih.',
         style: AppTextStyles.caption,
       ),
       const SizedBox(height: 8),
-      CalendarDatePicker(
+      PickupCalendar(
         initialDate: initial,
         firstDate: first,
         lastDate: last,

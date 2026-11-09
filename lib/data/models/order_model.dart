@@ -122,6 +122,8 @@ class OrderModel {
   final String? refundedAt;
   final String? cancelReason;
   final RefundInfo? refund;
+  final bool affectedByHoliday;
+  final String? holidayReason;
 
   const OrderModel({
     required this.id,
@@ -147,6 +149,8 @@ class OrderModel {
     this.refundedAt,
     this.cancelReason,
     this.refund,
+    this.affectedByHoliday = false,
+    this.holidayReason,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> j) {
@@ -196,6 +200,8 @@ class OrderModel {
       refundedAt: j['refundedAt'] ?? rInfo?.refundedAt,
       cancelReason: j['cancelReason'],
       refund: rInfo,
+      affectedByHoliday: j['affectedByHoliday'] == true,
+      holidayReason: j['holidayInfo'] is Map ? (j['holidayInfo']['reason'] as String?) : null,
     );
   }
 
@@ -223,6 +229,8 @@ class OrderModel {
     if (refundedAt != null) 'refundedAt': refundedAt,
     if (cancelReason != null) 'cancelReason': cancelReason,
     if (refund != null) 'refund': refund!.toJson(),
+    'affectedByHoliday': affectedByHoliday,
+    if (holidayReason != null) 'holidayReason': holidayReason,
   };
 
   OrderModel copyWith({
@@ -231,6 +239,8 @@ class OrderModel {
     String? holdExpiresAt,
     int? holdExtendedMinutes,
     Map<String, dynamic>? snap,
+    bool? affectedByHoliday,
+    String? holidayReason,
   }) =>
       OrderModel(
         id: id,
@@ -252,6 +262,8 @@ class OrderModel {
         pickupDeadline: pickupDeadline,
         items: items,
         snap: snap ?? this.snap,
+        affectedByHoliday: affectedByHoliday ?? this.affectedByHoliday,
+        holidayReason: holidayReason ?? this.holidayReason,
       );
 
   static OrderStatus _statusFromStr(String s) {

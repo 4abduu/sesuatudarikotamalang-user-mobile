@@ -173,7 +173,7 @@ class _ReservationBody extends StatelessWidget {
                       // Pesan error selalu dari backend; mobile tidak mengganti dengan teks buatan sendiri.
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
                     }
-                    if (e.code == 'SLOT_FULL' || e.code == 'SLOT_PASSED' || e.code == 'SLOT_UNAVAILABLE') {
+                    if (e.code == 'SLOT_FULL' || e.code == 'SLOT_PASSED' || e.code == 'SLOT_UNAVAILABLE' || e.code == 'PICKUP_DATE_CLOSED') {
                       // Slot penuh, lewat, atau tidak lagi tersedia: kembali ke pilihan jadwal dengan data slot terbaru.
                       p.backToSchedule();
                     } else if (e.status == 409) {
