@@ -1,3 +1,4 @@
+import '../../../core/utils/date_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
@@ -117,7 +118,7 @@ class _NotificationCard extends StatelessWidget {
                 children: [
                   Row(children: [
                     Expanded(child: Text(n.title, style: GoogleFonts.baloo2(fontSize: 13, height: 1.25, color: AppColors.foreground, fontWeight: n.read ? FontWeight.w500 : FontWeight.w700))),
-                    Text(n.date, style: AppTextStyles.caption),
+                    Text(formatDateTimeWib(n.date), style: AppTextStyles.caption.copyWith(fontSize: 11)),
                   ]),
                   const SizedBox(height: 2),
                   Text(n.body, style: GoogleFonts.poppins(fontSize: 12, height: 1.375, color: AppColors.muted), maxLines: 2, overflow: TextOverflow.ellipsis),

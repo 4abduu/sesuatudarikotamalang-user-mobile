@@ -1,3 +1,4 @@
+import '../features/notifications/providers/notifications_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -143,16 +144,51 @@ class _NavItem extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: active
-                      ? AppColors.primary.withValues(alpha: 0.10)
-                      : Colors.transparent,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(active ? tab.activeIcon : tab.icon, size: 20, color: color),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: active
+                          ? AppColors.primary.withValues(alpha: 0.10)
+                          : Colors.transparent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(active ? tab.activeIcon : tab.icon, size: 20, color: color),
+                  ),
+                  if (tab.id == 'notifikasi')
+                    Consumer<NotificationsProvider>(
+                      builder: (_, notifProv, __) {
+                        final count = notifProv.unreadCount;
+                        if (count <= 0) return const SizedBox.shrink();
+                        return Positioned(
+                          top: -2,
+                          right: -4,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: AppColors.destructive,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppColors.surface, width: 1.5),
+                            ),
+                            constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                            child: Text(
+                              count > 99 ? '99+' : count.toString(),
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.poppins(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                                height: 1.1,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                ],
               ),
               const SizedBox(height: 2),
               Text(

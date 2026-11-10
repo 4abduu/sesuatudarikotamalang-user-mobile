@@ -97,14 +97,7 @@ class _CreatorDashboardScreenState extends State<CreatorDashboardScreen> {
                 subtitle: 'Foto, nama brand, dan bio',
                 onTap: () => context.push('/dashboard-kreator/profil-toko'),
               ),
-              const SizedBox(height: 10),
-              MenuCard(
-                icon: Icons.check_circle_outline,
-                iconColor: AppColors.moss,
-                title: 'Status Pengajuan',
-                subtitle: 'Diterima & Tayang',
-                onTap: () => context.push('/akun/pengajuan'),
-              ),
+
             ],
           ),
         ),

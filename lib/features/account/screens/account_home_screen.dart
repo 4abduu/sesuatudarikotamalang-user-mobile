@@ -122,13 +122,15 @@ class _LoggedInBody extends StatelessWidget {
             subtitle: 'Kelola ulasan yang kamu berikan',
             onTap: () => context.push('/akun/ulasan'),
           ),
-          const SizedBox(height: 10),
-          MenuCard(
-            icon: Icons.assignment_outlined,
-            title: 'Status Pengajuan Kreator',
-            subtitle: 'Cek progres pengajuan konsinyasi',
-            onTap: () => context.push('/akun/pengajuan'),
-          ),
+          if (!isCreator) ...[
+            const SizedBox(height: 10),
+            MenuCard(
+              icon: Icons.assignment_outlined,
+              title: 'Status Pengajuan Kreator',
+              subtitle: 'Cek progres pengajuan konsinyasi',
+              onTap: () => context.push('/akun/pengajuan'),
+            ),
+          ],
           const SizedBox(height: 10),
           if (isCreator)
             MenuCard(

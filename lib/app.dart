@@ -38,6 +38,9 @@ class _SesuatuAppState extends State<SesuatuApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && _initialized) {
       final auth = context.read<AuthProvider>();
+      if (auth.isAuthenticated) {
+        context.read<NotificationsProvider>().fetchNotifications();
+      }
       auth.refreshMeThrottled().then((roleChanged) {
         if (roleChanged && auth.isCreator && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
