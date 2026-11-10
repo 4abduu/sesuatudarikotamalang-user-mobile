@@ -35,11 +35,33 @@ class ProductCard extends StatelessWidget {
           Expanded(
             child: Stack(children: [
               Positioned.fill(
-                child: ArtImage(
-                  seed: product.id,
-                  categoryId: product.categoryId,
-                  label: product.name,
-                ),
+                child: product.images.isNotEmpty
+                    ? Image.network(
+                        product.images.first,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => ArtImage(
+                          seed: product.id,
+                          categoryId: product.categoryId,
+                          label: product.name,
+                        ),
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return Container(
+                            color: AppColors.surfaceAlt,
+                            alignment: Alignment.center,
+                            child: const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                            ),
+                          );
+                        },
+                      )
+                    : ArtImage(
+                        seed: product.id,
+                        categoryId: product.categoryId,
+                        label: product.name,
+                      ),
               ),
               if (product.badge != BadgeType.none)
                 Positioned(top: 8, left: 8, child: BadgeChip(badge: product.badge, compact: true)),

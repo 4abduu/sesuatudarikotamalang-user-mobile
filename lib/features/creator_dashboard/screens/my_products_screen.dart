@@ -127,6 +127,7 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
                                 Container(
                                   width: 40,
                                   height: 40,
+                                  clipBehavior: Clip.antiAlias,
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(
                                       begin: Alignment.topLeft,
@@ -135,7 +136,13 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
                                     ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: const Icon(Icons.brush, color: AppColors.onPrimary, size: 16),
+                                  child: p.images.isNotEmpty
+                                      ? Image.network(
+                                          p.images.first,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => const Icon(Icons.brush, color: AppColors.onPrimary, size: 16),
+                                        )
+                                      : const Icon(Icons.brush, color: AppColors.onPrimary, size: 16),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(

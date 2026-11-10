@@ -4,8 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/widgets/primary_button.dart';
-import '../../../core/widgets/secondary_button.dart';
 import '../../../core/widgets/product_card.dart';
 import '../../../core/widgets/rating_stars.dart';
 import '../../../core/widgets/creator_avatar.dart';
@@ -22,7 +20,6 @@ class CreatorProfileScreen extends StatefulWidget {
 }
 
 class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
-  bool _following = false;
   CreatorModel? _creator;
   List<ProductModel> _products = [];
   bool _isLoading = true;
@@ -106,26 +103,7 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
                 textAlign: TextAlign.center,
               ),
             ),
-            const SizedBox(height: 12),
-            _following
-                ? SecondaryButton(
-                    label: 'Mengikuti',
-                    onPressed: () {
-                      setState(() => _following = false);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Berhenti mengikuti ${creator.name}')),
-                      );
-                    },
-                  )
-                : PrimaryButton(
-                    label: 'Ikuti Kreator',
-                    onPressed: () {
-                      setState(() => _following = true);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Kamu mengikuti ${creator.name}')),
-                      );
-                    },
-                  ),
+
             const SizedBox(height: 24),
             Align(
               alignment: Alignment.centerLeft,

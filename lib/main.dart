@@ -1,3 +1,4 @@
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'app.dart';
@@ -11,8 +12,9 @@ import 'features/creators/providers/artisans_provider.dart';
 import 'features/search/providers/search_provider.dart';
 import 'features/creator_dashboard/providers/creator_dashboard_provider.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null);
   final auth = AuthProvider();
   final products = ProductsProvider();
   final artisans = ArtisansProvider();

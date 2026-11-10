@@ -1,3 +1,4 @@
+import '../../../core/widgets/art_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
@@ -114,12 +115,16 @@ class _ProductGalleryState extends State<ProductGallery> {
       return AspectRatio(
         aspectRatio: 1,
         child: Container(
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            gradient: LinearGradient(colors: _palette(widget.seed.hashCode.abs())),
             borderRadius: BorderRadius.circular(20),
             boxShadow: AppShadows.soft,
           ),
-          child: Center(child: Icon(Icons.brush_outlined, size: 48, color: AppColors.onPrimary.withValues(alpha: 0.3))),
+          child: ArtImage(
+            seed: widget.seed,
+            categoryId: null,
+            label: '',
+          ),
         ),
       );
     }
@@ -174,13 +179,4 @@ class _ProductGalleryState extends State<ProductGallery> {
     );
   }
 
-  List<Color> _palette(int i) {
-    const palettes = [
-      [Color(0xFFA8452B), Color(0xFFC45A3A)],
-      [Color(0xFF6B7A3D), Color(0xFF8A9D52)],
-      [Color(0xFFC99A2E), Color(0xFFE0B85A)],
-      [Color(0xFF8A6A3A), Color(0xFFA8855A)],
-    ];
-    return palettes[i % palettes.length];
-  }
 }
