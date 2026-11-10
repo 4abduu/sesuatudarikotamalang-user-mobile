@@ -120,7 +120,7 @@ class _StoryFormScreenState extends State<StoryFormScreen> {
         title: _judul.text.trim(),
         content: _isi.text.trim(),
         process: _proses.text.trim().isNotEmpty ? _proses.text.trim() : null,
-        processImages: photoChanged ? sync!.images : null,
+        processImages: photoChanged ? sync!.images : _initialPhotos.map((e) => e.url ?? '').where((u) => u.isNotEmpty).toList(),
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
