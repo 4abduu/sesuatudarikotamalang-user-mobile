@@ -10,7 +10,6 @@ import '../../../core/widgets/loading_indicator.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/auth/widgets/auth_gate_bottom_sheet.dart';
 import '../../../features/account/providers/orders_provider.dart';
-import '../../../data/models/order_model.dart';
 import '../../../data/models/product_model.dart';
 import '../../../shared/app_scaffold.dart';
 import '../providers/reservation_flow_provider.dart';
@@ -23,51 +22,74 @@ import 'midtrans_webview_screen.dart';
 import '../../../core/network/api_client.dart';
 import '../../../features/catalog/providers/products_provider.dart';
 
-class ReservationFlowScreen extends StatelessWidget {
+class ReservationFlowScreen extends StatefulWidget {
   final String productId;
   const ReservationFlowScreen({super.key, required this.productId});
 
   @override
-  Widget build(BuildContext context) {
+  State<ReservationFlowScreen> createState() => _ReservationFlowScreenState();
+}
+
+class _ReservationFlowScreenState extends State<ReservationFlowScreen> {
+  // Produk & provider alur dibuat SEKALI lalu dipegang. Dengan begitu, perubahan stok / daftar
+  // produk setelah pembayaran tidak membuat layar mencari ulang produk (dan jatuh ke
+  // "Produk tidak ditemukan") ataupun membuang state alur.
+  ReservationFlowProvider? _flow;
+  bool _loading = true;
+  bool _gateShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _init());
+  }
+
+  Future<void> _init() async {
+    if (!mounted) return;
     final auth = context.read<AuthProvider>();
     if (!auth.isAuthenticated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showAuthGateSheet(context, next: '/reservasi/$productId', contextLabel: 'reservasi pickup');
-        context.pop();
-      });
-      return const Scaffold(body: LoadingIndicator(label: 'Memeriksa sesi...'));
+      if (_gateShown) return;
+      _gateShown = true;
+      showAuthGateSheet(context, next: '/reservasi/${widget.productId}', contextLabel: 'reservasi pickup');
+      context.pop();
+      return;
     }
+    final products = context.read<ProductsProvider>();
+    ProductModel? product;
+    for (final p in products.products) {
+      if (p.id == widget.productId) {
+        product = p;
+        break;
+      }
+    }
+    product ??= await products.getProductById(widget.productId);
+    if (!mounted) return;
+    setState(() {
+      if (product != null) _flow = ReservationFlowProvider(product);
+      _loading = false;
+    });
+  }
 
-    final products = context.watch<ProductsProvider>();
-    final product = products.products.cast<ProductModel?>().firstWhere(
-      (p) => p?.id == productId,
-      orElse: () => null,
-    );
+  @override
+  void dispose() {
+    _flow?.dispose();
+    super.dispose();
+  }
 
-    if (product == null) {
-      return FutureBuilder<ProductModel?>(
-        future: products.getProductById(productId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(body: LoadingIndicator(label: 'Memuat data produk...'));
-          }
-          final loadedProduct = snapshot.data;
-          if (loadedProduct == null) {
-            return Scaffold(
-              appBar: AppBar(title: const Text('Reservasi')),
-              body: const Center(child: Text('Produk tidak ditemukan')),
-            );
-          }
-          return ChangeNotifierProvider(
-            create: (_) => ReservationFlowProvider(loadedProduct),
-            child: const _ReservationBody(),
-          );
-        },
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return const Scaffold(body: LoadingIndicator(label: 'Memuat data produk...'));
+    }
+    final flow = _flow;
+    if (flow == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Reservasi')),
+        body: const Center(child: Text('Produk tidak ditemukan')),
       );
     }
-
-    return ChangeNotifierProvider(
-      create: (_) => ReservationFlowProvider(product),
+    return ChangeNotifierProvider<ReservationFlowProvider>.value(
+      value: flow,
       child: const _ReservationBody(),
     );
   }
@@ -144,28 +166,20 @@ class _ReservationBody extends StatelessWidget {
                             ),
                           );
 
-                          // Polling status order dari webhook backend (maks 60s, cek tiap 3s)
-                          for (int i = 0; i < 15; i++) {
-                            await Future.delayed(const Duration(seconds: 3));
-                            final updated = await orders.getOrderDetail(created.id);
-                            if (updated != null && updated.status == OrderStatus.lunas) {
-                              p.setPaid();
-                              break;
-                            }
+                          // Cek status dan langsung alihkan ke halaman detail pesanan / tiket
+                          if (context.mounted) {
+                            context.go('/akun/pesanan/${created.id}');
                           }
                         }
                       } else {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Pesanan dibuat. Silakan selesaikan pembayaran di detail pesanan.')),
-                          );
+                          context.go('/akun/pesanan/${created.id}');
                         }
                       }
                     } else {
+                      // COD: Langsung arahkan ke detail pesanan (ada QR code & tiket pengambilan)
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Reservasi berhasil dibuat!')),
-                        );
+                        context.go('/akun/pesanan/${created.id}');
                       }
                     }
                   } on ApiException catch (e) {
@@ -173,7 +187,12 @@ class _ReservationBody extends StatelessWidget {
                       // Pesan error selalu dari backend; mobile tidak mengganti dengan teks buatan sendiri.
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
                     }
-                    if (e.code == 'SLOT_FULL' || e.code == 'SLOT_PASSED' || e.code == 'SLOT_UNAVAILABLE' || e.code == 'PICKUP_DATE_CLOSED') {
+                    if (e.code == 'PRODUCT_UNAVAILABLE') {
+                      if (context.mounted) {
+                        context.read<ProductsProvider>().getProductById(p.product.id);
+                      }
+                      p.restart();
+                    } else if (e.code == 'SLOT_FULL' || e.code == 'SLOT_PASSED' || e.code == 'SLOT_UNAVAILABLE' || e.code == 'PICKUP_DATE_CLOSED') {
                       // Slot penuh, lewat, atau tidak lagi tersedia: kembali ke pilihan jadwal dengan data slot terbaru.
                       p.backToSchedule();
                     } else if (e.status == 409) {

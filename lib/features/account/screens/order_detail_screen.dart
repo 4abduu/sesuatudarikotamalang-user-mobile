@@ -1,3 +1,4 @@
+import 'dart:async';
 import '../widgets/holiday_affected_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -30,11 +31,54 @@ class OrderDetailScreen extends StatefulWidget {
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
   bool _isLoading = true;
   bool _isProcessingAction = false;
+  Timer? _statusPollingTimer;
+  bool _hasRedirectedOnComplete = false;
 
   @override
   void initState() {
     super.initState();
-    _loadOrder();
+    _loadOrder().then((_) {
+      if (mounted) _startPollingIfEligible();
+    });
+  }
+
+  @override
+  void dispose() {
+    _statusPollingTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startPollingIfEligible() {
+    _statusPollingTimer?.cancel();
+    final orders = context.read<OrdersProvider>();
+    final o = orders.orders.cast<OrderModel?>().firstWhere(
+      (item) => item?.id == widget.orderId,
+      orElse: () => null,
+    );
+    if (o == null) return;
+
+    final status = effectiveStatus(o);
+    final isCod = o.paymentMethod.toLowerCase().contains('cod') || o.paymentMethod.toLowerCase().contains('cash');
+    final shouldPoll = status == OrderStatus.lunas || (status == OrderStatus.menungguBayar && isCod);
+
+    if (shouldPoll && !_hasRedirectedOnComplete) {
+      _statusPollingTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+        final updated = await context.read<OrdersProvider>().getOrderDetail(widget.orderId);
+        if (updated != null && mounted) {
+          final updatedStatus = effectiveStatus(updated);
+          if (updatedStatus == OrderStatus.selesai && !_hasRedirectedOnComplete) {
+            _hasRedirectedOnComplete = true;
+            timer.cancel();
+            // Arahkan otomatis ke halaman konfirmasi reservasi
+            context.go('/reservasi/konfirmasi?orderNumber=${Uri.encodeComponent(updated.orderNumber)}');
+          }
+        }
+      });
+    }
   }
 
   Future<void> _loadOrder() async {

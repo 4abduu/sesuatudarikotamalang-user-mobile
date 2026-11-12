@@ -63,8 +63,14 @@ GoRouter buildAppRouter(AuthProvider auth) {
       GoRoute(path: '${RouteNames.productDetail}/:id', builder: (_, s) => ProductDetailScreen(productId: s.pathParameters['id']!)),
       GoRoute(path: RouteNames.creatorsList, builder: (_, __) => const CreatorsListScreen()),
       GoRoute(path: '${RouteNames.creatorProfile}/:id', builder: (_, s) => CreatorProfileScreen(creatorId: s.pathParameters['id']!)),
+      // Rute konfirmasi ditaruh LEBIH DULU agar tidak termakan parameter dinamis :productId
+      GoRoute(
+        path: RouteNames.reservationConfirm,
+        builder: (_, s) => ReservationConfirmationScreen(
+          orderNumber: s.uri.queryParameters['orderNumber'],
+        ),
+      ),
       GoRoute(path: '${RouteNames.reservation}/:productId', builder: (_, s) => ReservationFlowScreen(productId: s.pathParameters['productId']!)),
-      GoRoute(path: RouteNames.reservationConfirm, builder: (_, __) => const ReservationConfirmationScreen()),
       GoRoute(path: RouteNames.daftarKreator, builder: (_, __) => const CreatorApplicationFormScreen()),
       GoRoute(path: RouteNames.login, builder: (_, __) => const LoginScreen()),
       GoRoute(path: RouteNames.register, builder: (_, __) => const RegisterScreen()),

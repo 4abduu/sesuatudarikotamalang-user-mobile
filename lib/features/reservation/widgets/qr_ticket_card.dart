@@ -13,14 +13,61 @@ class QrTicketCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border), boxShadow: AppShadows.soft),
-      child: Column(children: [
-      Row(mainAxisAlignment: MainAxisAlignment.center, children: [const Icon(Icons.qr_code, size: 16, color: AppColors.primary), const SizedBox(width: 4), Text('SCAN DI KASIR', style: AppTextStyles.eyebrow)]),
-      const SizedBox(height: 12),
-      Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.primary, width: 2)),
-        child: QrImageView(data: code, size: 160, backgroundColor: Colors.white)),
-      const SizedBox(height: 12),
-      Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: AppColors.surfaceAlt, borderRadius: BorderRadius.circular(999)), child: Text(code, style: AppTextStyles.h2.copyWith(letterSpacing: 2))),
-    ]));
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.soft,
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.qr_code_2, size: 18, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Text('SCAN DI KASIR', style: AppTextStyles.eyebrow),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.6), width: 1.5),
+                ),
+                child: QrImageView(
+                  data: code,
+                  size: 130,
+                  backgroundColor: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceAlt,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    code,
+                    style: AppTextStyles.h3.copyWith(
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
