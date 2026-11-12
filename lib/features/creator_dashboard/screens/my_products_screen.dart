@@ -179,6 +179,7 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
                               ProductStatusNotice(
                                 displayStatus: p.displayStatus,
                                 note: p.statusNote,
+                                hasReplacement: p.replacedByProductId != null,
                                 onSubmitNew: () => context.push('/dashboard-kreator/product-form?replaceOf=${p.id}'),
                               ),
                             ],

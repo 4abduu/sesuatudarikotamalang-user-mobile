@@ -8,6 +8,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../utils/image_helper.dart';
 import '../utils/photo_rules.dart';
+import 'photo_viewer.dart';
 
 // ============================================================================
 // MODEL
@@ -150,6 +151,7 @@ class PhotoEditor extends StatelessWidget {
   final bool dirty;
   final VoidCallback? onReset;
   final bool enabled;
+  final Set<String>? rejectedKeys;
 
   const PhotoEditor({
     super.key,
@@ -162,6 +164,7 @@ class PhotoEditor extends StatelessWidget {
     this.dirty = false,
     this.onReset,
     this.enabled = true,
+    this.rejectedKeys,
   });
 
   static const double _gap = 8;
@@ -393,6 +396,7 @@ class PhotoEditor extends StatelessWidget {
     final isMain = !item.isLinked && plain.isNotEmpty && plain.first.key == item.key;
     final canLeft = listIndex > 0 && items[listIndex - 1].isLinked == item.isLinked;
     final canRight = listIndex >= 0 && listIndex < items.length - 1 && items[listIndex + 1].isLinked == item.isLinked;
+    final isRejected = rejectedKeys != null && rejectedKeys!.contains(item.key);
 
     return SizedBox(
       width: size,
@@ -401,13 +405,29 @@ class PhotoEditor extends StatelessWidget {
         children: [
           Positioned.fill(
             child: GestureDetector(
-              onTap: enabled ? () => _openActions(context, item) : null,
+              onTap: () {
+                final imageProviders = items.map<ImageProvider>((e) {
+                  if (e.file != null) {
+                    final provider = safeImageProvider(e.file!.path);
+                    if (provider != null) return provider;
+                  }
+                  return NetworkImage(e.url ?? '');
+                }).toList();
+                final initialIdx = items.indexWhere((i) => i.key == item.key);
+                showPhotoViewer(
+                  context,
+                  images: imageProviders,
+                  initialIndex: initialIdx >= 0 ? initialIdx : 0,
+                );
+              },
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: highlight ? AppColors.primary : AppColors.border,
-                    width: highlight ? 2 : 1,
+                    color: isRejected
+                        ? AppColors.destructive
+                        : (highlight ? AppColors.primary : AppColors.border),
+                    width: isRejected ? 2.5 : (highlight ? 2 : 1),
                   ),
                 ),
                 clipBehavior: Clip.antiAlias,
@@ -425,6 +445,19 @@ class PhotoEditor extends StatelessWidget {
                 child: Text(
                   'Utama',
                   style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.onPrimary),
+                ),
+              ),
+            ),
+          if (isRejected)
+            Positioned(
+              left: isMain ? 58 : 6,
+              top: 6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(color: AppColors.destructive, borderRadius: BorderRadius.circular(999)),
+                child: Text(
+                  'Ditolak',
+                  style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.white),
                 ),
               ),
             ),
@@ -454,10 +487,20 @@ class PhotoEditor extends StatelessWidget {
                 onTap: canRight ? () => _shift(item, 1) : null,
               ),
             ),
+          if (enabled)
+            Positioned(
+              right: 6,
+              bottom: 6,
+              child: _circleButton(
+                icon: Icons.more_horiz,
+                size: 24,
+                onTap: () => _openActions(context, item),
+              ),
+            ),
           if (item.isLinked)
             Positioned(
               left: 6,
-              right: 6,
+              right: enabled ? 34 : 6,
               bottom: 6,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

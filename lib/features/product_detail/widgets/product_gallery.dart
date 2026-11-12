@@ -1,4 +1,5 @@
 import '../../../core/widgets/art_image.dart';
+import '../../../core/widgets/photo_viewer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
@@ -139,11 +140,21 @@ class _ProductGalleryState extends State<ProductGallery> {
               boxShadow: AppShadows.soft,
             ),
             clipBehavior: Clip.antiAlias,
-            child: PageView.builder(
-              controller: _controller,
-              itemCount: _ordered.length,
-              onPageChanged: (i) => setState(() => _index = i),
-              itemBuilder: (_, i) => _network(_ordered[i]),
+            child: GestureDetector(
+              onTap: () {
+                final imageProviders = _ordered.map<ImageProvider>((url) => NetworkImage(url)).toList();
+                showPhotoViewer(
+                  context,
+                  images: imageProviders,
+                  initialIndex: _index,
+                );
+              },
+              child: PageView.builder(
+                controller: _controller,
+                itemCount: _ordered.length,
+                onPageChanged: (i) => setState(() => _index = i),
+                itemBuilder: (_, i) => _network(_ordered[i]),
+              ),
             ),
           ),
         ),

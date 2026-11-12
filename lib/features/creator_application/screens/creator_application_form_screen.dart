@@ -31,6 +31,8 @@ class _CreatorApplicationFormScreenState extends State<CreatorApplicationFormScr
   final _desc = TextEditingController();
   String? _category;
   String? _brandError;
+  String? _photoError;
+  Set<String> _rejectedKeys = {};
   List<PhotoItem> _photos = [];
   bool _isSubmitting = false;
 
@@ -73,32 +75,56 @@ class _CreatorApplicationFormScreenState extends State<CreatorApplicationFormScr
       );
       return;
     }
+    if (_photos.isEmpty) {
+      setState(() => _photoError = 'Minimal 1 foto sampel produk');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Minimal 1 foto sampel produk')),
+      );
+      return;
+    }
 
     setState(() {
       _isSubmitting = true;
       _brandError = null;
+      _photoError = null;
     });
 
     PhotoSyncResult? sync;
     try {
-      if (_photos.isNotEmpty) {
-        try {
-          sync = await syncPhotos(_photos);
-        } on ApiException catch (e) {
-          if (mounted) {
+      try {
+        sync = await syncPhotos(_photos);
+      } on ApiException catch (e) {
+        if (mounted) {
+          if (e.code == 'IMAGE_REJECTED') {
+            final newPhotos = _photos.where((p) => p.file != null).toList();
+            final rejected = <String>{};
+            for (final idx in e.rejectedIndexes) {
+              if (idx >= 0 && idx < newPhotos.length) {
+                rejected.add(newPhotos[idx].key);
+              }
+            }
+            setState(() => _rejectedKeys = rejected);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Ada foto yang tidak pantas. Hapus foto bertanda merah lalu coba lagi.')),
+            );
+          } else if (e.code == 'MODERATION_UNAVAILABLE') {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Pemeriksaan foto sedang tidak tersedia. Coba lagi nanti.')),
+            );
+          } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Foto sampel gagal diunggah: ${e.message}')),
             );
           }
-          return;
-        } catch (e) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Foto sampel gagal diunggah: $e')),
-            );
-          }
-          return;
         }
+        return;
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Foto sampel gagal diunggah: $e')),
+          );
+        }
+        return;
       }
 
       if (!mounted) return;
@@ -108,8 +134,8 @@ class _CreatorApplicationFormScreenState extends State<CreatorApplicationFormScr
         brandName: _brand.text.trim().isNotEmpty ? _brand.text.trim() : null,
         description: _desc.text.trim(),
         categoryId: _category,
-        samplePhotos: sync?.images,
-        sampleFileUrl: (sync != null && sync.images.isNotEmpty) ? sync.images.first : null,
+        samplePhotos: sync.images,
+        sampleFileUrl: sync.images.isNotEmpty ? sync.images.first : null,
       );
 
       auth.setApplication(app.id);
@@ -248,10 +274,19 @@ class _CreatorApplicationFormScreenState extends State<CreatorApplicationFormScr
                   const SizedBox(height: 12),
                   PhotoEditor(
                     items: _photos,
-                    onChanged: (v) => setState(() => _photos = v),
+                    onChanged: (v) => setState(() {
+                      _photos = v;
+                      if (_photos.isNotEmpty) _photoError = null;
+                      _rejectedKeys.removeWhere((k) => !v.any((item) => item.key == k));
+                    }),
                     maxPhotos: PhotoRules.maxSamplePhotos,
-                    label: 'Foto contoh karya (opsional)',
+                    label: 'Foto sampel produk (wajib, min. 1)',
+                    rejectedKeys: _rejectedKeys,
                   ),
+                  if (_photoError != null) ...[
+                    const SizedBox(height: 4),
+                    Text(_photoError!, style: AppTextStyles.caption.copyWith(color: AppColors.destructive)),
+                  ],
                   const SizedBox(height: 24),
                   PrimaryButton(
                     label: _isSubmitting ? 'Mengirim...' : 'Kirim Pengajuan',

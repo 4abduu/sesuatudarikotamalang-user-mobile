@@ -9,12 +9,14 @@ class ProductStatusNotice extends StatelessWidget {
   final String displayStatus;
   final String? note;
   final VoidCallback? onSubmitNew;
+  final bool hasReplacement;
 
   const ProductStatusNotice({
     super.key,
     required this.displayStatus,
     this.note,
     this.onSubmitNew,
+    this.hasReplacement = false,
   });
 
   String _message() {
@@ -52,16 +54,22 @@ class ProductStatusNotice extends StatelessWidget {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(_message(), style: AppTextStyles.caption.copyWith(color: AppColors.foreground)),
-        if (displayStatus == 'ditarik' && onSubmitNew != null) ...[
+        if (displayStatus == 'ditarik') ...[
           const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: onSubmitNew,
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Ajukan produk baru'),
+          if (hasReplacement)
+            Text(
+              'Pengganti sudah diajukan',
+              style: AppTextStyles.caption.copyWith(color: AppColors.muted, fontStyle: FontStyle.italic),
+            )
+          else if (onSubmitNew != null)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: onSubmitNew,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Ajukan produk baru'),
+              ),
             ),
-          ),
         ],
       ]),
     );

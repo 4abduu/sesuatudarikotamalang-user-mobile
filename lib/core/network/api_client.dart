@@ -11,6 +11,16 @@ class ApiException implements Exception {
 
   ApiException(this.status, this.message, [this.code, this.data]);
 
+  String? get requestId => data?['requestId'] as String?;
+
+  List<int> get rejectedIndexes {
+    final list = data?['rejectedIndexes'];
+    if (list is List) {
+      return list.map((e) => (e as num).toInt()).toList();
+    }
+    return const [];
+  }
+
   @override
   String toString() => message;
 }
@@ -84,8 +94,11 @@ class ApiClient {
     Map<String, dynamic>? extraData;
 
     if (decoded is Map<String, dynamic>) {
+      final reqId = decoded['requestId'] as String?;
       message = (status >= 500)
-          ? 'Terjadi kesalahan pada server'
+          ? (reqId != null && reqId.isNotEmpty
+              ? 'Terjadi kesalahan pada server. Kode: $reqId'
+              : 'Terjadi kesalahan pada server')
           : (decoded['error'] ?? decoded['message'] ?? 'Request gagal');
       code = decoded['code'] as String?;
       extraData = decoded;

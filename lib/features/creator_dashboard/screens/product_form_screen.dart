@@ -37,6 +37,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
   List<PhotoItem> _photos = [];
   List<PhotoItem> _initialPhotos = [];
+  Set<String> _rejectedKeys = {};
 
   List<VariantOptionModel> _opts = [];
   Map<String, int> _stocks = {};
@@ -165,9 +166,27 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           sync = await syncPhotos(_photos);
         } on ApiException catch (e) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Foto gagal diunggah: ${e.message}')),
-            );
+            if (e.code == 'IMAGE_REJECTED') {
+              final newPhotos = _photos.where((p) => p.file != null).toList();
+              final rejected = <String>{};
+              for (final idx in e.rejectedIndexes) {
+                if (idx >= 0 && idx < newPhotos.length) {
+                  rejected.add(newPhotos[idx].key);
+                }
+              }
+              setState(() => _rejectedKeys = rejected);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Ada foto yang tidak pantas. Hapus foto bertanda merah lalu coba lagi.')),
+              );
+            } else if (e.code == 'MODERATION_UNAVAILABLE') {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Pemeriksaan foto sedang tidak tersedia. Coba lagi nanti.')),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Foto gagal diunggah: ${e.message}')),
+              );
+            }
           }
           return;
         } catch (e) {
@@ -245,6 +264,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         await UploadApi.deleteUrls(sync.newlyUploaded);
       }
       if (mounted) {
+        if (e.code == 'REPLACEMENT_ALREADY_EXISTS') {
+          await dashboard.fetchDashboardData();
+        }
+        if (!mounted) return;
         final msg = e.code == 'PRODUCT_LOCKED'
             ? (e.message.isNotEmpty ? e.message : 'Produk ini terkunci dan tidak dapat diubah lagi.')
             : (e.message.isNotEmpty ? e.message : 'Gagal menyimpan produk');
@@ -287,12 +310,16 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               const SizedBox(height: 16),
               PhotoEditor(
                 items: _photos,
-                onChanged: (v) => setState(() => _photos = v),
+                onChanged: (v) => setState(() {
+                  _photos = v;
+                  _rejectedKeys.removeWhere((k) => !v.any((item) => item.key == k));
+                }),
                 maxPhotos: PhotoRules.maxProductPhotos,
                 variantChoices: _variantChoices(),
-                label: 'Foto produk',
+                label: 'Foto produk (wajib, min. 1)',
                 dirty: _isPhotosDirty,
                 onReset: () => setState(() => _photos = List.of(_initialPhotos)),
+                rejectedKeys: _rejectedKeys,
               ),
               const SizedBox(height: 16),
               AuthField(controller: _nama, label: 'Nama Produk', icon: Icons.edit_outlined),

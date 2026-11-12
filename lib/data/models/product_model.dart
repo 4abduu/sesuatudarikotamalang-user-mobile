@@ -30,6 +30,7 @@ class ProductModel {
   final String artisanName;
   final String displayStatus;
   final String? statusNote;
+  final String? replacedByProductId;
 
   const ProductModel({
     required this.id,
@@ -56,6 +57,7 @@ class ProductModel {
     this.artisanName = '',
     this.displayStatus = 'aktif',
     this.statusNote,
+    this.replacedByProductId,
   });
 
   /// Menggunakan effectiveStock dari backend (stok mentah dikurangi order aktif)
@@ -131,6 +133,7 @@ class ProductModel {
       artisanName: artisanName,
       displayStatus: (j['displayStatus'] ?? 'aktif').toString(),
       statusNote: j['statusNote']?.toString(),
+      replacedByProductId: j['replacedByProductId']?.toString(),
     );
   }
 
@@ -156,5 +159,6 @@ class ProductModel {
     'isActive': isActive,
     'displayStatus': displayStatus,
     if (statusNote != null) 'statusNote': statusNote,
+    if (replacedByProductId != null) 'replacedByProductId': replacedByProductId,
   };
 }
