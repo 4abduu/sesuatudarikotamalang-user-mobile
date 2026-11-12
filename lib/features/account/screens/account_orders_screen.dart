@@ -1,3 +1,5 @@
+import '../../../core/utils/infinite_scroll.dart';
+import '../../../core/widgets/load_more_footer.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -22,12 +24,24 @@ class AccountOrdersScreen extends StatefulWidget {
 }
 
 class _AccountOrdersScreenState extends State<AccountOrdersScreen> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
+    setupInfiniteScroll(
+      controller: _scrollController,
+      onLoadMore: () => context.read<OrdersProvider>().loadMore(),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<OrdersProvider>().fetchOrders();
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -64,10 +78,18 @@ class _AccountOrdersScreenState extends State<AccountOrdersScreen> {
                     ],
                   )
                 : ListView.builder(
+                    controller: _scrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                    itemCount: mine.length,
+                    itemCount: mine.length + 1,
                     itemBuilder: (_, i) {
+                      if (i == mine.length) {
+                        return LoadMoreFooter(
+                          isLoading: orders.isLoadingMore,
+                          hasMore: orders.hasMore,
+                          isEmpty: mine.isEmpty,
+                        );
+                      }
                       final o = mine[i];
                       final status = effectiveStatus(o);
                       return Padding(

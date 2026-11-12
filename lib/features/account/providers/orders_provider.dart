@@ -5,11 +5,20 @@ import '../../../data/models/order_model.dart';
 class OrdersProvider extends ChangeNotifier {
   List<OrderModel> _orders = [];
   bool _isLoading = false;
+  bool _isLoadingMore = false;
   String? _errorMessage;
+
+  int _page = 1;
+  static const int _limit = 10;
+  int _total = 0;
+  bool _hasMore = false;
 
   List<OrderModel> get orders => List.unmodifiable(_orders);
   bool get isLoading => _isLoading;
+  bool get isLoadingMore => _isLoadingMore;
   String? get errorMessage => _errorMessage;
+  int get total => _total;
+  bool get hasMore => _hasMore;
 
   List<OrderModel> ordersForUser(String userId) =>
       _orders.where((o) => o.userId == userId || userId.isEmpty).toList()
@@ -19,24 +28,73 @@ class OrdersProvider extends ChangeNotifier {
     await fetchOrders();
   }
 
-  /// Ambil riwayat order dari backend (GET /api/orders)
+  /// Ambil riwayat order dari backend (GET /api/orders?page=1&limit=10)
   Future<void> fetchOrders() async {
     _isLoading = true;
     _errorMessage = null;
+    _page = 1;
     notifyListeners();
 
     try {
-      final res = await ApiClient.get('/orders');
+      final res = await ApiClient.get('/orders', queryParameters: {
+        'page': _page,
+        'limit': _limit,
+      });
       if (res != null && res['orders'] != null) {
         final list = (res['orders'] as List<dynamic>)
             .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
             .toList();
         _orders = list;
+
+        final pagination = res['pagination'] as Map<String, dynamic>?;
+        if (pagination != null) {
+          _total = (pagination['total'] as num?)?.toInt() ?? list.length;
+          final totalPages = (pagination['totalPages'] as num?)?.toInt() ?? 1;
+          _hasMore = _page < totalPages;
+        } else {
+          _total = list.length;
+          _hasMore = false;
+        }
       }
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Muat halaman order berikutnya
+  Future<void> loadMore() async {
+    if (_isLoadingMore || !_hasMore) return;
+    _isLoadingMore = true;
+    notifyListeners();
+
+    try {
+      final nextPage = _page + 1;
+      final res = await ApiClient.get('/orders', queryParameters: {
+        'page': nextPage,
+        'limit': _limit,
+      });
+      if (res != null && res['orders'] != null) {
+        final list = (res['orders'] as List<dynamic>)
+            .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+        _orders.addAll(list);
+        _page = nextPage;
+
+        final pagination = res['pagination'] as Map<String, dynamic>?;
+        if (pagination != null) {
+          _total = (pagination['total'] as num?)?.toInt() ?? _total;
+          final totalPages = (pagination['totalPages'] as num?)?.toInt() ?? 1;
+          _hasMore = _page < totalPages;
+        } else {
+          _hasMore = false;
+        }
+      }
+    } catch (_) {
+    } finally {
+      _isLoadingMore = false;
       notifyListeners();
     }
   }

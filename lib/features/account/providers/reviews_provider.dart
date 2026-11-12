@@ -5,34 +5,92 @@ import '../../../data/models/review_model.dart';
 class ReviewsProvider extends ChangeNotifier {
   List<ReviewModel> _reviews = [];
   bool _isLoading = false;
+  bool _isLoadingMore = false;
   String? _errorMessage;
+
+  int _page = 1;
+  static const int _limit = 10;
+  int _total = 0;
+  bool _hasMore = false;
 
   List<ReviewModel> get reviews => List.unmodifiable(_reviews);
   bool get isLoading => _isLoading;
+  bool get isLoadingMore => _isLoadingMore;
   String? get errorMessage => _errorMessage;
+  int get total => _total;
+  bool get hasMore => _hasMore;
 
   Future<void> init() async {
     await fetchMyReviews();
   }
 
-  /// Ambil ulasan milik pengguna yang login (GET /api/reviews/mine)
+  /// Ambil ulasan milik pengguna yang login (GET /api/reviews/mine?page=1&limit=10)
   Future<void> fetchMyReviews() async {
     _isLoading = true;
     _errorMessage = null;
+    _page = 1;
     notifyListeners();
 
     try {
-      final res = await ApiClient.get('/reviews/mine');
+      final res = await ApiClient.get('/reviews/mine', queryParameters: {
+        'page': _page,
+        'limit': _limit,
+      });
       if (res != null && res['reviews'] != null) {
         final list = (res['reviews'] as List<dynamic>)
             .map((e) => ReviewModel.fromJson(e as Map<String, dynamic>))
             .toList();
         _reviews = list;
+
+        final pagination = res['pagination'] as Map<String, dynamic>?;
+        if (pagination != null) {
+          _total = (pagination['total'] as num?)?.toInt() ?? list.length;
+          final totalPages = (pagination['totalPages'] as num?)?.toInt() ?? 1;
+          _hasMore = _page < totalPages;
+        } else {
+          _total = list.length;
+          _hasMore = false;
+        }
       }
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Muat halaman ulasan berikutnya
+  Future<void> loadMore() async {
+    if (_isLoadingMore || !_hasMore) return;
+    _isLoadingMore = true;
+    notifyListeners();
+
+    try {
+      final nextPage = _page + 1;
+      final res = await ApiClient.get('/reviews/mine', queryParameters: {
+        'page': nextPage,
+        'limit': _limit,
+      });
+      if (res != null && res['reviews'] != null) {
+        final list = (res['reviews'] as List<dynamic>)
+            .map((e) => ReviewModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+        _reviews.addAll(list);
+        _page = nextPage;
+
+        final pagination = res['pagination'] as Map<String, dynamic>?;
+        if (pagination != null) {
+          _total = (pagination['total'] as num?)?.toInt() ?? _total;
+          final totalPages = (pagination['totalPages'] as num?)?.toInt() ?? 1;
+          _hasMore = _page < totalPages;
+        } else {
+          _hasMore = false;
+        }
+      }
+    } catch (_) {
+    } finally {
+      _isLoadingMore = false;
       notifyListeners();
     }
   }

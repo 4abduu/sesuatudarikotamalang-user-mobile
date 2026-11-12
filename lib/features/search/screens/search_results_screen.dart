@@ -1,3 +1,5 @@
+import '../../../core/utils/infinite_scroll.dart';
+import '../../../core/widgets/load_more_footer.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -20,10 +22,21 @@ class SearchResultsScreen extends StatefulWidget {
 
 class _SearchResultsScreenState extends State<SearchResultsScreen> {
   final TextEditingController _controller = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    setupInfiniteScroll(
+      controller: _scrollController,
+      onLoadMore: () => context.read<SearchProvider>().loadMore(),
+    );
+  }
 
   @override
   void dispose() {
     _controller.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -48,6 +61,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       title: 'Pencarian',
       showBottomNav: false,
       body: SingleChildScrollView(
+        controller: _scrollController,
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,7 +99,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 const SizedBox(height: 16),
               ],
               if (products.isNotEmpty) ...[
-                _SectionHeader(title: 'Produk', count: products.length),
+                _SectionHeader(title: 'Produk', count: searchProvider.totalProducts > 0 ? searchProvider.totalProducts : products.length),
                 const SizedBox(height: 8),
                 GridView.builder(
                   shrinkWrap: true,
@@ -101,6 +115,10 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                     product: products[i],
                     onTap: () => context.push('/produk/${products[i].id}'),
                   ),
+                ),
+                LoadMoreFooter(
+                  isLoading: searchProvider.isLoadingMore,
+                  hasMore: searchProvider.hasMore,
                 ),
               ],
             ],

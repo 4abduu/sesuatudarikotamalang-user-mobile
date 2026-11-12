@@ -1,11 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/utils/search_helper.dart';
+import '../../../core/utils/infinite_scroll.dart';
 import '../../../core/widgets/app_search_decoration.dart';
+import '../../../core/widgets/load_more_footer.dart';
 import '../../../shared/app_scaffold.dart';
-import '../../../data/models/product_model.dart';
 import '../providers/products_provider.dart';
 import '../widgets/category_filter_chips.dart';
 import '../widgets/sort_dropdown.dart';
@@ -18,17 +19,24 @@ class CatalogScreen extends StatefulWidget {
 }
 
 class _CatalogScreenState extends State<CatalogScreen> {
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
+
   String? _category;
-  String _search = '';
   SortOption _sort = SortOption.terbaru;
 
   @override
   void initState() {
     super.initState();
+    setupInfiniteScroll(
+      controller: _scrollController,
+      onLoadMore: () => context.read<ProductsProvider>().loadMoreCatalog(),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final p = context.read<ProductsProvider>();
       p.fetchCategories();
-      p.fetchProducts(categoryId: _category);
+      _fetchCurrentCatalog(reset: true);
     });
   }
 
@@ -37,55 +45,77 @@ class _CatalogScreenState extends State<CatalogScreen> {
     super.didChangeDependencies();
     final q = GoRouterState.of(context).uri.queryParameters['kategori'];
     if (q != null && _category == null) {
-      setState(() => _category = q);
-      context.read<ProductsProvider>().fetchProducts(categoryId: q);
+      _category = q;
+      _fetchCurrentCatalog(reset: true);
     }
   }
 
-  List<ProductModel> _filterAndSort(List<ProductModel> products) {
-    var list = products.where((p) {
-      if (_category == null || _category!.isEmpty) return true;
-      return p.categoryId == _category;
-    }).toList();
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
 
-    list = list.where((p) => matchesProductQuery(p, _search)).toList();
-
-    switch (_sort) {
-      case SortOption.terbaru:
-        list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        break;
+  String? _serverSort(SortOption s) {
+    switch (s) {
       case SortOption.termurah:
-        list.sort((a, b) => a.price.compareTo(b.price));
-        break;
+        return 'termurah';
       case SortOption.termahal:
-        list.sort((a, b) => b.price.compareTo(a.price));
-        break;
+        return 'termahal';
       case SortOption.terlaris:
-        list.sort((a, b) => b.soldCount.compareTo(a.soldCount));
-        break;
+        return 'terlaris';
+      case SortOption.terbaru:
+        return null;
     }
-    return list;
+  }
+
+  void _fetchCurrentCatalog({bool reset = true}) {
+    if (reset && _scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    }
+    context.read<ProductsProvider>().fetchCatalog(
+      categoryId: _category,
+      search: _searchController.text.trim(),
+      sort: _serverSort(_sort),
+      reset: reset,
+    );
+  }
+
+  void _onSearchChanged(String val) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () {
+      _fetchCurrentCatalog(reset: true);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final productsProvider = context.watch<ProductsProvider>();
-    final allProducts = productsProvider.products;
-    final filtered = _filterAndSort(allProducts);
+    final catalogList = productsProvider.catalogProducts;
+    final total = productsProvider.catalogTotal;
 
     return AppScaffold(
       title: 'Katalog',
       body: RefreshIndicator(
-        onRefresh: () => productsProvider.fetchProducts(categoryId: _category),
+        onRefresh: () async {
+          _fetchCurrentCatalog(reset: true);
+        },
         child: SingleChildScrollView(
+          controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
-          // px-4 pt-4 pb-6
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextField(
-                onChanged: (v) => setState(() => _search = v),
+                controller: _searchController,
+                onChanged: _onSearchChanged,
                 style: appSearchTextStyle,
                 decoration: appSearchDecoration('Cari dalam katalog...'),
               ),
@@ -94,36 +124,49 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 selected: _category,
                 onSelected: (v) {
                   setState(() => _category = v);
-                  // Refresh atau fetch sesuai kategori
-                  productsProvider.fetchProducts(categoryId: v);
+                  _fetchCurrentCatalog(reset: true);
                 },
               ),
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Menampilkan ${filtered.length} produk', style: AppTextStyles.caption),
+                  Text(
+                    'Menampilkan $total produk',
+                    style: AppTextStyles.caption,
+                  ),
                   Row(
                     children: [
                       Text('Urut: ', style: AppTextStyles.caption),
                       SortDropdown(
                         value: _sort,
-                        onChanged: (v) => setState(() => _sort = v ?? SortOption.terbaru),
+                        onChanged: (v) {
+                          if (v != null) {
+                            setState(() => _sort = v);
+                            _fetchCurrentCatalog(reset: true);
+                          }
+                        },
                       ),
                     ],
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              if (productsProvider.isLoading)
+              if (productsProvider.isCatalogLoading && catalogList.isEmpty)
                 const Center(
                   child: Padding(
                     padding: EdgeInsets.all(40),
                     child: CircularProgressIndicator(),
                   ),
                 )
-              else
-                ProductGridView(products: filtered),
+              else ...[
+                ProductGridView(products: catalogList),
+                LoadMoreFooter(
+                  isLoading: productsProvider.isCatalogLoadingMore,
+                  hasMore: productsProvider.catalogHasMore,
+                  isEmpty: catalogList.isEmpty,
+                ),
+              ],
             ],
           ),
         ),

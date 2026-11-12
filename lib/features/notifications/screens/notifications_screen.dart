@@ -1,5 +1,6 @@
 import '../../../core/utils/date_formatter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -20,31 +21,119 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<NotificationsProvider>().fetchNotifications();
     });
   }
 
   @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+    if (maxScroll - currentScroll <= 200) {
+      context.read<NotificationsProvider>().loadMore();
+    }
+  }
+
+  Future<void> _handleDeleteAll(NotificationsProvider provider) async {
+    final count = provider.total;
+    if (count <= 0) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Semua Notifikasi'),
+        content: Text('Hapus $count notifikasi? Tindakan ini tidak bisa dibatalkan.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.destructive),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    try {
+      await provider.deleteAll();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Semua notifikasi telah dihapus.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menghapus notifikasi: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleDeleteOne(NotificationsProvider provider, NotificationModel n) async {
+    try {
+      await provider.deleteOne(n.id);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menghapus notifikasi: $e')),
+        );
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     if (!auth.isAuthenticated) {
-      return AppScaffold(title: 'Notifikasi', body: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Icon(Icons.lock, size: 48, color: AppColors.muted),
-        const SizedBox(height: 12),
-        Text('Masuk untuk melihat notifikasi', style: AppTextStyles.h3),
-        const SizedBox(height: 16),
-        ElevatedButton(onPressed: () => context.push('/login'), child: const Text('Masuk')),
-      ])));
+      return AppScaffold(
+        title: 'Notifikasi',
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.lock, size: 48, color: AppColors.muted),
+              const SizedBox(height: 12),
+              Text('Masuk untuk melihat notifikasi', style: AppTextStyles.h3),
+              const SizedBox(height: 16),
+              ElevatedButton(onPressed: () => context.push('/login'), child: const Text('Masuk')),
+            ],
+          ),
+        ),
+      );
     }
     final provider = context.watch<NotificationsProvider>();
     final items = provider.notifications;
+    final total = provider.total;
+
     return AppScaffold(
       title: 'Notifikasi',
       actions: [
+        if (total > 0)
+          IconButton(
+            icon: const Icon(Icons.delete_sweep_outlined),
+            tooltip: 'Hapus semua ($total)',
+            onPressed: () => _handleDeleteAll(provider),
+          ),
         if (provider.unreadCount > 0)
           TextButton(
             onPressed: () => provider.markAllRead(),
@@ -64,16 +153,46 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     ],
                   )
                 : ListView.builder(
+                    controller: _scrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                    itemCount: items.length,
+                    itemCount: items.length + (provider.isLoadingMore ? 1 : 0),
                     itemBuilder: (_, i) {
+                      if (i == items.length) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                            ),
+                          ),
+                        );
+                      }
                       final n = items[i];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: _NotificationCard(
-                          notification: n,
-                          onTap: () => provider.markRead(n.id),
+                        child: Slidable(
+                          key: ValueKey(n.id),
+                          endActionPane: ActionPane(
+                            motion: const ScrollMotion(),
+                            extentRatio: 0.25,
+                            children: [
+                              SlidableAction(
+                                onPressed: (_) => _handleDeleteOne(provider, n),
+                                backgroundColor: AppColors.destructive,
+                                foregroundColor: Colors.white,
+                                icon: Icons.delete_outline,
+                                label: 'Hapus',
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ],
+                          ),
+                          child: _NotificationCard(
+                            notification: n,
+                            onTap: () => provider.markRead(n.id),
+                          ),
                         ),
                       );
                     },
