@@ -71,7 +71,7 @@ final List<ProductModel> dummyProducts = [
   ),
   const ProductModel(
     id: 'zine-sudut-kota', name: "Zine 'Sudut Kota'",
-    categoryId: 'zine', price: 45000, creatorId: 'dini-aulia',
+    categoryId: 'lainnya', price: 45000, creatorId: 'dini-aulia',
     shortDesc: 'Zine 24 halaman sketsa sudut Malang',
     description: 'Zine berisi 24 halaman sketsa tangan sudut-sudut Malang: gang sempit, warung, sampai atap genteng. Dicetak hitam-putih di kertas krem dengan cover warna.',
     variantOptions: [VariantOptionModel(name: 'Cover', values: ['Terakota', 'Krem'])],

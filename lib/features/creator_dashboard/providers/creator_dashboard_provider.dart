@@ -60,6 +60,7 @@ class CreatorDashboardProvider extends ChangeNotifier {
     List<Map<String, String>>? imageVariants,
     bool isLimited = false,
     String? shopeeUrl,
+    Map<String, dynamic>? olshop,
     int? stock,
     List<Map<String, dynamic>>? variantOptions,
     List<Map<String, dynamic>>? variantStocks,
@@ -75,6 +76,7 @@ class CreatorDashboardProvider extends ChangeNotifier {
       if (imageVariants != null && imageVariants.isNotEmpty) 'imageVariants': imageVariants,
       'isLimited': isLimited,
       if (shopeeUrl != null) 'shopeeUrl': shopeeUrl,
+      if (olshop != null) 'olshop': olshop,
       if (stock != null) 'stock': stock,
       if (variantOptions != null && variantOptions.isNotEmpty) 'variantOptions': variantOptions,
       if (variantStocks != null && variantStocks.isNotEmpty) 'variantStocks': variantStocks,
@@ -103,6 +105,7 @@ class CreatorDashboardProvider extends ChangeNotifier {
     List<Map<String, String>>? imageVariants,
     bool? isLimited,
     String? shopeeUrl,
+    Map<String, dynamic>? olshop,
     List<Map<String, dynamic>>? variantStocks,
   }) async {
     final body = <String, dynamic>{
@@ -115,6 +118,7 @@ class CreatorDashboardProvider extends ChangeNotifier {
       if (imageVariants != null) 'imageVariants': imageVariants,
       if (isLimited != null) 'isLimited': isLimited,
       if (shopeeUrl != null) 'shopeeUrl': shopeeUrl,
+      if (olshop != null) 'olshop': olshop,
       if (variantStocks != null) 'variantStocks': variantStocks,
     };
 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/network/api_client.dart';
 import '../../../data/models/product_model.dart';
+import '../../../data/models/olshop_model.dart';
 import '../../../data/models/category_model.dart';
 
 class ProductsProvider extends ChangeNotifier {
@@ -9,6 +10,11 @@ class ProductsProvider extends ChangeNotifier {
   List<ProductModel> _allProducts = [];
   List<CategoryModel> _categories = [];
   String _whatsappAdminNumber = '6281234567890';
+  String? _contactEmail;
+  String? _aboutDescription;
+  Map<OlshopPlatform, String?> _olshopStores = {};
+  bool _settingsOk = false; // pengaturan publik berhasil dimuat
+  bool _settingsDone = false; // percobaan memuat sudah selesai (berhasil atau gagal)
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -29,6 +35,11 @@ class ProductsProvider extends ChangeNotifier {
   List<ProductModel> get allProducts => _allProducts.isNotEmpty ? _allProducts : _products;
   List<CategoryModel> get categories => _categories;
   String get whatsappAdminNumber => _whatsappAdminNumber;
+  String? get contactEmail => _contactEmail;
+  String? get aboutDescription => _aboutDescription;
+  Map<OlshopPlatform, String?> get olshopStores => _olshopStores;
+  bool get settingsOk => _settingsOk;
+  bool get settingsDone => _settingsDone;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
@@ -49,14 +60,33 @@ class ProductsProvider extends ChangeNotifier {
   Future<void> fetchSettings() async {
     try {
       final res = await ApiClient.get('/settings/public');
-      if (res != null && res['settings'] != null) {
-        final wa = res['settings']['whatsappAdminNumber'] as String?;
+      final s = res?['settings'];
+      if (s is Map<String, dynamic>) {
+        final wa = s['whatsappAdminNumber'] as String?;
         if (wa != null && wa.isNotEmpty) {
           _whatsappAdminNumber = wa.replaceAll(RegExp(r'[^0-9]'), '');
-          notifyListeners();
         }
+        _contactEmail = _cleanText(s['contactEmail']);
+        _aboutDescription = _cleanText(s['aboutDescription']);
+        final stores = s['olshopStores'];
+        final parsed = <OlshopPlatform, String?>{};
+        if (stores is Map<String, dynamic>) {
+          for (final p in OlshopPlatform.values) {
+            parsed[p] = _cleanText(stores[p.id]);
+          }
+        }
+        _olshopStores = parsed;
+        _settingsOk = true;
       }
     } catch (_) {}
+    _settingsDone = true;
+    notifyListeners();
+  }
+
+  String? _cleanText(Object? v) {
+    if (v is! String) return null;
+    final text = v.trim();
+    return text.isEmpty ? null : text;
   }
 
   /// Ambil daftar kategori (GET /api/categories)

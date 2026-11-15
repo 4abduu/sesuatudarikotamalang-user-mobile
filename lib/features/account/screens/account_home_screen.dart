@@ -45,45 +45,130 @@ class _GuestBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header profil sambutan tamu
+          Container(
+            width: double.infinity,
+            clipBehavior: Clip.antiAlias,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.primary, AppColors.primaryLight],
               ),
-              child: const Icon(Icons.lock_outline, size: 36, color: AppColors.primary),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: AppShadows.sticker,
             ),
-            const SizedBox(height: 16),
-            Text('Masuk untuk lanjut', style: AppTextStyles.h2, textAlign: TextAlign.center),
-            const SizedBox(height: 8),
-            Text(
-              'Belum punya akun? Yuk masuk dulu untuk lihat riwayat pesanan, ulasan, dan status pengajuan kreatormu.',
-              style: AppTextStyles.bodyMuted,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  right: -32,
+                  top: -32,
+                  child: SwirlOrnament(
+                    size: 80,
+                    color: AppColors.onPrimary.withValues(alpha: 0.15),
+                    strokeWidth: 2,
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const CircleAvatar(
+                          radius: 28,
+                          backgroundColor: AppColors.onPrimary,
+                          child: Icon(
+                            Icons.person_outline,
+                            size: 30,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Halo, Pengunjung!',
+                                style: AppTextStyles.h3.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.onPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Masuk untuk transaksi, ulasan, dan fitur lainnya.',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.onPrimary.withValues(alpha: 0.9),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => context.push('/login'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.onPrimary,
+                          foregroundColor: AppColors.primary,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          textStyle: GoogleFonts.baloo2(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        icon: const Icon(Icons.login, size: 18),
+                        label: const Text('Masuk / Daftar Akun'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'INFORMASI',
+            style: AppTextStyles.caption.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.muted,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          MenuCard(
+            icon: Icons.info_outline,
+            title: 'Tentang Kami',
+            subtitle: 'Kenali toko, cerita kriya Kayutangan & hubungi kami',
+            onTap: () => context.push('/tentang'),
+          ),
+          const SizedBox(height: 32),
+          Center(
+            child: Text(
+              'Sesuatu DariKota Malang\nKriya & Cinderamata Khas Kota Malang',
               textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => context.push('/login'),
-                icon: const Icon(Icons.login, size: 18),
-                label: const Text('Masuk'),
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.muted.withValues(alpha: 0.7),
+                height: 1.4,
               ),
             ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => context.go('/'),
-              child: const Text('Lanjut sebagai tamu', style: TextStyle(fontSize: 12, color: AppColors.muted)),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -154,6 +239,13 @@ class _LoggedInBody extends StatelessWidget {
             title: 'Pengaturan Akun',
             subtitle: 'Profil, email, dan password',
             onTap: () => context.push('/akun/pengaturan'),
+          ),
+          const SizedBox(height: 10),
+          MenuCard(
+            icon: Icons.info_outline,
+            title: 'Tentang Kami',
+            subtitle: 'Kenali toko dan hubungi kami',
+            onTap: () => context.push('/tentang'),
           ),
           const SizedBox(height: 20),
           SizedBox(

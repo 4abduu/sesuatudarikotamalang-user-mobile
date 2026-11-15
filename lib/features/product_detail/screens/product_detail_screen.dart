@@ -99,6 +99,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   links: product.imageVariants,
                   optionNames: product.variantOptions.map((o) => o.name).toList(),
                   selected: sel.selected,
+                  isOutOfStock: product.isOutOfStock || (sel.matchedVariant != null && sel.matchedVariant!.effectiveStock <= 0),
                 ),
               ),
               const SizedBox(height: 16),
@@ -115,7 +116,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 style: GoogleFonts.baloo2(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.primary,
+                  color: product.isOutOfStock ? AppColors.muted : AppColors.primary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -136,7 +137,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: product.totalStock <= 10 ? AppColors.mustard : AppColors.muted,
+                      color: product.totalStock <= 0
+                          ? AppColors.destructive
+                          : (product.totalStock <= 10 ? AppColors.mustard : AppColors.muted),
                     ),
                   ),
                   if (product.isOfficial) ...[
@@ -165,6 +168,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 productId: product.id,
                 productName: product.name,
                 creatorId: product.creatorId,
+                olshopLinks: product.olshopLinks,
               ),
               const SizedBox(height: 24),
               BehindTheDesignSection(product: product),

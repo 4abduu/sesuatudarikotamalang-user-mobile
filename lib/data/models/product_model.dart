@@ -2,6 +2,7 @@ import 'variant_option_model.dart';
 import 'variant_model.dart';
 import 'product_story_model.dart';
 import 'image_variant_link.dart';
+import 'olshop_model.dart';
 
 enum BadgeType { limited, story, bestseller, none }
 
@@ -24,6 +25,8 @@ class ProductModel {
   final int soldCount;
   final String createdAt;
   final String shopeeUrl;
+  final List<OlshopLink> olshopLinks; // link marketplace siap tampil (dari backend)
+  final Map<OlshopPlatform, OlshopSetting> olshop; // pengaturan mentah per marketplace (form kreator)
   final bool isLimited;
   final bool isActive;
   final bool isOfficial;
@@ -51,6 +54,8 @@ class ProductModel {
     required this.soldCount,
     required this.createdAt,
     required this.shopeeUrl,
+    this.olshopLinks = const [],
+    this.olshop = const {},
     this.isLimited = false,
     this.isActive = true,
     this.isOfficial = false,
@@ -61,7 +66,8 @@ class ProductModel {
   });
 
   /// Menggunakan effectiveStock dari backend (stok mentah dikurangi order aktif)
-  int get totalStock => variants.fold(0, (s, v) => s + (v.effectiveStock > 0 ? v.effectiveStock : v.stock));
+  int get totalStock => variants.fold(0, (s, v) => s + (v.effectiveStock >= 0 ? v.effectiveStock : v.stock));
+  bool get isOutOfStock => totalStock <= 0;
   bool get hasVariants => variantOptions.isNotEmpty;
   bool get hasStory => story != null;
 
@@ -104,6 +110,23 @@ class ProductModel {
             .toList() ??
         <ImageVariantLink>[];
 
+    final olshopLinks = (j['olshopLinks'] as List<dynamic>?)
+            ?.whereType<Map<String, dynamic>>()
+            .map(OlshopLink.fromJson)
+            .whereType<OlshopLink>()
+            .toList() ??
+        <OlshopLink>[];
+    final olshop = <OlshopPlatform, OlshopSetting>{};
+    final olshopRaw = j['olshop'];
+    if (olshopRaw is Map<String, dynamic>) {
+      for (final p in OlshopPlatform.values) {
+        final cfg = olshopRaw[p.id];
+        if (cfg is Map<String, dynamic>) {
+          olshop[p] = OlshopSetting(mode: olshopModeFromId(cfg['mode']?.toString()), url: cfg['url']?.toString() ?? '');
+        }
+      }
+    }
+
     final artisanObj = j['artisan'] as Map<String, dynamic>?;
     final isOfficial = j['isOfficial'] == true || artisanObj?['isOfficial'] == true;
     final artisanName = artisanObj?['brandName'] ?? (artisanObj?['name'] ?? (j['artisanName'] ?? ''));
@@ -127,6 +150,8 @@ class ProductModel {
       soldCount: sold,
       createdAt: j['createdAt'] ?? '',
       shopeeUrl: j['shopeeUrl'] ?? '',
+      olshopLinks: olshopLinks,
+      olshop: olshop,
       isLimited: isLimited,
       isActive: j['isActive'] ?? true,
       isOfficial: isOfficial,

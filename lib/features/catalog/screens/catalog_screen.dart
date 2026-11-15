@@ -25,6 +25,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   String? _category;
   SortOption _sort = SortOption.terbaru;
+  bool _initializedFromUrl = false;
 
   @override
   void initState() {
@@ -43,10 +44,12 @@ class _CatalogScreenState extends State<CatalogScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final q = GoRouterState.of(context).uri.queryParameters['kategori'];
-    if (q != null && _category == null) {
-      _category = q;
-      _fetchCurrentCatalog(reset: true);
+    if (!_initializedFromUrl) {
+      _initializedFromUrl = true;
+      final q = GoRouterState.of(context).uri.queryParameters['kategori'];
+      if (q != null && q.isNotEmpty) {
+        _category = q;
+      }
     }
   }
 

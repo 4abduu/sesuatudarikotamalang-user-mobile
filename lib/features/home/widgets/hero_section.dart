@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/widgets/badge_chip.dart';
 import '../../../data/models/product_model.dart';
-import '../../../data/dummy/dummy_reviews.dart';
 import '../../../core/widgets/rating_stars.dart';
+import '../../account/providers/reviews_provider.dart';
 
 class HeroSection extends StatelessWidget {
   const HeroSection({super.key});
@@ -92,31 +93,37 @@ class HeroSection extends StatelessWidget {
                         ]),
                       ),
                       const SizedBox(height: 12),
-                      Row(children: [
-                        RatingStars(value: storeRating, size: 12),
-                        const SizedBox(width: 6),
-                        Text(storeRating.toStringAsFixed(1),
-                            style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primary)),
-                        const SizedBox(width: 6),
-                        Text('($storeReviewTotal ulasan)',
-                            style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                color:
-                                    AppColors.primary.withValues(alpha: 0.8))),
-                        const Spacer(),
-                        const SizedBox(width: 6),
-                        const Icon(Icons.location_on_outlined,
-                            size: 16, color: AppColors.primary),
-                        const SizedBox(width: 6),
-                        Text('Kayutangan',
-                            style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                color:
-                                    AppColors.primary.withValues(alpha: 0.8))),
-                      ]),
+                      Consumer<ReviewsProvider>(
+                        builder: (context, reviewsProv, _) {
+                          final rating = reviewsProv.storeRating > 0 ? reviewsProv.storeRating : 4.4;
+                          final total = reviewsProv.storeReviewTotal > 0 ? reviewsProv.storeReviewTotal : 191;
+                          return Row(children: [
+                            RatingStars(value: rating, size: 12),
+                            const SizedBox(width: 6),
+                            Text(rating.toStringAsFixed(1),
+                                style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primary)),
+                            const SizedBox(width: 6),
+                            Text('($total ulasan)',
+                                style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    color:
+                                        AppColors.primary.withValues(alpha: 0.8))),
+                            const Spacer(),
+                            const SizedBox(width: 6),
+                            const Icon(Icons.location_on_outlined,
+                                size: 16, color: AppColors.primary),
+                            const SizedBox(width: 6),
+                            Text('Kayutangan',
+                                style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    color:
+                                        AppColors.primary.withValues(alpha: 0.8))),
+                          ]);
+                        },
+                      ),
                     ]))),
       ]),
     );

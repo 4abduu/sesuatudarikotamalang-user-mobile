@@ -85,6 +85,30 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
                 ),
+              if (product.isOutOfStock)
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    alignment: Alignment.center,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.foreground.withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        'Stok Habis',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ]),
           ),
           Padding(padding: const EdgeInsets.all(10), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -101,7 +125,14 @@ class ProductCard extends StatelessWidget {
             Text(product.shortDesc, style: GoogleFonts.poppins(fontSize: 11, color: AppColors.muted), maxLines: 1, overflow: TextOverflow.ellipsis),
             const SizedBox(height: 6),
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(formatRupiah(product.price), style: GoogleFonts.baloo2(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.primary)),
+              Text(
+                formatRupiah(product.price),
+                style: GoogleFonts.baloo2(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: product.isOutOfStock ? AppColors.muted : AppColors.primary,
+                ),
+              ),
               RatingStars(value: product.rating, size: 11),
             ]),
             const SizedBox(height: 2),

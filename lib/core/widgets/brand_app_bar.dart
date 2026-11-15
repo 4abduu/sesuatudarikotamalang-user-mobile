@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
 import '../routing/route_names.dart';
+import '../../features/auth/providers/auth_provider.dart';
 
 /// Brand-flavored AppBar used by AppScaffold on every screen.
 ///
@@ -175,6 +177,24 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
               onPressed: () => context.push(RouteNames.pencarian),
             ),
+          Consumer<AuthProvider>(
+            builder: (context, auth, _) {
+              if (auth.isAuthenticated) {
+                return const SizedBox.shrink();
+              }
+              return IconButton(
+                tooltip: 'Masuk',
+                iconSize: 20,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                icon: const Icon(
+                  Icons.login_rounded,
+                  color: AppColors.primary,
+                ),
+                onPressed: () => context.push(RouteNames.login),
+              );
+            },
+          ),
           if (actions != null) ...actions!,
           const SizedBox(width: 12),
         ],

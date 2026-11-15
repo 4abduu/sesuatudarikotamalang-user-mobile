@@ -22,8 +22,9 @@ class VariantPicker extends StatelessWidget {
 
     final matched = provider.matchedVariant;
     final int stockToShow = matched != null ? matched.effectiveStock : product.totalStock;
-    final isLimited = stockToShow <= 10;
-    final stockLabel = stockToShow <= 0
+    final isZero = stockToShow <= 0;
+    final isLimited = stockToShow <= 10 && stockToShow > 0;
+    final stockLabel = isZero
         ? 'Stok habis'
         : stockToShow > 10
             ? 'Stok 10+ tersedia'
@@ -41,7 +42,9 @@ class VariantPicker extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: isLimited ? AppColors.mustard : AppColors.muted,
+                color: isZero
+                    ? AppColors.destructive
+                    : (isLimited ? AppColors.mustard : AppColors.muted),
               ),
             ),
           ],
@@ -67,30 +70,44 @@ class VariantPicker extends StatelessWidget {
                 children: opt.values.map((v) {
                   final active = provider.selected[i] == v;
                   final available = provider.isValueAvailable(i, v);
+
+                  // Cek apakah varian ini stoknya habis
+                  final matchingVariants = product.variants.where((vr) {
+                    if (vr.options.length <= i || vr.options[i] != v) return false;
+                    return provider.selected.asMap().entries.every(
+                        (e) => e.key == i || e.value == null || vr.options[e.key] == e.value);
+                  });
+                  final isOutOfStock = matchingVariants.isNotEmpty &&
+                      matchingVariants.every((vr) => vr.effectiveStock <= 0);
+
+                  final chipBg = active
+                      ? (isOutOfStock ? AppColors.destructive.withValues(alpha: 0.85) : AppColors.primary)
+                      : (isOutOfStock ? AppColors.surfaceAlt : (available ? AppColors.surface : AppColors.surfaceAlt));
+                  final chipBorder = active
+                      ? (isOutOfStock ? AppColors.destructive : AppColors.primary)
+                      : (isOutOfStock ? AppColors.border : (available ? AppColors.border : AppColors.border));
+                  final chipText = isOutOfStock ? '$v (Habis)' : v;
+
                   return GestureDetector(
                     onTap: available ? () => provider.selectOption(i, v) : null,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: active
-                            ? AppColors.primary
-                            : (available ? AppColors.surface : AppColors.surfaceAlt),
+                        color: chipBg,
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: active
-                              ? AppColors.primary
-                              : (available ? AppColors.border : AppColors.border),
-                        ),
+                        border: Border.all(color: chipBorder),
                       ),
                       child: Text(
-                        v,
+                        chipText,
                         style: GoogleFonts.poppins(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: active
                               ? AppColors.onPrimary
-                              : (available ? AppColors.foreground : AppColors.muted),
-                          decoration: available ? TextDecoration.none : TextDecoration.lineThrough,
+                              : (isOutOfStock
+                                  ? AppColors.muted
+                                  : (available ? AppColors.foreground : AppColors.muted)),
+                          decoration: available && !isOutOfStock ? TextDecoration.none : TextDecoration.lineThrough,
                         ),
                       ),
                     ),

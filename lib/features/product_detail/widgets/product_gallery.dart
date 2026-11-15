@@ -2,6 +2,7 @@ import '../../../core/widgets/art_image.dart';
 import '../../../core/widgets/photo_viewer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../data/models/image_variant_link.dart';
@@ -19,6 +20,7 @@ class ProductGallery extends StatefulWidget {
   final List<ImageVariantLink> links;
   final List<String> optionNames;
   final List<String?> selected;
+  final bool isOutOfStock;
 
   const ProductGallery({
     super.key,
@@ -27,6 +29,7 @@ class ProductGallery extends StatefulWidget {
     this.links = const [],
     this.optionNames = const [],
     this.selected = const [],
+    this.isOutOfStock = false,
   });
 
   @override
@@ -140,21 +143,49 @@ class _ProductGalleryState extends State<ProductGallery> {
               boxShadow: AppShadows.soft,
             ),
             clipBehavior: Clip.antiAlias,
-            child: GestureDetector(
-              onTap: () {
-                final imageProviders = _ordered.map<ImageProvider>((url) => NetworkImage(url)).toList();
-                showPhotoViewer(
-                  context,
-                  images: imageProviders,
-                  initialIndex: _index,
-                );
-              },
-              child: PageView.builder(
-                controller: _controller,
-                itemCount: _ordered.length,
-                onPageChanged: (i) => setState(() => _index = i),
-                itemBuilder: (_, i) => _network(_ordered[i]),
-              ),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: () {
+                      final imageProviders = _ordered.map<ImageProvider>((url) => NetworkImage(url)).toList();
+                      showPhotoViewer(
+                        context,
+                        images: imageProviders,
+                        initialIndex: _index,
+                      );
+                    },
+                    child: PageView.builder(
+                      controller: _controller,
+                      itemCount: _ordered.length,
+                      onPageChanged: (i) => setState(() => _index = i),
+                      itemBuilder: (_, i) => _network(_ordered[i]),
+                    ),
+                  ),
+                ),
+                if (widget.isOutOfStock)
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.foreground.withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        'Stok Habis',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ),

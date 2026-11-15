@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
@@ -90,6 +91,7 @@ class _SesuatuAppState extends State<SesuatuApp> with WidgetsBindingObserver {
       title: 'Sesuatu DariKota Malang',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),
+      scrollBehavior: const AppScrollBehavior(),
       routerConfig: _router!,
       builder: (context, child) {
         if (!_initialized) {
@@ -99,4 +101,17 @@ class _SesuatuAppState extends State<SesuatuApp> with WidgetsBindingObserver {
       },
     );
   }
+}
+
+/// Izinkan drag scroll menggunakan mouse, touch, maupun trackpad di seluruh platform (Desktop & Mobile).
+class AppScrollBehavior extends MaterialScrollBehavior {
+  const AppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+        PointerDeviceKind.stylus,
+      };
 }

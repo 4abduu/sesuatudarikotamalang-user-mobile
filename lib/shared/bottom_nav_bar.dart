@@ -32,12 +32,12 @@ const _userTabs = <_TabDef>[
   _TabDef(id: 'akun', icon: Icons.person_outline, activeIcon: Icons.person, label: 'Akun', route: '/akun'),
 ];
 
-/// Tab list untuk guest (4 tab — "Masuk" menggantikan "Akun", "Notif" dihapus).
+/// Tab list untuk guest (4 tab — "Akun" untuk profil tamu & informasi publik, "Notif" khusus user login).
 const _guestTabs = <_TabDef>[
   _TabDef(id: 'beranda', icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Beranda', route: '/'),
   _TabDef(id: 'katalog', icon: Icons.grid_view_outlined, activeIcon: Icons.grid_view, label: 'Katalog', route: '/katalog'),
   _TabDef(id: 'kreator', icon: Icons.palette_outlined, activeIcon: Icons.palette, label: 'Kreator', route: '/kreator'),
-  _TabDef(id: 'masuk', icon: Icons.login, activeIcon: Icons.login, label: 'Masuk', route: '/login'),
+  _TabDef(id: 'akun', icon: Icons.person_outline, activeIcon: Icons.person, label: 'Akun', route: '/akun'),
 ];
 
 /// Menentukan id tab yang sedang aktif dari lokasi rute saat ini.
@@ -54,9 +54,6 @@ String? _activeTabId(String location, List<_TabDef> tabs) {
       if (location == '/' || location.startsWith('/produk')) return t.id;
     } else if (t.id == 'kreator') {
       if (location.startsWith('/kreator')) return t.id;
-    } else if (t.id == 'masuk') {
-      // Tab "Masuk" tidak pernah aktif (layar login = no selection).
-      continue;
     } else if (location.startsWith(t.route)) {
       return t.id;
     }
@@ -79,12 +76,6 @@ class BottomNavBar extends StatelessWidget {
     // ke closure ini supaya tampilan bisa dibuat custom (sesuai _frame.tsx).
     void onTap(int i) {
       final tab = tabs[i];
-      if (tab.id == 'masuk') {
-        // Guest menekan "Masuk" → buka login dengan next = lokasi asal.
-        final next = location.isEmpty || location == '/login' ? '/' : location;
-        context.push('/login?next=$next');
-        return;
-      }
       context.go(tab.route);
     }
 
