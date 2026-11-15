@@ -9,7 +9,7 @@ import 'swirl_ornament_painter.dart';
 /// gambar produk.
 ///
 /// Pemetaan (sama dengan `motifByCategory` di TSX):
-///   postcard, zine            → jendela heritage
+///   postcard                  → jendela heritage
 ///   pin-enamel, keramik       → matahari
 ///   apparel, tote-bag         → swirl
 ///   stiker, kriya-kayu, lain  → leaf sprig
@@ -30,7 +30,6 @@ class CategoryMotif extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (categoryId) {
       case 'postcard':
-      case 'zine':
         return _paint(_HeritageWindowPainter(color, strokeWidth));
       case 'pin-enamel':
       case 'keramik':

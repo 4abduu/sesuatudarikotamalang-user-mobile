@@ -17,6 +17,9 @@ import '../../../features/catalog/providers/products_provider.dart';
 import '../../../shared/app_scaffold.dart';
 import '../providers/creator_dashboard_provider.dart';
 import '../widgets/variant_builder.dart';
+import '../widgets/olshop_links_editor.dart';
+import '../../../core/utils/olshop_validator.dart';
+import '../../../data/models/olshop_model.dart';
 
 class ProductFormScreen extends StatefulWidget {
   final String productId;
@@ -42,12 +45,20 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   List<VariantOptionModel> _opts = [];
   Map<String, int> _stocks = {};
 
+  Map<OlshopPlatform, OlshopSetting> _olshop = {};
+  Map<OlshopPlatform, OlshopSetting> _initialOlshop = {};
+  Map<OlshopPlatform, String?> _olshopErrors = {};
+
   bool get _isEdit => widget.productId.isNotEmpty;
   bool get _isPhotosDirty => !photoListsEqual(_photos, _initialPhotos);
 
   @override
   void initState() {
     super.initState();
+    // Muat ulang pengaturan publik agar status link toko dari admin terbaru
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<ProductsProvider>().fetchSettings();
+    });
     if (_isEdit) {
       final dashboard = context.read<CreatorDashboardProvider>();
       final p = dashboard.myProducts.cast<ProductModel?>().firstWhere(
@@ -66,6 +77,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           stocks[v.options.join(' / ')] = v.stock;
         }
         _stocks = stocks;
+        _olshop = Map.of(p.olshop);
+        _initialOlshop = Map.of(p.olshop);
 
         _initialPhotos = photoItemsFromServer(p.images, p.imageVariants);
         _photos = List.of(_initialPhotos);
@@ -155,6 +168,25 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       return;
     }
 
+    // Periksa link marketplace (backend tetap memeriksa ulang)
+    final olshopErrs = <OlshopPlatform, String?>{};
+    for (final p in OlshopPlatform.values) {
+      final s = _olshop[p];
+      if (s != null && s.mode == OlshopMode.khusus) {
+        final msg = validateOlshopUrl(p, s.url);
+        if (msg != null) olshopErrs[p] = msg;
+      }
+    }
+    if (olshopErrs.isNotEmpty) {
+      setState(() => _olshopErrors = olshopErrs);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Periksa link marketplace yang ditandai merah')),
+      );
+      return;
+    }
+    if (_olshopErrors.isNotEmpty) setState(() => _olshopErrors = {});
+    final olshopChanged = !olshopSettingsEqual(_olshop, _initialOlshop);
+
     setState(() => _isSaving = true);
     final photoChanged = _isPhotosDirty;
     PhotoSyncResult? sync;
@@ -236,6 +268,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           images: photoChanged ? sync!.images : null,
           imageVariants: photoChanged ? sync!.imageVariants : null,
           isLimited: _limited,
+          olshop: olshopChanged ? olshopPayload(_olshop) : null,
         );
       } else {
         await dashboard.createProduct(
@@ -250,6 +283,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           variantOptions: variantOptionsPayload,
           variantStocks: variantStocksPayload,
           replacesProductId: widget.replaceOf.isEmpty ? null : widget.replaceOf,
+          olshop: olshopChanged ? olshopPayload(_olshop) : null,
         );
       }
 
@@ -382,6 +416,20 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   });
                   _pruneOrphanedVariantLinks(rec.$1);
                 },
+              ),
+              const SizedBox(height: 16),
+              Consumer<ProductsProvider>(
+                builder: (context, prov, _) => OlshopLinksEditor(
+                  value: _olshop,
+                  stores: prov.olshopStores,
+                  storesKnown: prov.settingsOk,
+                  errors: _olshopErrors,
+                  enabled: !_isSaving,
+                  onChanged: (v) => setState(() {
+                    _olshop = v;
+                    _olshopErrors = {};
+                  }),
+                ),
               ),
               const SizedBox(height: 16),
               PrimaryButton(

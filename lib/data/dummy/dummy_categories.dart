@@ -54,10 +54,10 @@ final List<CategoryModel> dummyCategories = [
     // imagePath: 'assets/images/categories/keramik.png',
   ),
   const CategoryModel(
-    id: 'zine',
-    name: 'Zine',
-    blurb: 'Buku kecil cerita kota',
-    iconName: 'book-open',
-    // imagePath: 'assets/images/categories/zine.png',
+    id: 'lainnya',
+    name: 'Lainnya',
+    slug: 'lainnya',
+    blurb: 'Karya kriya & cinderamata lainnya',
+    iconName: 'more-horizontal',
   ),
 ];

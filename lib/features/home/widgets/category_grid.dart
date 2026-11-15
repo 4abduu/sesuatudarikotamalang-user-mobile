@@ -140,6 +140,9 @@ class CategoryGrid extends StatelessWidget {
         return Icons.coffee_outlined;
       case 'book-open':
         return Icons.book_outlined;
+      case 'more-horizontal':
+      case 'more':
+        return Icons.more_horiz;
       default:
         return Icons.category;
     }
