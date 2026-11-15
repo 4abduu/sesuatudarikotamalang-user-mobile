@@ -13,6 +13,12 @@ class ReviewsProvider extends ChangeNotifier {
   int _total = 0;
   bool _hasMore = false;
 
+  // Data ringkasan ulasan toko & ulasan kurasi toko (landing page)
+  double _storeRating = 0.0;
+  int _storeReviewTotal = 0;
+  List<ReviewModel> _storeReviews = [];
+  bool _isLoadingStoreReviews = false;
+
   List<ReviewModel> get reviews => List.unmodifiable(_reviews);
   bool get isLoading => _isLoading;
   bool get isLoadingMore => _isLoadingMore;
@@ -20,8 +26,45 @@ class ReviewsProvider extends ChangeNotifier {
   int get total => _total;
   bool get hasMore => _hasMore;
 
+  double get storeRating => _storeRating;
+  int get storeReviewTotal => _storeReviewTotal;
+  List<ReviewModel> get storeReviews => List.unmodifiable(_storeReviews);
+  bool get isLoadingStoreReviews => _isLoadingStoreReviews;
+
   Future<void> init() async {
+    await fetchStoreReviews();
     await fetchMyReviews();
+  }
+
+  /// Ambil ulasan toko & rating toko publik (GET /api/reviews)
+  Future<void> fetchStoreReviews() async {
+    _isLoadingStoreReviews = true;
+    notifyListeners();
+
+    try {
+      final res = await ApiClient.get('/reviews');
+      if (res != null) {
+        if (res['avgRating'] != null) {
+          _storeRating = (res['avgRating'] as num).toDouble();
+        }
+        if (res['totalReviews'] != null) {
+          _storeReviewTotal = (res['totalReviews'] as num).toInt();
+        }
+        if (res['reviews'] != null) {
+          final all = (res['reviews'] as List<dynamic>)
+              .map((e) => ReviewModel.fromJson(e as Map<String, dynamic>))
+              .toList();
+          // Filter ulasan umum toko (tanpa productId spesifik)
+          final curated = all.where((r) => r.productId == null || r.productId!.isEmpty).toList();
+          _storeReviews = curated.isNotEmpty ? curated : all;
+        }
+      }
+    } catch (_) {
+      // Biarkan fallback default jika offline/gagal
+    } finally {
+      _isLoadingStoreReviews = false;
+      notifyListeners();
+    }
   }
 
   /// Ambil ulasan milik pengguna yang login (GET /api/reviews/mine?page=1&limit=10)
@@ -95,17 +138,49 @@ class ReviewsProvider extends ChangeNotifier {
     }
   }
 
-  /// Ambil ulasan produk tertentu (GET /api/reviews?productId=...)
-  Future<List<ReviewModel>> fetchProductReviews(String productId) async {
+  /// Ambil ulasan produk tertentu (default 3 ulasan terbaru untuk preview)
+  Future<List<ReviewModel>> fetchProductReviews(String productId, {int limit = 3}) async {
     try {
-      final res = await ApiClient.get('/reviews', queryParameters: {'productId': productId});
+      final res = await ApiClient.get('/products/$productId/reviews', queryParameters: {
+        'page': 1,
+        'limit': limit,
+      });
       if (res != null && res['reviews'] != null) {
         return (res['reviews'] as List<dynamic>)
             .map((e) => ReviewModel.fromJson(e as Map<String, dynamic>))
             .toList();
       }
-    } catch (_) {}
-    return _reviews.where((r) => r.productId == productId).toList();
+    } catch (_) {
+      try {
+        final legacyRes = await ApiClient.get('/reviews', queryParameters: {'productId': productId});
+        if (legacyRes != null && legacyRes['reviews'] != null) {
+          return (legacyRes['reviews'] as List<dynamic>)
+              .map((e) => ReviewModel.fromJson(e as Map<String, dynamic>))
+              .take(limit)
+              .toList();
+        }
+      } catch (_) {}
+    }
+    return _reviews.where((r) => r.productId == productId).take(limit).toList();
+  }
+
+  /// Ambil ulasan produk lengkap dengan paginasi dan filter rating
+  Future<ProductReviewsResult> getProductReviewsPaginated(
+    String productId, {
+    int? rating,
+    int page = 1,
+    int limit = 10,
+  }) async {
+    final query = <String, dynamic>{
+      'page': page,
+      'limit': limit,
+      if (rating != null && rating >= 1 && rating <= 5) 'rating': rating,
+    };
+    final res = await ApiClient.get('/products/$productId/reviews', queryParameters: query);
+    if (res != null) {
+      return ProductReviewsResult.fromJson(res);
+    }
+    throw ApiException(500, 'Gagal memuat ulasan produk.');
   }
 
   /// Kirim ulasan baru (POST /api/reviews)

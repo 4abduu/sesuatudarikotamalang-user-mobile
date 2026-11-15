@@ -31,10 +31,15 @@ import '../../features/account/screens/write_review_screen.dart';
 import '../../features/account/screens/application_status_screen.dart';
 import '../../features/account/screens/account_settings_screen.dart';
 import '../../features/search/screens/search_results_screen.dart';
+import '../../features/about/screens/about_screen.dart';
+import '../../features/product_detail/screens/product_reviews_screen.dart';
 
 /// Rute yang butuh login — guest diarahkan ke `/login?next=<original>`.
 /// Autentikasi dicek lewat [AuthProvider] (ChangeNotifierProvider).
 bool _isProtectedRoute(String location) {
+  // Tab Akun (/akun persis) boleh dibuka tamu: layarnya menampilkan ajakan masuk
+  // dan akses ke "Tentang Kami". Sub-halaman /akun/... tetap butuh login.
+  if (Uri.tryParse(location)?.path == RouteNames.account) return false;
   return location.startsWith('/notifikasi') ||
       location.startsWith('/akun') ||
       location.startsWith('/dashboard-kreator') ||
@@ -60,6 +65,8 @@ GoRouter buildAppRouter(AuthProvider auth) {
     routes: [
       GoRoute(path: RouteNames.home, builder: (_, __) => const HomeScreen()),
       GoRoute(path: RouteNames.catalog, builder: (_, __) => const CatalogScreen()),
+      // Rute ulasan spesifik ditaruh SEBELUM :id umum agar tidak termakan parameter
+      GoRoute(path: '${RouteNames.productDetail}/:id/ulasan', builder: (_, s) => ProductReviewsScreen(productId: s.pathParameters['id']!)),
       GoRoute(path: '${RouteNames.productDetail}/:id', builder: (_, s) => ProductDetailScreen(productId: s.pathParameters['id']!)),
       GoRoute(path: RouteNames.creatorsList, builder: (_, __) => const CreatorsListScreen()),
       GoRoute(path: '${RouteNames.creatorProfile}/:id', builder: (_, s) => CreatorProfileScreen(creatorId: s.pathParameters['id']!)),
@@ -98,6 +105,7 @@ GoRouter buildAppRouter(AuthProvider auth) {
       GoRoute(path: RouteNames.applicationStatus, builder: (_, __) => const ApplicationStatusScreen()),
       GoRoute(path: RouteNames.accountSettings, builder: (_, __) => const AccountSettingsScreen()),
       GoRoute(path: RouteNames.pencarian, builder: (_, __) => const SearchResultsScreen()),
+      GoRoute(path: RouteNames.about, builder: (_, __) => const AboutScreen()),
     ],
     errorBuilder: (_, __) => Scaffold(body: Center(child: Text('Halaman tidak ditemukan', style: buildTheme().textTheme.bodyLarge))),
   );

@@ -3,6 +3,7 @@ class RouteNames {
   static const home = '/';
   static const catalog = '/katalog';
   static const productDetail = '/produk';
+  static const productReviews = '/produk/:id/ulasan';
   static const creatorsList = '/kreator';
   static const creatorProfile = '/kreator';
   static const reservation = '/reservasi';
@@ -22,4 +23,5 @@ class RouteNames {
   static const applicationStatus = '/akun/pengajuan';
   static const accountSettings = '/akun/pengaturan';
   static const pencarian = '/pencarian';
+  static const about = '/tentang';
 }

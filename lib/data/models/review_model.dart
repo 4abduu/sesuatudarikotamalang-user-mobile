@@ -64,3 +64,62 @@ class ReviewModel {
     };
   }
 }
+
+class ProductReviewsSummary {
+  final double avgRating;
+  final int reviewCount;
+  final Map<int, int> breakdown;
+
+  const ProductReviewsSummary({
+    required this.avgRating,
+    required this.reviewCount,
+    required this.breakdown,
+  });
+
+  factory ProductReviewsSummary.fromJson(Map<String, dynamic> json) {
+    final bd = json['breakdown'] as Map<String, dynamic>? ?? {};
+    final breakdownMap = <int, int>{};
+    for (int i = 1; i <= 5; i++) {
+      breakdownMap[i] = (bd[i.toString()] as num?)?.toInt() ?? 0;
+    }
+    return ProductReviewsSummary(
+      avgRating: (json['avgRating'] as num?)?.toDouble() ?? 0.0,
+      reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
+      breakdown: breakdownMap,
+    );
+  }
+}
+
+class ProductReviewsResult {
+  final List<ReviewModel> reviews;
+  final int page;
+  final int limit;
+  final int total;
+  final int totalPages;
+  final ProductReviewsSummary summary;
+
+  const ProductReviewsResult({
+    required this.reviews,
+    required this.page,
+    required this.limit,
+    required this.total,
+    required this.totalPages,
+    required this.summary,
+  });
+
+  factory ProductReviewsResult.fromJson(Map<String, dynamic> json) {
+    final list = (json['reviews'] as List<dynamic>? ?? [])
+        .map((e) => ReviewModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+    final pag = json['pagination'] as Map<String, dynamic>? ?? {};
+    final sum = json['summary'] as Map<String, dynamic>? ?? {};
+    return ProductReviewsResult(
+      reviews: list,
+      page: (pag['page'] as num?)?.toInt() ?? 1,
+      limit: (pag['limit'] as num?)?.toInt() ?? 10,
+      total: (pag['total'] as num?)?.toInt() ?? list.length,
+      totalPages: (pag['totalPages'] as num?)?.toInt() ?? 1,
+      summary: ProductReviewsSummary.fromJson(sum),
+    );
+  }
+}
