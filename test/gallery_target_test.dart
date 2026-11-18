@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sesuatu_darikota_malang/data/models/image_variant_link.dart';
-import 'package:sesuatu_darikota_malang/features/product_detail/utils/gallery_target.dart';
+import 'package:sesuatu_darikota_malang/core/utils/gallery_target.dart';
 
 void main() {
   const links = [

@@ -22,7 +22,8 @@ class CreatorAvatar extends StatelessWidget {
   });
 
   String get _initials {
-    final parts = name.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    final parts =
+        name.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
     if (parts.isEmpty) return '?';
     return parts.take(2).map((w) => w.substring(0, 1)).join().toUpperCase();
   }
@@ -55,6 +56,25 @@ class CreatorAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Semantics(
+      image: true,
+      label: 'Foto profil $name',
+      child: _buildAvatar(),
+    );
+  }
+
+  Widget _buildAvatar() {
+    if (isOfficial) {
+      return ClipOval(
+        child: Image.asset(
+          'assets/images/logos/logo_sesuatu_crop.png',
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _fallback(),
+        ),
+      );
+    }
     final url = avatarUrl;
     if (url == null || url.isEmpty) return _fallback();
     return ClipOval(
@@ -75,7 +95,8 @@ class CreatorAvatar extends StatelessWidget {
               child: SizedBox(
                 width: size * 0.3,
                 height: size * 0.3,
-                child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                child: const CircularProgressIndicator(
+                    strokeWidth: 2, color: AppColors.primary),
               ),
             );
           },

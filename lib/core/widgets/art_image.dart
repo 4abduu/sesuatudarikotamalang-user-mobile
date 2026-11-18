@@ -50,10 +50,13 @@ class ArtImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = colors ?? palettes[_hash % palettes.length];
-    return Container(
-      clipBehavior: Clip.hardEdge,
-      decoration: BoxDecoration(gradient: gradient(p)),
-      child: Stack(
+    return Semantics(
+      image: true,
+      label: label,
+      child: Container(
+        clipBehavior: Clip.hardEdge,
+        decoration: BoxDecoration(gradient: gradient(p)),
+        child: Stack(
         children: [
           Positioned(
             right: -24,
@@ -100,6 +103,7 @@ class ArtImage extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }

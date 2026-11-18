@@ -3,24 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routing/app_router.dart';
-import 'features/auth/providers/auth_provider.dart';
-import 'features/account/providers/orders_provider.dart';
-import 'features/account/providers/reviews_provider.dart';
-import 'features/account/providers/applications_provider.dart';
-import 'features/notifications/providers/notifications_provider.dart';
-import 'features/catalog/providers/products_provider.dart';
-import 'features/creators/providers/artisans_provider.dart';
-import 'features/creator_dashboard/providers/creator_dashboard_provider.dart';
+import 'core/di/app_dependencies.dart';
+import 'features/auth/viewmodel/auth_view_model.dart';
+import 'features/notifications/viewmodel/notifications_view_model.dart';
+import 'features/catalog/viewmodel/app_config_view_model.dart';
 import 'package:provider/provider.dart';
 
 class SesuatuApp extends StatefulWidget {
-  const SesuatuApp({super.key});
+  const SesuatuApp({super.key, required this.dependencies});
+  final AppDependencies dependencies;
   @override
   State<SesuatuApp> createState() => _SesuatuAppState();
 }
 
 class _SesuatuAppState extends State<SesuatuApp> with WidgetsBindingObserver {
   bool _initialized = false;
+  bool _initializing = false;
   GoRouter? _router;
 
   @override
@@ -38,41 +36,30 @@ class _SesuatuAppState extends State<SesuatuApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && _initialized) {
-      final auth = context.read<AuthProvider>();
+      final auth = context.read<AuthViewModel>();
       if (auth.isAuthenticated) {
-        context.read<NotificationsProvider>().fetchNotifications();
+        context.read<NotificationsViewModel>().fetchNotifications();
       }
       auth.refreshMeThrottled().then((roleChanged) {
         if (roleChanged && auth.isCreator && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Selamat! Akunmu sekarang berperan sebagai kreator.')),
+            const SnackBar(
+                content:
+                    Text('Selamat! Akunmu sekarang berperan sebagai kreator.')),
           );
         }
       });
     }
   }
 
-
   Future<void> _initProviders() async {
+    if (_initializing) return;
+    _initializing = true;
     // Baca semua provider sebelum await pertama untuk menghindari
     // penggunaan BuildContext di seberang async gap.
-    final auth = context.read<AuthProvider>();
-    final products = context.read<ProductsProvider>();
-    final artisans = context.read<ArtisansProvider>();
-    final orders = context.read<OrdersProvider>();
-    final reviews = context.read<ReviewsProvider>();
-    final applications = context.read<ApplicationsProvider>();
-    final notifications = context.read<NotificationsProvider>();
-    final creatorDashboard = context.read<CreatorDashboardProvider>();
-
-    await auth.init();
-    await products.init();
-    await artisans.init();
-    await orders.init();
-    await reviews.init();
-    await applications.init();
-    await notifications.init();
-    await creatorDashboard.init();
+    final auth = context.read<AuthViewModel>();
+    final config = context.read<AppConfigViewModel>();
+    await Future.wait([auth.init(), config.init()]);
     if (mounted) setState(() => _initialized = true);
   }
 
@@ -80,9 +67,10 @@ class _SesuatuAppState extends State<SesuatuApp> with WidgetsBindingObserver {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_initialized) _initProviders();
-    // Build router lazily — reuses AuthProvider via refreshListenable so
+    // Build router lazily — reuses AuthViewModel via refreshListenable so
     // the router re-evaluates redirects when auth state changes (login/logout).
-    _router ??= buildAppRouter(context.read<AuthProvider>());
+    _router ??=
+        buildAppRouter(context.read<AuthViewModel>(), widget.dependencies);
   }
 
   @override
@@ -95,7 +83,8 @@ class _SesuatuAppState extends State<SesuatuApp> with WidgetsBindingObserver {
       routerConfig: _router!,
       builder: (context, child) {
         if (!_initialized) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
         }
         return child ?? const SizedBox();
       },

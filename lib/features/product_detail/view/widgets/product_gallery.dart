@@ -1,0 +1,224 @@
+import '../../../../core/widgets/art_image.dart';
+import '../../../../core/widgets/photo_viewer.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../data/models/image_variant_link.dart';
+import '../../../../../core/utils/gallery_target.dart';
+
+/// Galeri produk dengan foto asli dari server.
+///
+/// - Foto tanpa tautan varian tampil lebih dulu, foto bertautan di akhir.
+/// - Saat pembeli mengubah pilihan varian ([selected]), galeri berpindah ke foto
+///   pertama yang tertaut ke nilai itu; bila tak ada foto tertaut, tidak pindah.
+/// - Tanpa foto, tampil satu placeholder gradien seperti sebelumnya.
+class ProductGallery extends StatefulWidget {
+  final String seed;
+  final List<String> images;
+  final List<ImageVariantLink> links;
+  final List<String> optionNames;
+  final List<String?> selected;
+  final bool isOutOfStock;
+
+  const ProductGallery({
+    super.key,
+    required this.seed,
+    this.images = const [],
+    this.links = const [],
+    this.optionNames = const [],
+    this.selected = const [],
+    this.isOutOfStock = false,
+  });
+
+  @override
+  State<ProductGallery> createState() => _ProductGalleryState();
+}
+
+class _ProductGalleryState extends State<ProductGallery> {
+  late List<String> _ordered;
+  final PageController _controller = PageController();
+  int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _ordered = galleryOrder(widget.images, widget.links);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant ProductGallery oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final listChanged = !listEquals(oldWidget.images, widget.images) ||
+        oldWidget.links.length != widget.links.length;
+    if (listChanged) {
+      _ordered = galleryOrder(widget.images, widget.links);
+      if (_index >= _ordered.length) _index = 0;
+      if (_controller.hasClients) _controller.jumpToPage(_index);
+    }
+    final axis = changedAxisBetween(oldWidget.selected, widget.selected);
+    final target = galleryTargetIndex(
+      images: _ordered,
+      links: widget.links,
+      optionNames: widget.optionNames,
+      selected: widget.selected,
+      changedAxis: axis,
+    );
+    if (target != null && target != _index) {
+      // Tidak memanggil setState di sini (build menyusul otomatis); animasi
+      // dijalankan setelah frame agar PageView sudah terpasang.
+      _index = target;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _controller.hasClients) _animateTo(target);
+      });
+    }
+  }
+
+  void _animateTo(int i) {
+    _controller.animateToPage(i, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+  }
+
+  void _goTo(int i) {
+    if (i < 0 || i >= _ordered.length) return;
+    setState(() => _index = i);
+    if (_controller.hasClients) _animateTo(i);
+  }
+
+  Widget _network(String url, {BoxFit fit = BoxFit.cover}) {
+    return Image.network(
+      url,
+      fit: fit,
+      width: double.infinity,
+      height: double.infinity,
+      errorBuilder: (_, __, ___) => Container(
+        color: AppColors.surfaceAlt,
+        alignment: Alignment.center,
+        child: Icon(Icons.broken_image_outlined, size: 40, color: AppColors.muted.withValues(alpha: 0.6)),
+      ),
+      loadingBuilder: (context, child, progress) {
+        if (progress == null) return child;
+        return Container(
+          color: AppColors.surfaceAlt,
+          alignment: Alignment.center,
+          child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_ordered.isEmpty) {
+      return AspectRatio(
+        aspectRatio: 1,
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: AppShadows.soft,
+          ),
+          child: ArtImage(
+            seed: widget.seed,
+            categoryId: null,
+            label: '',
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        AspectRatio(
+          aspectRatio: 1,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: AppShadows.soft,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: () {
+                      final imageProviders = _ordered.map<ImageProvider>((url) => NetworkImage(url)).toList();
+                      showPhotoViewer(
+                        context,
+                        images: imageProviders,
+                        initialIndex: _index,
+                      );
+                    },
+                    child: PageView.builder(
+                      controller: _controller,
+                      itemCount: _ordered.length,
+                      onPageChanged: (i) => setState(() => _index = i),
+                      itemBuilder: (_, i) => _network(_ordered[i]),
+                    ),
+                  ),
+                ),
+                if (widget.isOutOfStock)
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.foreground.withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        'Stok Habis',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        if (_ordered.length > 1) ...[
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 64,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _ordered.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (_, i) {
+                final selected = i == _index;
+                return GestureDetector(
+                  onTap: () => _goTo(i),
+                  child: Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: selected ? AppColors.primary : Colors.transparent, width: 2),
+                      boxShadow: selected ? AppShadows.sticker : null,
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: _network(_ordered[i]),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+}

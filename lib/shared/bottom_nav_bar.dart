@@ -1,10 +1,10 @@
-import '../features/notifications/providers/notifications_provider.dart';
+import '../features/notifications/viewmodel/notifications_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_colors.dart';
-import '../features/auth/providers/auth_provider.dart';
+import '../features/auth/viewmodel/auth_view_model.dart';
 
 /// Tab definition — id-based (bukan indeks) supaya tidak bergeser saat
 /// daftar tab berubah antara guest dan user login.
@@ -66,7 +66,7 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
+    final auth = context.watch<AuthViewModel>();
     final location = GoRouterState.of(context).uri.toString();
     final tabs = auth.isAuthenticated ? _userTabs : _guestTabs;
     final activeId = _activeTabId(location, tabs);
@@ -127,8 +127,8 @@ class _NavItem extends StatelessWidget {
       button: true,
       selected: active,
       label: tab.label,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+        child: InkWell(
+        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
@@ -150,7 +150,7 @@ class _NavItem extends StatelessWidget {
                     child: Icon(active ? tab.activeIcon : tab.icon, size: 20, color: color),
                   ),
                   if (tab.id == 'notifikasi')
-                    Consumer<NotificationsProvider>(
+                    Consumer<NotificationsViewModel>(
                       builder: (_, notifProv, __) {
                         final count = notifProv.unreadCount;
                         if (count <= 0) return const SizedBox.shrink();

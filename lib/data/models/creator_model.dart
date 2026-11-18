@@ -7,6 +7,7 @@ class CreatorModel {
   final String specialty;
   final int joinedYear;
   final int productCount;
+  final int soldCount;
   final double rating;
   final String accent; // hex for avatar gradient
   final String? avatarUrl;
@@ -22,6 +23,7 @@ class CreatorModel {
     this.specialty = 'Artisan',
     this.joinedYear = 2024,
     this.productCount = 0,
+    this.soldCount = 0,
     this.rating = 5.0,
     this.accent = '8B4513',
     this.avatarUrl,
@@ -46,6 +48,7 @@ class CreatorModel {
       joinedYear: (j['joinedYear'] as num?)?.toInt() ?? year,
       productCount: (j['productCount'] as num?)?.toInt() ??
           ((j['products'] as List<dynamic>?)?.length ?? 0),
+      soldCount: (j['soldCount'] as num?)?.toInt() ?? 0,
       rating: (j['rating'] as num?)?.toDouble() ??
           ((j['avgRating'] as num?)?.toDouble() ?? 5.0),
       accent: j['accent'] ?? '8B4513',
@@ -64,6 +67,7 @@ class CreatorModel {
     'specialty': specialty,
     'joinedYear': joinedYear,
     'productCount': productCount,
+    'soldCount': soldCount,
     'rating': rating,
     'accent': accent,
     if (avatarUrl != null) 'avatarUrl': avatarUrl,

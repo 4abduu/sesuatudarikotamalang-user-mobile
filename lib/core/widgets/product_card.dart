@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_shadows.dart';
 import '../../data/models/product_model.dart';
-import '../../features/catalog/providers/products_provider.dart';
+import '../../features/catalog/viewmodel/app_config_view_model.dart';
 import 'art_image.dart';
 import 'badge_chip.dart';
 import 'rating_stars.dart';
@@ -17,13 +17,18 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final categories = context.watch<ProductsProvider>().categories;
+    final categories = context.watch<AppConfigViewModel>().categories;
     final catMatch = categories.where((c) => c.id == product.categoryId).toList();
     final catName = catMatch.isNotEmpty ? catMatch.first.name : '';
-    return GestureDetector(
-      onTap: onTap,
-      // Kartu: radius 20, latar surface, border 1px, bayangan soft (TSX ProductCardMini).
-      child: Container(
+    return Semantics(
+      button: onTap != null,
+      label: 'Produk ${product.name}',
+      hint: onTap == null ? null : 'Buka detail produk',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        // Kartu: radius 20, latar surface, border 1px, bayangan soft (TSX ProductCardMini).
+        child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -139,6 +144,7 @@ class ProductCard extends StatelessWidget {
             Text('${product.soldCount} terjual', style: GoogleFonts.poppins(fontSize: 10, color: AppColors.muted)),
           ])),
         ]),
+        ),
       ),
     );
   }

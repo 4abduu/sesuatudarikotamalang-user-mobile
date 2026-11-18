@@ -262,6 +262,10 @@ class OrderModel {
         pickupDeadline: pickupDeadline,
         items: items,
         snap: snap ?? this.snap,
+        refundStatus: refundStatus,
+        refundedAt: refundedAt,
+        cancelReason: cancelReason,
+        refund: refund,
         affectedByHoliday: affectedByHoliday ?? this.affectedByHoliday,
         holidayReason: holidayReason ?? this.holidayReason,
       );

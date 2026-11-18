@@ -9,10 +9,30 @@ class RatingStars extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final rating = value.clamp(0.0, 5.0).toDouble();
     return Row(mainAxisSize: MainAxisSize.min, children: [
       ...List.generate(5, (i) {
-        final filled = i < value.round();
-        return Icon(Icons.star, size: size, color: filled ? AppColors.mustard : AppColors.border);
+        final fill = (rating - i).clamp(0.0, 1.0).toDouble();
+        return SizedBox(
+          width: size,
+          height: size,
+          child: Stack(
+            children: [
+              Icon(Icons.star, size: size, color: AppColors.border),
+              if (fill > 0)
+                ClipRect(
+                  child: SizedBox(
+                    width: size * fill,
+                    height: size,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Icon(Icons.star, size: size, color: AppColors.mustard),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
       }),
       if (showValue) ...[
         const SizedBox(width: 4),

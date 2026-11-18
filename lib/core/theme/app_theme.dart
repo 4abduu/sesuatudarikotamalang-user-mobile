@@ -5,6 +5,10 @@ import 'app_colors.dart';
 ThemeData buildTheme() {
   return ThemeData(
     useMaterial3: true,
+    // Pertahankan target interaksi minimal 48x48 agar nyaman disentuh dan
+    // tetap mudah difokuskan dengan keyboard pada Flutter Web.
+    materialTapTargetSize: MaterialTapTargetSize.padded,
+    visualDensity: VisualDensity.standard,
     scaffoldBackgroundColor: AppColors.background,
     colorScheme: const ColorScheme.light(
       primary: AppColors.primary, onPrimary: AppColors.onPrimary,
@@ -44,6 +48,12 @@ ThemeData buildTheme() {
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.background, foregroundColor: AppColors.foreground, elevation: 0,
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        tapTargetSize: MaterialTapTargetSize.padded,
+      ),
     ),
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: AppColors.surface, selectedItemColor: AppColors.primary,

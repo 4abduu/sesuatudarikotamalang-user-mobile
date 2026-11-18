@@ -106,7 +106,7 @@ class ProductModel {
     final imgLinks = (j['imageVariants'] as List<dynamic>?)
             ?.whereType<Map<String, dynamic>>()
             .map(ImageVariantLink.fromJson)
-            .where((l) => l.url.isNotEmpty && l.option.isNotEmpty && l.value.isNotEmpty)
+            .where((l) => l.url.isNotEmpty && l.combination.isNotEmpty)
             .toList() ??
         <ImageVariantLink>[];
 
@@ -145,7 +145,8 @@ class ProductModel {
       variants: vVariants,
       badge: b,
       story: pStory,
-      rating: (j['rating'] as num?)?.toDouble() ?? ((j['avgRating'] as num?)?.toDouble() ?? 5.0),
+      // Produk tanpa ulasan belum memiliki rating, bukan rating sempurna.
+      rating: (j['rating'] as num?)?.toDouble() ?? ((j['avgRating'] as num?)?.toDouble() ?? 0.0),
       reviewCount: (j['reviewCount'] as num?)?.toInt() ?? 0,
       soldCount: sold,
       createdAt: j['createdAt'] ?? '',

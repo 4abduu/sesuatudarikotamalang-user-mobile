@@ -4,7 +4,6 @@ class UserModel {
   final String id;
   final String name;
   final String email;
-  final String? password;
   final Role role;
   final String? creatorId;
   final String? applicationId;
@@ -14,7 +13,6 @@ class UserModel {
     required this.id,
     required this.name,
     required this.email,
-    this.password,
     required this.role,
     this.creatorId,
     this.applicationId,
@@ -33,7 +31,6 @@ class UserModel {
       id: j['id'] ?? '',
       name: j['name'] ?? '',
       email: j['email'] ?? '',
-      password: j['password'],
       role: r,
       creatorId: j['creatorId'],
       applicationId: j['applicationId'],
@@ -45,7 +42,6 @@ class UserModel {
     'id': id,
     'name': name,
     'email': email,
-    if (password != null) 'password': password,
     'role': role == Role.creator ? 'creator' : (role == Role.admin ? 'admin' : 'buyer'),
     'creatorId': creatorId,
     'applicationId': applicationId,
@@ -59,13 +55,11 @@ class UserModel {
     String? creatorId,
     String? applicationId,
     String? email,
-    String? password,
   }) =>
       UserModel(
         id: id,
         name: name ?? this.name,
         email: email ?? this.email,
-        password: password ?? this.password,
         role: role ?? this.role,
         creatorId: creatorId ?? this.creatorId,
         applicationId: applicationId ?? this.applicationId,

@@ -11,36 +11,47 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:sesuatu_darikota_malang/app.dart';
-import 'package:sesuatu_darikota_malang/features/auth/providers/auth_provider.dart';
-import 'package:sesuatu_darikota_malang/features/account/providers/orders_provider.dart';
-import 'package:sesuatu_darikota_malang/features/account/providers/reviews_provider.dart';
-import 'package:sesuatu_darikota_malang/features/account/providers/applications_provider.dart';
-import 'package:sesuatu_darikota_malang/features/notifications/providers/notifications_provider.dart';
-import 'package:sesuatu_darikota_malang/features/catalog/providers/products_provider.dart';
-import 'package:sesuatu_darikota_malang/features/creators/providers/artisans_provider.dart';
-import 'package:sesuatu_darikota_malang/features/search/providers/search_provider.dart';
-import 'package:sesuatu_darikota_malang/features/creator_dashboard/providers/creator_dashboard_provider.dart';
+import 'package:sesuatu_darikota_malang/features/auth/viewmodel/auth_view_model.dart';
+import 'package:sesuatu_darikota_malang/features/notifications/viewmodel/notifications_view_model.dart';
+import 'package:sesuatu_darikota_malang/features/catalog/viewmodel/app_config_view_model.dart';
+import 'package:sesuatu_darikota_malang/data/repositories/catalog_repositories.dart';
+import 'package:sesuatu_darikota_malang/data/repositories/notification_repository.dart';
+import 'package:sesuatu_darikota_malang/data/repositories/auth_repository.dart';
+import 'package:sesuatu_darikota_malang/core/di/app_dependencies.dart';
+import 'package:sesuatu_darikota_malang/data/services/session_store.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('app boots with providers', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
+    final dependencies = AppDependencies();
 
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => AuthProvider()),
-          ChangeNotifierProvider(create: (_) => ProductsProvider()),
-          ChangeNotifierProvider(create: (_) => ArtisansProvider()),
-          ChangeNotifierProvider(create: (_) => SearchProvider()),
-          ChangeNotifierProvider(create: (_) => OrdersProvider()),
-          ChangeNotifierProvider(create: (_) => ReviewsProvider()),
-          ChangeNotifierProvider(create: (_) => ApplicationsProvider()),
-          ChangeNotifierProvider(create: (_) => NotificationsProvider()),
-          ChangeNotifierProvider(create: (_) => CreatorDashboardProvider()),
+          ChangeNotifierProvider(
+              create: (_) => AuthViewModel(
+                      repository: AuthRepository(
+                    dependencies.api,
+                    dependencies.tokenStorage,
+                    SessionStore(),
+                  ))),
+          ChangeNotifierProvider(
+              create: (_) => AppConfigViewModel(
+                    categories: CategoryRepository(dependencies.api),
+                    settings: SettingsRepository(dependencies.api),
+                  )),
+          ChangeNotifierProxyProvider<AuthViewModel, NotificationsViewModel>(
+            create: (_) => NotificationsViewModel(
+                repository: NotificationRepositoryImpl(dependencies.api)),
+            update: (_, auth, vm) {
+              vm!.updateAuth(auth);
+              return vm;
+            },
+          ),
         ],
-        child: const SesuatuApp(),
+        child: SesuatuApp(dependencies: dependencies),
       ),
     );
 

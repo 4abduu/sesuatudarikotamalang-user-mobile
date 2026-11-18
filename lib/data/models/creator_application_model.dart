@@ -55,7 +55,9 @@ class CreatorApplicationModel {
       email: j['email'] as String? ?? '',
       brandName: j['brandName'] as String? ?? '',
       description: j['description'] as String? ?? '',
-      category: j['category'] as String? ?? (j['categoryId'] as String? ?? ''),
+      category: j['category'] is Map
+          ? (j['category']['name'] ?? j['categoryId'] ?? '').toString()
+          : (j['category'] ?? j['categoryId'] ?? '').toString(),
       submittedAt: (j['submittedAt'] ?? '').toString(),
       status: parsedStatus,
       rejectReason: j['rejectReason'] as String?,
