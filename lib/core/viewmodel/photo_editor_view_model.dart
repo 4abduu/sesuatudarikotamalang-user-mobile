@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../data/models/photo_item.dart';
-import '../../data/services/upload_service.dart';
+import '../../data/repositories/upload_repository.dart';
 import '../../data/services/photo_picker_service.dart';
 import '../network/api_exception.dart';
 import '../utils/photo_rules.dart';
@@ -11,7 +11,7 @@ typedef PhotoPicker = Future<PickedPhotos> Function({required int maxCount});
 
 class PhotoEditorViewModel extends ChangeNotifier {
   PhotoEditorViewModel(
-      {required UploadService uploadService,
+      {required UploadRepository uploadService,
       List<PhotoItem> items = const [],
       this.maxPhotos = 10,
       PhotoPicker? pickMany})
@@ -21,7 +21,7 @@ class PhotoEditorViewModel extends ChangeNotifier {
     _initialItems = List.of(_items);
   }
 
-  final UploadService _uploadService;
+  final UploadRepository _uploadService;
   final PhotoPicker _pickMany;
   final int maxPhotos;
   late List<PhotoItem> _items;
@@ -162,7 +162,7 @@ class PhotoEditorViewModel extends ChangeNotifier {
 }
 
 Future<PhotoSyncResult> _syncItems(
-    List<PhotoItem> items, UploadService uploadService) async {
+    List<PhotoItem> items, UploadRepository uploadService) async {
   final fresh = items.where((i) => i.file != null).map((i) => i.file!).toList();
   final uploaded =
       fresh.isEmpty ? <String>[] : await uploadService.uploadMany(fresh);

@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shadows.dart';
 import '../../../../data/models/image_variant_link.dart';
-import '../../../../../core/utils/gallery_target.dart';
+import '../../../../core/utils/gallery_target.dart';
 
 /// Galeri produk dengan foto asli dari server.
 ///

@@ -3,14 +3,14 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/utils/photo_rules.dart';
 import '../../../data/repositories/catalog_repositories.dart';
-import '../../../data/services/upload_service.dart';
+import '../../../data/repositories/upload_repository.dart';
 import '../../auth/viewmodel/auth_view_model.dart';
 
 class EditStoreProfileViewModel extends ChangeNotifier {
-  EditStoreProfileViewModel({required ArtisanRepository repository, required UploadService upload, required AuthViewModel auth, Future<PickedPhotos> Function()? pickPhoto})
+  EditStoreProfileViewModel({required ArtisanRepository repository, required UploadRepository upload, required AuthViewModel auth, Future<PickedPhotos> Function()? pickPhoto})
       : _repository = repository, _upload = upload, _auth = auth, _pickPhoto = pickPhoto ?? PhotoRules.pickOne;
   final ArtisanRepository _repository;
-  final UploadService _upload;
+  final UploadRepository _upload;
   final AuthViewModel _auth;
   final Future<PickedPhotos> Function() _pickPhoto;
   static const int nameMax = 191;

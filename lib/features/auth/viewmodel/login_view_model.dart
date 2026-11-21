@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../domain/auth/auth_validation_use_cases.dart';
 import 'auth_view_model.dart';
 
 class LoginViewModel extends ChangeNotifier {
   LoginViewModel(this._auth);
   final AuthViewModel _auth;
+  final ValidateLoginUseCase _validate = ValidateLoginUseCase();
   bool _isSubmitting = false;
   String? _errorMessage;
   String? _errorCode;
@@ -14,8 +16,15 @@ class LoginViewModel extends ChangeNotifier {
   String? get errorCode => _errorCode;
   int? get errorStatus => _errorStatus;
 
-  Future<bool> login(String email, String password) =>
-      _run(() => _auth.loginWithApi(email: email, password: password));
+  Future<bool> login(String email, String password) {
+    final validationError = _validate(email, password);
+    if (validationError != null) {
+      _errorMessage = validationError;
+      notifyListeners();
+      return Future.value(false);
+    }
+    return _run(() => _auth.loginWithApi(email: email, password: password));
+  }
 
   Future<bool> loginWithGoogle() => _run(_auth.loginWithGoogle);
 

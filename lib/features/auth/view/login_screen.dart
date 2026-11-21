@@ -20,7 +20,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _email = TextEditingController();
   final _pw = TextEditingController();
   bool _showPw = false;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -58,18 +57,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _email.text.trim();
     final password = _pw.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Isi email dan password dulu ya')),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final vm = context.read<LoginViewModel>();
-      final success = await vm.login(email, password);
+    final vm = context.read<LoginViewModel>();
+    final success = await vm.login(email, password);
       if (!mounted) return;
       if (!success) {
         if (vm.errorCode == 'GOOGLE_ACCOUNT') {
@@ -88,17 +77,12 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
       final next = GoRouterState.of(context).uri.queryParameters['next'];
-      context.go(next ?? '/');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    context.go(next ?? '/');
   }
 
   Future<void> _loginWithGoogle() async {
-    setState(() => _isLoading = true);
-    try {
-      final vm = context.read<LoginViewModel>();
-      final success = await vm.loginWithGoogle();
+    final vm = context.read<LoginViewModel>();
+    final success = await vm.loginWithGoogle();
       if (!mounted) return;
       final message = vm.errorMessage ?? 'Login Google gagal.';
       if (!success) {
@@ -115,14 +99,12 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
       final next = GoRouterState.of(context).uri.queryParameters['next'];
-      context.go(next ?? '/');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    context.go(next ?? '/');
   }
 
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<LoginViewModel>();
     return AppScaffold(
       showBottomNav: false,
       showSearchAction: false,
@@ -186,13 +168,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 8),
                 PrimaryButton(
                   label: 'Masuk',
-                  loading: _isLoading,
-                  onPressed: _login,
+                  loading: vm.isSubmitting,
+                  onPressed: vm.isSubmitting ? null : _login,
                 ),
                 const SizedBox(height: 16),
                 // ===== Masuk dengan Google =====
                 GoogleSignInButton(
-                  onTap: _isLoading ? null : _loginWithGoogle,
+                  onTap: vm.isSubmitting ? null : _loginWithGoogle,
                 ),
                 const SizedBox(height: 24),
                 Row(

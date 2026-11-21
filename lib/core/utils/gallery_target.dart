@@ -1,4 +1,4 @@
-import '../../../data/models/image_variant_link.dart';
+import '../../data/models/image_variant_link.dart';
 
 /// Urutan galeri: foto tanpa tautan varian lebih dulu, foto bertautan di akhir
 /// (stable partition). Sama dengan normalisasi di backend, jadi aman dipakai

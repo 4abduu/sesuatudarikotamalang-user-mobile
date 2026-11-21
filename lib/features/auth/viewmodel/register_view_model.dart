@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../domain/auth/auth_validation_use_cases.dart';
 import 'auth_view_model.dart';
 
 class RegisterViewModel extends ChangeNotifier {
   RegisterViewModel(this._auth);
   final AuthViewModel _auth;
+  final ValidateRegisterUseCase _validate = ValidateRegisterUseCase();
   bool _isSubmitting = false;
   String? _errorMessage;
   String? _errorCode;
@@ -17,7 +19,14 @@ class RegisterViewModel extends ChangeNotifier {
   Future<bool> register(
       {required String name,
       required String email,
-      required String password}) async {
+      required String password,
+      required String confirmation}) async {
+    final validationError = _validate(name, email, password, confirmation);
+    if (validationError != null) {
+      _errorMessage = validationError;
+      notifyListeners();
+      return false;
+    }
     _isSubmitting = true;
     _errorMessage = null;
     _errorCode = null;

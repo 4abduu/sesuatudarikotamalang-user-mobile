@@ -5,7 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/craft_cards.dart';
-import '../../../features/catalog/viewmodel/app_config_view_model.dart';
+import '../../catalog/viewmodel/app_config_view_model.dart';
 import '../../../shared/app_scaffold.dart';
 
 /// Halaman "Tentang Kami": deskripsi toko + kontak (email & WhatsApp) dari pengaturan admin.

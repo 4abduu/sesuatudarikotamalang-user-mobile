@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -16,6 +17,7 @@ class AuthField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final int? maxLength;
   final Widget? suffix;
+  final List<TextInputFormatter>? inputFormatters;
 
   const AuthField({
     super.key,
@@ -28,6 +30,7 @@ class AuthField extends StatelessWidget {
     this.onChanged,
     this.maxLength,
     this.suffix,
+    this.inputFormatters,
   });
 
   @override
@@ -40,6 +43,7 @@ class AuthField extends StatelessWidget {
         TextField(
           controller: controller,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
           obscureText: obscureText,
           onChanged: onChanged,
           maxLength: maxLength,

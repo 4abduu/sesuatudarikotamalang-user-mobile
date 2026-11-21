@@ -7,16 +7,16 @@ import '../../../data/models/product_model.dart';
 import '../../../data/models/variant_option_model.dart';
 import '../../../data/models/olshop_model.dart';
 import '../../../data/repositories/catalog_repositories.dart';
-import '../../../data/services/upload_service.dart';
+import '../../../data/repositories/upload_repository.dart';
 
 class ProductFormViewModel extends ChangeNotifier {
-  ProductFormViewModel({required ProductRepository repository, required UploadService upload,
+  ProductFormViewModel({required ProductRepository repository, required UploadRepository upload,
     required this.photos, this.productId = '', this.replaceOf = ''})
       : _repository = repository, _upload = upload {
     photos.addListener(_notify);
   }
   final ProductRepository _repository;
-  final UploadService _upload;
+  final UploadRepository _upload;
   final PhotoEditorViewModel photos;
   final String productId;
   final String replaceOf;
@@ -132,10 +132,13 @@ class ProductFormViewModel extends ChangeNotifier {
     return pruned;
   }
 
+  String get _cleanPrice => _price.replaceAll(RegExp(r'\D'), '').trim();
+
   bool _validate() {
-    if (_name.trim().isEmpty || _description.trim().isEmpty || _category == null || _price.trim().isEmpty) {
+    final cleanPrice = _cleanPrice;
+    if (_name.trim().isEmpty || _description.trim().isEmpty || _category == null || cleanPrice.isEmpty) {
       _errorMessage = 'Lengkapi nama, deskripsi, kategori, dan harga';
-    } else if (int.tryParse(_price.trim()) == null || int.parse(_price.trim()) < 0) {
+    } else if (int.tryParse(cleanPrice) == null || int.parse(cleanPrice) < 0) {
       _errorMessage = 'Harga harus berupa angka positif';
     } else if (photos.items.isEmpty) {
       _errorMessage = 'Produk harus punya minimal satu foto';
@@ -161,10 +164,11 @@ class ProductFormViewModel extends ChangeNotifier {
         if (_variantIds[c.join(' / ')]?.isNotEmpty == true && _stocks[c.join(' / ')] != _initialStocks[c.join(' / ')])
           {'id': _variantIds[c.join(' / ')]!, 'stock': _stocks[c.join(' / ')] ?? 0},
     ];
+    final parsedPrice = int.tryParse(_cleanPrice) ?? 0;
     return {
       if (!isEdit || _name.trim() != initial!.name) 'name': _name.trim(),
       if (!isEdit || _category != initial!.categoryId) 'categoryId': _category,
-      if (!isEdit || int.parse(_price.trim()) != initial!.price) 'price': int.parse(_price.trim()),
+      if (!isEdit || parsedPrice != initial!.price) 'price': parsedPrice,
       if (!isEdit || _description.trim() != initial!.description) 'description': _description.trim(),
       if (!isEdit || _shortDescription.trim() != initial!.shortDesc) 'shortDescription': _shortDescription.trim(),
       if (!isEdit || _limited != initial!.isLimited) 'isLimited': _limited,

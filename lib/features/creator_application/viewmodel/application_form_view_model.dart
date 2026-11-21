@@ -3,12 +3,12 @@ import '../../../core/network/api_exception.dart';
 import '../../../core/viewmodel/photo_editor_view_model.dart';
 import '../../../data/models/creator_application_model.dart';
 import '../../../data/repositories/application_repository.dart';
-import '../../../data/services/upload_service.dart';
+import '../../../data/repositories/upload_repository.dart';
 import '../../auth/viewmodel/auth_view_model.dart';
 
 class ApplicationFormViewModel extends ChangeNotifier {
   ApplicationFormViewModel({required ApplicationRepository repository,
-    required AuthViewModel auth, required UploadService uploadService,
+    required AuthViewModel auth, required UploadRepository uploadService,
     PhotoPicker? pickMany})
       : _repository = repository, _auth = auth, _uploadService = uploadService,
         photos = PhotoEditorViewModel(uploadService: uploadService, pickMany: pickMany),
@@ -18,7 +18,7 @@ class ApplicationFormViewModel extends ChangeNotifier {
 
   final ApplicationRepository _repository;
   final AuthViewModel _auth;
-  final UploadService _uploadService;
+  final UploadRepository _uploadService;
   final PhotoEditorViewModel photos;
   String _applicantName;
   String _contact = '';

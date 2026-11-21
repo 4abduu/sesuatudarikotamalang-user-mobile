@@ -9,8 +9,8 @@ import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../data/models/notification_model.dart';
-import '../../../features/auth/viewmodel/auth_view_model.dart';
-import '../../../features/notifications/viewmodel/notifications_view_model.dart';
+import '../../auth/viewmodel/auth_view_model.dart';
+import '../viewmodel/notifications_view_model.dart';
 import '../../../shared/app_scaffold.dart';
 
 class NotificationsScreen extends StatefulWidget {

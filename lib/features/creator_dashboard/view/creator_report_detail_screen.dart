@@ -8,7 +8,7 @@ import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/empty_state.dart';
-import '../../../features/auth/viewmodel/auth_view_model.dart';
+import '../../auth/viewmodel/auth_view_model.dart';
 import '../../../shared/app_scaffold.dart';
 import 'creator_report_screen.dart' show formatReportMonth;
 

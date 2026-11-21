@@ -9,9 +9,9 @@ import '../../../../core/widgets/olshop_logo.dart';
 import '../../../../data/models/olshop_model.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/widgets/secondary_button.dart';
-import '../../../../features/auth/viewmodel/auth_view_model.dart';
-import '../../../../features/auth/view/widgets/auth_gate_bottom_sheet.dart';
-import '../../../../features/catalog/viewmodel/app_config_view_model.dart';
+import '../../../auth/viewmodel/auth_view_model.dart';
+import '../../../auth/view/widgets/auth_gate_bottom_sheet.dart';
+import '../../../catalog/viewmodel/app_config_view_model.dart';
 import '../../viewmodel/variant_selection_view_model.dart';
 
 class ProductActionButtons extends StatelessWidget {

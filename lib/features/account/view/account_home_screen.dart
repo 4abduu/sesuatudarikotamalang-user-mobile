@@ -9,7 +9,7 @@ import '../../../core/utils/image_helper.dart';
 import '../../../core/widgets/illustrations/swirl_ornament_painter.dart';
 import '../../../core/widgets/craft_cards.dart';
 import '../../../data/models/user_model.dart';
-import '../../../features/auth/viewmodel/auth_view_model.dart';
+import '../../auth/viewmodel/auth_view_model.dart';
 import '../../../shared/app_scaffold.dart';
 
 /// Account home screen — entry point of the "Akun" tab.

@@ -125,6 +125,19 @@ class OrderModel {
   final bool affectedByHoliday;
   final String? holidayReason;
 
+  String get paymentMethodLabel {
+    final lower = paymentMethod.toLowerCase();
+    if (lower == 'midtrans') return 'Midtrans';
+    if (lower == 'cod' || lower == 'cash') return 'Bayar di Toko (Kasir)';
+    if (lower.isEmpty) return '-';
+    // Format title case umum jika ada metode pembayaran lainnya
+    return lower
+        .split(RegExp(r'[_\s]+'))
+        .where((s) => s.isNotEmpty)
+        .map((s) => s[0].toUpperCase() + s.substring(1))
+        .join(' ');
+  }
+
   const OrderModel({
     required this.id,
     required this.orderNumber,

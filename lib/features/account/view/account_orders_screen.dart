@@ -12,8 +12,8 @@ import '../../../core/utils/date_formatter.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/order_status_helper.dart';
 import '../../../data/models/order_model.dart';
-import '../../../features/auth/viewmodel/auth_view_model.dart';
-import '../../../features/account/viewmodel/orders_view_model.dart';
+import '../../auth/viewmodel/auth_view_model.dart';
+import '../viewmodel/orders_view_model.dart';
 import '../../../shared/app_scaffold.dart';
 
 class AccountOrdersScreen extends StatefulWidget {

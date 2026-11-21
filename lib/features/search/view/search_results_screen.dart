@@ -9,7 +9,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_search_decoration.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/product_card.dart';
-import '../../../features/creators/view/widgets/creator_card.dart';
+import '../../creators/view/widgets/creator_card.dart';
 import '../../../shared/app_scaffold.dart';
 import '../viewmodel/search_view_model.dart';
 

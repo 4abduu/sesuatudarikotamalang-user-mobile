@@ -2,15 +2,15 @@ import 'package:flutter/foundation.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/viewmodel/photo_editor_view_model.dart';
 import '../../../data/repositories/story_repository.dart';
-import '../../../data/services/upload_service.dart';
+import '../../../data/repositories/upload_repository.dart';
 
 class StoryFormViewModel extends ChangeNotifier {
   StoryFormViewModel({required this.productId, required StoryRepository repository,
-    required UploadService uploads, required this.photos})
+    required UploadRepository uploads, required this.photos})
       : _repository = repository, _uploads = uploads;
   final String productId;
   final StoryRepository _repository;
-  final UploadService _uploads;
+  final UploadRepository _uploads;
   final PhotoEditorViewModel photos;
   String _title = '', _content = '', _process = '', _productName = '';
   String? _actionError, _errorMessage;

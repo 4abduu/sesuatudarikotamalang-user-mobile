@@ -4,14 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/photo_editor.dart';
-import '../../../../core/widgets/primary_button.dart';
-import '../../../../features/auth/viewmodel/auth_view_model.dart';
-import '../../../../features/auth/view/widgets/auth_field.dart';
-import '../../../../features/catalog/viewmodel/app_config_view_model.dart';
-import '../../../../shared/app_scaffold.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/photo_editor.dart';
+import '../../../core/widgets/primary_button.dart';
+import '../../../features/auth/viewmodel/auth_view_model.dart';
+import '../../../features/auth/view/widgets/auth_field.dart';
+import '../../../features/catalog/viewmodel/app_config_view_model.dart';
+import '../../../shared/app_scaffold.dart';
 
 class CreatorApplicationFormScreen extends StatefulWidget {
   const CreatorApplicationFormScreen({super.key});

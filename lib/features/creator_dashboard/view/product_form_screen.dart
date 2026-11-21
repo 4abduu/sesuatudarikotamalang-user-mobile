@@ -5,12 +5,13 @@ import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/photo_editor.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../data/models/olshop_model.dart';
 import '../../../data/models/variant_option_model.dart';
-import '../../../features/auth/view/widgets/auth_field.dart';
-import '../../../features/catalog/viewmodel/app_config_view_model.dart';
+import '../../auth/view/widgets/auth_field.dart';
+import '../../catalog/viewmodel/app_config_view_model.dart';
 import '../../../shared/app_scaffold.dart';
 import '../viewmodel/product_form_view_model.dart';
 import 'widgets/olshop_links_editor.dart';
@@ -61,7 +62,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     _name.text = form.name;
     _description.text = form.description;
     _shortDescription.text = form.shortDescription;
-    _price.text = form.price;
+    final intPrice = int.tryParse(form.price.replaceAll(RegExp(r'\D'), ''));
+    _price.text = intPrice != null ? formatRibuan(intPrice) : form.price;
     setState(() {
       _category = form.category;
       _limited = form.limited;
@@ -248,7 +250,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   controller: _price,
                   label: 'Harga (Rp)',
                   icon: Icons.payments_outlined,
-                  keyboardType: TextInputType.number),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    ThousandsSeparatorInputFormatter(),
+                  ]),
               const SizedBox(height: 16),
               Container(
                 padding:

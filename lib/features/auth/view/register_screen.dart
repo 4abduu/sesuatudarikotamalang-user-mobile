@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/utils/password_validator.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../shared/app_scaffold.dart';
 import '../viewmodel/register_view_model.dart';
@@ -23,7 +22,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _pw = TextEditingController();
   final _confirm = TextEditingController();
   bool _showPw = false;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -35,25 +33,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _submit() async {
-    final v = validatePassword(_pw.text);
-    if (_nama.text.trim().isEmpty ||
-        _email.text.trim().isEmpty ||
-        !v.isValid ||
-        _pw.text != _confirm.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Periksa kembali isianmu ya')),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final vm = context.read<RegisterViewModel>();
-      final success = await vm.register(
+    final vm = context.read<RegisterViewModel>();
+    final success = await vm.register(
         name: _nama.text.trim(),
         email: _email.text.trim(),
         password: _pw.text.trim(),
+        confirmation: _confirm.text,
       );
       if (!mounted) return;
       if (!success) {
@@ -68,18 +53,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
           backgroundColor: AppColors.moss,
         ),
       );
-      context.go('/login');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    context.go('/login');
   }
 
   /// Google Sign-In — mengambil idToken dari Google lalu POST /api/auth/google
   Future<void> _googleSignUp() async {
-    setState(() => _isLoading = true);
-    try {
-      final vm = context.read<RegisterViewModel>();
-      final success = await vm.registerWithGoogle();
+    final vm = context.read<RegisterViewModel>();
+    final success = await vm.registerWithGoogle();
       if (!mounted) return;
       final message = vm.errorMessage ?? 'Login Google gagal.';
       if (!success) {
@@ -95,14 +75,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           backgroundColor: AppColors.moss,
         ),
       );
-      context.go('/');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    context.go('/');
   }
 
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<RegisterViewModel>();
     return AppScaffold(
       showBottomNav: false,
       showSearchAction: false,
@@ -184,12 +162,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 24),
             PrimaryButton(
               label: 'Daftar',
-              loading: _isLoading,
-              onPressed: _submit,
+              loading: vm.isSubmitting,
+              onPressed: vm.isSubmitting ? null : _submit,
             ),
             const SizedBox(height: 16),
             GoogleSignInButton(
-                label: 'Daftar dengan Google', onTap: _googleSignUp),
+                label: 'Daftar dengan Google', onTap: vm.isSubmitting ? null : _googleSignUp),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

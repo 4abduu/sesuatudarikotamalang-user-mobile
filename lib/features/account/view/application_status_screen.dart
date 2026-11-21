@@ -8,8 +8,8 @@ import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/secondary_button.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../data/models/creator_application_model.dart';
-import '../../../features/auth/viewmodel/auth_view_model.dart';
-import '../../../features/account/viewmodel/application_status_view_model.dart';
+import '../../auth/viewmodel/auth_view_model.dart';
+import '../viewmodel/application_status_view_model.dart';
 import '../../../shared/app_scaffold.dart';
 
 class ApplicationStatusScreen extends StatefulWidget {

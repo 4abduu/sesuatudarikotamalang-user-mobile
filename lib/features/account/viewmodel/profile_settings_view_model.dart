@@ -2,14 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../data/services/photo_picker_service.dart';
-import '../../../data/services/upload_service.dart';
+import '../../../data/repositories/upload_repository.dart';
 import '../../auth/viewmodel/auth_view_model.dart';
 
 class ProfileSettingsViewModel extends ChangeNotifier {
   ProfileSettingsViewModel(this._auth, this._upload, this._picker)
       : _userId = _auth.user?.id, _name = _auth.user?.name ?? '';
   final AuthViewModel _auth;
-  final UploadService _upload;
+  final UploadRepository _upload;
   final PhotoPickerService _picker;
   final String? _userId;
   String _name;

@@ -6,7 +6,7 @@ import '../../../core/utils/order_status_helper.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/secondary_button.dart';
 import '../../../data/models/order_model.dart';
-import '../../../features/account/viewmodel/orders_view_model.dart';
+import '../../account/viewmodel/orders_view_model.dart';
 import '../../../shared/app_scaffold.dart';
 import 'widgets/pickup_location_card.dart';
 import 'widgets/qr_ticket_card.dart';

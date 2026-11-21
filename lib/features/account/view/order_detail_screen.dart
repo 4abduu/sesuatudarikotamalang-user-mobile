@@ -9,9 +9,10 @@ import '../../../core/utils/date_formatter.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/order_status_helper.dart';
 import '../../../core/widgets/primary_button.dart';
-import '../../../features/account/viewmodel/order_detail_view_model.dart';
+import '../../../core/widgets/secondary_button.dart';
+import '../viewmodel/order_detail_view_model.dart';
 import '../../../data/models/order_model.dart';
-import '../../../features/reservation/view/widgets/qr_ticket_card.dart';
+import '../../reservation/view/widgets/qr_ticket_card.dart';
 import '../../../shared/app_scaffold.dart';
 
 import 'package:url_launcher/url_launcher.dart';
@@ -196,7 +197,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             _Row(label: 'Varian', value: o.variantLabel),
                             _Row(label: 'Tanggal Ambil', value: formatDateID(o.pickupDate)),
                             _Row(label: 'Waktu', value: o.pickupSlot),
-                            _Row(label: 'Pembayaran', value: '${o.paymentMethod} (${status.label})'),
+                            _Row(label: 'Pembayaran', value: '${o.paymentMethodLabel} (${status.label})'),
                             _Row(label: 'Total', value: formatRupiah(o.total)),
                             if (status == OrderStatus.lewatBatas) ...[
                               const SizedBox(height: 8),
@@ -242,7 +243,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         },
                       ),
                     ] else if (isCompleted && o.reviewed) ...[
-                      const Text('Sudah diulas', style: TextStyle(fontSize: 13, color: AppColors.moss)),
+                      SecondaryButton(
+                        label: 'Lihat Ulasan',
+                        icon: const Icon(Icons.rate_review_outlined, size: 16, color: AppColors.primary),
+                        onPressed: () {
+                          final pId = o.productId.isNotEmpty
+                              ? o.productId
+                              : (o.items.isNotEmpty ? o.items.first.productId : '');
+                          if (pId.isNotEmpty) {
+                            context.push('/produk/$pId/ulasan');
+                          } else {
+                            context.push('/akun/ulasan');
+                          }
+                        },
+                      ),
                     ],
 
                     if (o.refund != null && o.refund!.shouldShowSection) ...[

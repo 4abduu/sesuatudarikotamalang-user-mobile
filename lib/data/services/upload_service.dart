@@ -4,16 +4,19 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/network/api_service.dart';
 import '../../core/utils/photo_rules.dart';
+import '../repositories/upload_repository.dart';
 
-class UploadService {
+class UploadService implements UploadRepository {
   UploadService(this._api);
   final ApiService _api;
 
+  @override
   Future<String> uploadOne(XFile file) async {
     final urls = await _post('/upload/single', 'file', [file]);
     return urls.single;
   }
 
+  @override
   Future<List<String>> uploadMany(List<XFile> files) async {
     if (files.isEmpty) return <String>[];
     final urls = <String>[];
@@ -32,6 +35,7 @@ class UploadService {
     return urls;
   }
 
+  @override
   Future<void> deleteUrls(Iterable<String> urls) async {
     for (final url in urls) {
       try {

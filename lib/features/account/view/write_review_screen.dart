@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/primary_button.dart';
-import '../../../features/account/viewmodel/write_review_view_model.dart';
+import '../viewmodel/write_review_view_model.dart';
 import '../../../shared/app_scaffold.dart';
 
 class WriteReviewScreen extends StatefulWidget {

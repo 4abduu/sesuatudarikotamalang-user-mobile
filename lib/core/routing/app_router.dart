@@ -68,8 +68,8 @@ import '../../data/repositories/report_repository.dart';
 import '../../data/repositories/story_repository.dart';
 import '../../data/repositories/ai_repository.dart';
 import '../../data/services/photo_picker_service.dart';
-import '../../core/viewmodel/photo_editor_view_model.dart';
-import '../../core/di/app_dependencies.dart';
+import '../viewmodel/photo_editor_view_model.dart';
+import '../di/app_dependencies.dart';
 import '../../data/repositories/slot_repository.dart';
 import '../../features/reservation/viewmodel/reservation_flow_view_model.dart';
 
@@ -109,7 +109,7 @@ GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
           path: RouteNames.home,
           builder: (_, __) => ChangeNotifierProvider(
               create: (_) => HomeViewModel(
-                    products: ProductRepository(dependencies.api),
+                    products: dependencies.products,
                     artisans: ArtisanRepository(dependencies.api),
                     reviews: ReviewRepository(dependencies.api),
                   )..init(),
@@ -118,7 +118,7 @@ GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
           path: RouteNames.catalog,
           builder: (_, __) => ChangeNotifierProvider(
               create: (_) => CatalogViewModel(
-                    products: ProductRepository(dependencies.api),
+                    products: dependencies.products,
                     categories: CategoryRepository(dependencies.api),
                   ),
               child: const CatalogScreen())),
@@ -144,7 +144,7 @@ GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
               providers: [
                 ChangeNotifierProvider(
                     create: (_) => ProductDetailViewModel(
-                          products: ProductRepository(dependencies.api),
+                          products: dependencies.products,
                           artisans: ArtisanRepository(dependencies.api),
                         )..load(id)),
                 ChangeNotifierProvider(
@@ -192,7 +192,7 @@ GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
           builder: (_, s) => ChangeNotifierProvider(
                 create: (_) => ReservationFlowViewModel(
                   s.pathParameters['productId']!,
-                  products: ProductRepository(dependencies.api),
+                   products: dependencies.products,
                   orders: OrderRepository(dependencies.api),
                   slots: SlotRepository(dependencies.api),
                 ),
@@ -226,7 +226,7 @@ GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
           path: RouteNames.creatorDashboard,
           builder: (_, __) => ChangeNotifierProvider(
                 create: (_) => CreatorDashboardViewModel(
-                  products: ProductRepository(dependencies.api),
+                   products: dependencies.products,
                   artisans: ArtisanRepository(dependencies.api),
                 )..init(),
                 child: const CreatorDashboardScreen(),
@@ -253,7 +253,7 @@ GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
           path: '/dashboard-kreator/my-products',
           builder: (_, __) => ChangeNotifierProvider(
               create: (_) => CreatorDashboardViewModel(
-                  products: ProductRepository(dependencies.api),
+                  products: dependencies.products,
                   artisans: ArtisanRepository(dependencies.api))
                 ..init(),
               child: const MyProductsScreen())),
@@ -263,7 +263,7 @@ GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
                   providers: [
                     ChangeNotifierProvider(
                         create: (_) => ProductFormViewModel(
-                            repository: ProductRepository(dependencies.api),
+                            repository: dependencies.products,
                             upload: dependencies.upload,
                             photos: PhotoEditorViewModel(
                                 uploadService: dependencies.upload),
@@ -304,7 +304,7 @@ GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
                 providers: [
                   ChangeNotifierProvider(
                       create: (_) => CreatorDashboardViewModel(
-                            products: ProductRepository(dependencies.api),
+                             products: dependencies.products,
                             artisans: ArtisanRepository(dependencies.api),
                           )),
                   ChangeNotifierProvider(
