@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart';
-
 class ApiConfig {
-  /// Base URL API Backend:
-  /// - Web / Desktop / Localhost: http://localhost:4000
-  /// - Emulator Android: http://10.0.2.2:4000
-  static String get baseUrl => kIsWeb ? 'http://localhost:4000' : 'http://10.0.2.2:4000';
+  /// Production API by default; override for local development with:
+  /// --dart-define=API_BASE_URL=http://10.0.2.2:4000
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://api.sesuatudarikotamalang.my.id',
+  );
 
   static const String apiPrefix = '/api';
 

@@ -3,13 +3,56 @@
 Flutter app yang mereplikasi customer storefront dari versi Next.js.
 **Tidak ada admin** — admin hanya di web.
 
-## Cara Run
+## Menjalankan aplikasi
 
 ```bash
-cd mobile
+cd user_mobile
 flutter pub get
-flutter run
+
+# Lokal dengan backend Android emulator
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:4000
+
+# Lokal dengan backend perangkat fisik/LAN
+flutter run --dart-define=API_BASE_URL=http://ALAMAT_IP_KOMPUTER:4000
 ```
+
+Jika tidak memberikan `API_BASE_URL`, aplikasi memakai backend production:
+`https://api.sesuatudarikotamalang.my.id`.
+
+## Build APK release
+
+```bash
+cd user_mobile
+flutter pub get
+flutter build apk --release --dart-define=API_BASE_URL=https://api.sesuatudarikotamalang.my.id
+```
+
+APK hasil build berada di:
+
+```text
+build/app/outputs/flutter-apk/app-release.apk
+```
+
+APK dapat dipasang dengan drag-and-drop ke LDPlayer atau memakai:
+
+```bash
+adb install -r build/app/outputs/flutter-apk/app-release.apk
+```
+
+Build release demo saat ini memakai signing debug. Untuk publikasi ke Play Store,
+buat release keystore sendiri dan daftarkan SHA-1 release di Google Cloud Console.
+
+## Konfigurasi Google Sign-In
+
+Untuk mengambil SHA-1 signing debug Android:
+
+```bash
+cd android
+gradlew.bat signingReport
+```
+
+Gunakan package name dan SHA-1 yang dihasilkan untuk OAuth Android di Google Cloud
+Console. OAuth Web Client ID tetap dikonfigurasi di aplikasi dan backend.
 
 ## Demo Login
 
