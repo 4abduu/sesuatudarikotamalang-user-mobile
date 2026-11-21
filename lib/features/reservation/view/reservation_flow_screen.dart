@@ -92,7 +92,22 @@ class _ReservationBody extends StatelessWidget {
         Expanded(child: SingleChildScrollView(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // Product summary
           Card(child: Padding(padding: const EdgeInsets.all(12), child: Row(children: [
-            Container(width: 56, height: 56, decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.brush, color: AppColors.onPrimary)),
+            Container(
+              width: 56,
+              height: 56,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: p.product.images.isNotEmpty
+                  ? Image.network(
+                      p.product.images.first,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.brush, color: AppColors.onPrimary),
+                    )
+                  : const Icon(Icons.brush, color: AppColors.onPrimary),
+            ),
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(p.product.name, style: AppTextStyles.h3),
