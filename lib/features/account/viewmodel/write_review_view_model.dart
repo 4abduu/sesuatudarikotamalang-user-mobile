@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../../core/network/api_exception.dart';
 import '../../../data/models/order_model.dart';
 import '../../../data/repositories/order_repository.dart';
 import '../../../data/repositories/catalog_repositories.dart';
@@ -34,9 +35,22 @@ class WriteReviewViewModel extends ChangeNotifier {
       _order = await _orders.getOrder(orderId);
       if (_disposed) return false;
       final items = _order!.items;
-      await _reviews.submit(orderItemId: items.isNotEmpty ? items.first.id : null,
+      final targetItemId = items.isNotEmpty ? items.first.id : null;
+      await _reviews.submit(orderItemId: targetItemId,
           rating: _rating, comment: comment.trim());
+      // Catat secara lokal bahwa order ini sudah diulas
+      if (orderId.isNotEmpty) {
+        OrderRepository.markAsReviewed(orderId);
+      }
       return !_disposed;
+    } on ApiException catch (e) {
+      if (e.message.toLowerCase().contains('sudah') || e.code == 'ALREADY_REVIEWED') {
+        if (orderId.isNotEmpty) {
+          OrderRepository.markAsReviewed(orderId);
+        }
+      }
+      _errorMessage = e.message;
+      return false;
     } catch (e) {
       _errorMessage = 'Gagal mengirim ulasan: $e';
       return false;

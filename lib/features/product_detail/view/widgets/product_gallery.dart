@@ -113,6 +113,19 @@ class _ProductGalleryState extends State<ProductGallery> {
     );
   }
 
+  String? _getVariantBadge(String url) {
+    for (final l in widget.links) {
+      if (l.url == url) {
+        if (l.combination.isNotEmpty) {
+          final values = l.combination.map((e) => e['value']).where((v) => v != null && v.isNotEmpty).join(' / ');
+          if (values.isNotEmpty) return values;
+        }
+        if (l.value.isNotEmpty) return l.value;
+      }
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_ordered.isEmpty) {
@@ -182,6 +195,41 @@ class _ProductGalleryState extends State<ProductGallery> {
                           color: Colors.white,
                           letterSpacing: 0.3,
                         ),
+                      ),
+                    ),
+                  ),
+                if (_ordered.isNotEmpty && _getVariantBadge(_ordered[_index]) != null)
+                  Positioned(
+                    bottom: 12,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppColors.foreground.withValues(alpha: 0.82),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.style_outlined, size: 12, color: Colors.white70),
+                          const SizedBox(width: 4),
+                          Text(
+                            _getVariantBadge(_ordered[_index])!,
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

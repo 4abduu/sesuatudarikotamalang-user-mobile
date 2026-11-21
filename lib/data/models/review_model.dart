@@ -33,9 +33,11 @@ class ReviewModel {
     final avatar = user?['avatarUrl'] as String? ?? json['avatarUrl'] as String?;
     final prodName = product?['name'] as String? ?? json['productName'] as String?;
 
+    final prodId = product?['id'] as String? ?? json['productId'] as String?;
+
     return ReviewModel(
       id: (json['id'] ?? '').toString(),
-      productId: json['productId'] as String?,
+      productId: prodId,
       orderItemId: json['orderItemId'] as String?,
       author: authorName,
       city: json['city'] as String? ?? 'Malang',

@@ -90,33 +90,35 @@ class _ReservationBody extends StatelessWidget {
       body: Column(children: [
         Padding(padding: const EdgeInsets.all(16), child: StepIndicator(current: p.step)),
         Expanded(child: SingleChildScrollView(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // Product summary
-          Card(child: Padding(padding: const EdgeInsets.all(12), child: Row(children: [
-            Container(
-              width: 56,
-              height: 56,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]),
-                borderRadius: BorderRadius.circular(12),
+          // Product summary (hanya tampil di langkah jadwal dan pembayaran, tidak di langkah hasil)
+          if (p.step != ReservationStep.result) ...[
+            Card(child: Padding(padding: const EdgeInsets.all(12), child: Row(children: [
+              Container(
+                width: 56,
+                height: 56,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryLight]),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: p.product.images.isNotEmpty
+                    ? Image.network(
+                        p.product.images.first,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(Icons.brush, color: AppColors.onPrimary),
+                      )
+                    : const Icon(Icons.brush, color: AppColors.onPrimary),
               ),
-              child: p.product.images.isNotEmpty
-                  ? Image.network(
-                      p.product.images.first,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(Icons.brush, color: AppColors.onPrimary),
-                    )
-                  : const Icon(Icons.brush, color: AppColors.onPrimary),
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(p.product.name, style: AppTextStyles.h3),
-              Text(p.variantProvider.variantLabel, style: AppTextStyles.caption),
-              const SizedBox(height: 4),
-              Text(formatRupiah(p.product.price), style: AppTextStyles.price),
-            ])),
-          ]))),
-          const SizedBox(height: 16),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(p.product.name, style: AppTextStyles.h3),
+                Text(p.variantProvider.variantLabel, style: AppTextStyles.caption),
+                const SizedBox(height: 4),
+                Text(formatRupiah(p.product.price), style: AppTextStyles.price),
+              ])),
+            ]))),
+            const SizedBox(height: 16),
+          ],
           if (p.step == ReservationStep.schedule) ...[
             DateTimePickerStep(provider: p),
             const SizedBox(height: 24),
@@ -143,8 +145,14 @@ class _ReservationBody extends StatelessWidget {
                     await Navigator.of(context).push(MaterialPageRoute(
                       builder: (_) => MidtransWebViewScreen(url: redirectUrl, orderId: created.id),
                     ));
+                    // Cek status pembayaran terbaru setelah keluar dari WebView Midtrans
+                    final updated = await p.checkOrderPaid(created.id);
+                    if (updated && context.mounted) {
+                      p.setPaid();
+                    }
                   }
-                  if (context.mounted) context.go('/akun/pesanan/${created.id}');
+                  // Pindah ke langkah hasil konfirmasi (ResultSection)
+                  p.nextStep();
                 },
                 child: p.processing
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))

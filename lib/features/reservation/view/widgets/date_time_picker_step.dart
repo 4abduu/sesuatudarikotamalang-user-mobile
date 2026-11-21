@@ -98,54 +98,65 @@ class _SlotSection extends StatelessWidget {
         const SizedBox(height: 8),
       ],
       if (!isTrulyEmpty)
-        Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: slotsList.map((s) {
-          final active = provider.selectedSlot == s.time;
-          final disabled = isLoading || !s.bookable;
-          final label = s.isPast
-              ? '${s.time} (Lewat)'
-              : (s.isClosed ? '${s.time} (Ditutup)' : (s.available <= 0 ? '${s.time} (Penuh)' : s.time));
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // Gunakan 2 kolom yang sama rata di layar mobile
+            const spacing = 8.0;
+            final itemWidth = (constraints.maxWidth - spacing) / 2;
 
-          return GestureDetector(
-            onTap: disabled ? null : () => provider.setSlot(s.time),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: active
-                    ? AppColors.primary
-                    : (isLoading ? AppColors.surface.withValues(alpha: 0.6) : AppColors.surface),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: active
-                      ? AppColors.primary
-                      : (isLoading ? AppColors.border.withValues(alpha: 0.4) : AppColors.border),
-                ),
-              ),
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 180),
-                opacity: isLoading ? 0.45 : 1.0,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      label,
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: active ? AppColors.onPrimary : (s.bookable ? AppColors.foreground : AppColors.muted),
-                        decoration: (!isLoading && !s.bookable) ? TextDecoration.lineThrough : TextDecoration.none,
+            return Wrap(
+              spacing: spacing,
+              runSpacing: spacing,
+              children: slotsList.map((s) {
+                final active = provider.selectedSlot == s.time;
+                final disabled = isLoading || !s.bookable;
+                final label = s.isPast
+                    ? '${s.time} (Lewat)'
+                    : (s.isClosed ? '${s.time} (Ditutup)' : (s.available <= 0 ? '${s.time} (Penuh)' : s.time));
+
+                return SizedBox(
+                  width: itemWidth,
+                  child: GestureDetector(
+                    onTap: disabled ? null : () => provider.setSlot(s.time),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: active
+                            ? AppColors.primary
+                            : (isLoading ? AppColors.surface.withValues(alpha: 0.6) : AppColors.surface),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: active
+                              ? AppColors.primary
+                              : (isLoading ? AppColors.border.withValues(alpha: 0.4) : AppColors.border),
+                        ),
+                      ),
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 180),
+                        opacity: isLoading ? 0.45 : 1.0,
+                        child: Center(
+                          child: Text(
+                            label,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: active ? AppColors.onPrimary : (s.bookable ? AppColors.foreground : AppColors.muted),
+                              decoration: (!isLoading && !s.bookable) ? TextDecoration.lineThrough : TextDecoration.none,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
+                  ),
+                );
+              }).toList(),
+            );
+          },
+        ),
       if (provider.leadMinutes > 0) ...[
         const SizedBox(height: 8),
         Text(

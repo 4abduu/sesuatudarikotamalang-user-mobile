@@ -42,11 +42,25 @@ class ProductActionButtons extends StatelessWidget {
     }
     final uri = Uri.tryParse(link.url);
     var opened = false;
-    if (uri != null && uri.scheme == 'https') {
-      try {
-        opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } catch (_) {
-        opened = false;
+    if (uri != null) {
+      // Untuk platform seperti TikTok Shop, coba skema aplikasi asli terlebih dahulu
+      // agar tidak terbuka di dalam WebView aplikasi mobile sendiri.
+      if (link.platform == OlshopPlatform.tiktokshop) {
+        final rawUrl = link.url.trim();
+        final tiktokScheme = Uri.tryParse(rawUrl.replaceFirst(RegExp(r'^https?:\/\/'), 'tiktok://'));
+        if (tiktokScheme != null) {
+          try {
+            opened = await launchUrl(tiktokScheme, mode: LaunchMode.externalNonBrowserApplication);
+          } catch (_) {}
+        }
+      }
+
+      if (!opened) {
+        try {
+          opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } catch (_) {
+          opened = false;
+        }
       }
     }
     if (!opened && context.mounted) {

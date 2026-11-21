@@ -239,7 +239,6 @@ class ReservationFlowViewModel extends ChangeNotifier {
       );
       if (_disposed) return ReservationSubmitResult.failed;
       _createdOrder = created;
-      _step = ReservationStep.result;
       return method == PaymentMethod.midtrans
           ? ReservationSubmitResult.midtrans : ReservationSubmitResult.cod;
     } on ApiException catch (e) {
@@ -265,6 +264,19 @@ class ReservationFlowViewModel extends ChangeNotifier {
 
   void setProcessing(bool v) { _processing = v; _safeNotify(); }
   void setPaid() { _paid = true; _safeNotify(); }
+
+  Future<bool> checkOrderPaid(String orderId) async {
+    try {
+      final o = await _orders.getOrder(orderId);
+      if (o.status == OrderStatus.lunas || o.status == OrderStatus.selesai) {
+        _paid = true;
+        _createdOrder = o;
+        _safeNotify();
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
 
   void restart() {
     _step = ReservationStep.schedule;

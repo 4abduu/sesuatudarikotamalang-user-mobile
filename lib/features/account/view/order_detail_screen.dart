@@ -130,18 +130,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                 child: Column(
                   children: [
-                    if (isWaitingPayment && o.holdExpiresAt != null) ...[
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: HoldCountdownWidget(
-                          expiresAt: DateTime.tryParse(o.holdExpiresAt!)?.toLocal() ?? DateTime.now().add(const Duration(hours: 1)),
-                        ),
-                      ),
-                    ],
                     if (shouldShowQr) ...[
+                      // Untuk pesanan yang bisa diambil (Lunas atau COD menunggu_bayar):
+                      // Tampilkan countdown hold jika ada (misal COD hold 2 jam)
+                      if (isWaitingPayment && o.holdExpiresAt != null) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: HoldCountdownWidget(
+                            expiresAt: DateTime.tryParse(o.holdExpiresAt!)?.toLocal() ?? DateTime.now().add(const Duration(hours: 1)),
+                          ),
+                        ),
+                      ],
                       QrTicketCard(code: o.orderNumber),
                       const SizedBox(height: 16),
                     ] else if (isWaitingPayment && o.paymentMethod.toLowerCase() == 'midtrans') ...[
+                      // Untuk Midtrans menunggu bayar: cukup modal/card Menunggu Pembayaran ini saja
                       Card(
                         color: AppColors.mustard.withValues(alpha: 0.1),
                         child: Padding(
@@ -244,7 +247,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       ),
                     ] else if (isCompleted && o.reviewed) ...[
                       SecondaryButton(
-                        label: 'Lihat Ulasan',
+                        label: 'Lihat Ulasan Saya',
                         icon: const Icon(Icons.rate_review_outlined, size: 16, color: AppColors.primary),
                         onPressed: () {
                           final pId = o.productId.isNotEmpty
@@ -288,7 +291,30 @@ class _Row extends StatelessWidget {
   const _Row({required this.label, required this.value});
   @override
   Widget build(BuildContext context) {
-    return Padding(padding: const EdgeInsets.only(bottom: 6), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [SizedBox(width: 100, child: Text(label, style: AppTextStyles.caption)), const SizedBox(width: 8), Expanded(child: Text(value, textAlign: TextAlign.right, style: AppTextStyles.body))]));
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(label, style: AppTextStyles.caption.copyWith(fontSize: 13)),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: AppTextStyles.body.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import '../../../core/utils/infinite_scroll.dart';
 import '../../../core/widgets/load_more_footer.dart';
 import 'package:flutter/material.dart';
@@ -73,28 +74,43 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
                       final r = mine[i];
                       final displayName = r.productName ?? 'Produk DariKota Malang';
 
+                      final hasProduct = r.productId != null && r.productId!.isNotEmpty;
+
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppColors.border),
-                            boxShadow: AppShadows.soft,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(displayName, style: AppTextStyles.h3.copyWith(height: 1.2)),
-                              const SizedBox(height: 4),
-                              RatingStars(value: r.rating.toDouble(), size: 14),
-                              const SizedBox(height: 8),
-                              Text(r.comment, style: AppTextStyles.body.copyWith(height: 1.375)),
-                              const SizedBox(height: 4),
-                              Text(r.date, style: AppTextStyles.caption),
-                            ],
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: hasProduct ? () => context.push('/produk/${r.productId}') : null,
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: AppColors.border),
+                              boxShadow: AppShadows.soft,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(displayName, style: AppTextStyles.h3.copyWith(height: 1.2)),
+                                    ),
+                                    if (hasProduct) ...[
+                                      const Icon(Icons.chevron_right, size: 18, color: AppColors.muted),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                RatingStars(value: r.rating.toDouble(), size: 14),
+                                const SizedBox(height: 8),
+                                Text(r.comment, style: AppTextStyles.body.copyWith(height: 1.375)),
+                                const SizedBox(height: 4),
+                                Text(r.date, style: AppTextStyles.caption),
+                              ],
+                            ),
                           ),
                         ),
                       );

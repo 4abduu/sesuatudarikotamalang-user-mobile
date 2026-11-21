@@ -47,19 +47,24 @@ class QrTicketCard extends StatelessWidget {
                   backgroundColor: Colors.white,
                 ),
               ),
-              const SizedBox(width: 16),
-              Flexible(
+              const SizedBox(width: 14),
+              Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceAlt,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Text(
-                    code,
-                    style: AppTextStyles.h3.copyWith(
-                      letterSpacing: 1.2,
-                      fontWeight: FontWeight.bold,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.center,
+                    child: Text(
+                      code,
+                      maxLines: 1,
+                      style: AppTextStyles.h3.copyWith(
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),

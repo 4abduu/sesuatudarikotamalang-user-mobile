@@ -38,8 +38,8 @@ class _ReservationConfirmationScreenState extends State<ReservationConfirmationS
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
-    // Cek status tiap 3 detik sampai kasir selesai scan.
-    _timer = Timer.periodic(const Duration(seconds: 3), (_) => _refresh());
+    // Cek status tiap 5 detik sampai kasir selesai scan (efisien dan tidak membebani jaringan).
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) => _refresh());
   }
 
   Future<void> _refresh() async {
@@ -86,8 +86,10 @@ class _ReservationConfirmationScreenState extends State<ReservationConfirmationS
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         child: Column(
           children: [
-            TicketStatusBanner(status: accepted ? TicketStatus.accepted : TicketStatus.scan),
-            const SizedBox(height: 16),
+            if (accepted) ...[
+              const TicketStatusBanner(status: TicketStatus.accepted),
+              const SizedBox(height: 16),
+            ],
             QrTicketCard(code: code),
             const SizedBox(height: 16),
             const PickupLocationCard(),

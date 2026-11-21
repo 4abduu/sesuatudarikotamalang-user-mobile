@@ -15,7 +15,9 @@ class TicketStatusBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final accepted = status == TicketStatus.accepted;
     final color = accepted ? AppColors.moss : AppColors.mustard;
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -24,35 +26,48 @@ class TicketStatusBanner extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Container(
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
             width: 56,
             height: 56,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: color, width: 3),
             ),
-            child: Icon(
-              accepted ? Icons.check : Icons.qr_code_scanner,
-              size: accepted ? 36 : 30,
-              color: color,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: Icon(
+                accepted ? Icons.check : Icons.qr_code_scanner,
+                key: ValueKey<bool>(accepted),
+                size: accepted ? 36 : 30,
+                color: color,
+              ),
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            accepted ? 'RESERVASI DITERIMA' : 'SCAN TIKET DI KASIR',
-            style: AppTextStyles.eyebrow.copyWith(
-              color: AppColors.primary,
-              letterSpacing: 1.5,
-              fontWeight: FontWeight.bold,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            child: Text(
+              accepted ? 'RESERVASI DITERIMA' : 'SCAN TIKET DI KASIR',
+              key: ValueKey<String>(accepted ? 'accepted_title' : 'scan_title'),
+              style: AppTextStyles.eyebrow.copyWith(
+                color: AppColors.primary,
+                letterSpacing: 1.5,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            accepted
-                ? 'Tunjukkan kode ini ke kasir saat pengambilan.'
-                : 'Tunjukkan QR di bawah ini ke kasir agar tiketmu di-scan.',
-            style: AppTextStyles.bodyMuted,
-            textAlign: TextAlign.center,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            child: Text(
+              accepted
+                  ? 'Tunjukkan kode ini ke kasir saat pengambilan.'
+                  : 'Tunjukkan QR di bawah ini ke kasir agar tiketmu di-scan.',
+              key: ValueKey<String>(accepted ? 'accepted_body' : 'scan_body'),
+              style: AppTextStyles.bodyMuted,
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ),
