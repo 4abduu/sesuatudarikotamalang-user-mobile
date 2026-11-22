@@ -22,6 +22,7 @@ class ReservationFlowViewModel extends ChangeNotifier {
   final ProductRepository _products;
   final OrderRepository _orders;
   final SlotRepository _slotRepository;
+  final List<String?>? _initialVariantSelection;
   ProductModel? _product;
   ProductModel get product => _product!;
   bool get hasProduct => _product != null;
@@ -54,7 +55,11 @@ class ReservationFlowViewModel extends ChangeNotifier {
     required ProductRepository products,
     required OrderRepository orders,
     required SlotRepository slots,
-  }) : _products = products, _orders = orders, _slotRepository = slots {
+    List<String?>? initialVariantSelection,
+  }) : _products = products,
+       _orders = orders,
+       _slotRepository = slots,
+       _initialVariantSelection = initialVariantSelection {
     _selectedDate = dateOnly(DateTime.now());
     calendar = PickupCalendarViewModel(slots);
   }
@@ -70,6 +75,9 @@ class ReservationFlowViewModel extends ChangeNotifier {
       _variantProvider?.dispose();
       _product = loaded;
       _variantProvider = VariantSelectionViewModel(loaded)..addListener(_safeNotify);
+      if (_initialVariantSelection != null) {
+        _variantProvider!.restoreSelection(_initialVariantSelection);
+      }
       await loadSlots();
     } catch (e) {
       if (_disposed || id != _productRequestId) return;
@@ -108,7 +116,12 @@ class ReservationFlowViewModel extends ChangeNotifier {
 
   /// Slot dipilih dan (menurut data backend terbaru) masih bisa dipesan.
   bool get canContinue =>
+      (!product.hasVariants || (variantProvider.matchedVariant != null && variantProvider.matchedVariant!.effectiveStock > 0)) &&
       _selectedDate != null && _selectedSlot != null && (_selectedSlotInfo?.bookable ?? false);
+
+  bool get needsVariantSelection => product.hasVariants && variantProvider.matchedVariant == null;
+  bool get selectedVariantOutOfStock =>
+      product.hasVariants && variantProvider.matchedVariant != null && variantProvider.matchedVariant!.effectiveStock <= 0;
 
   /// True bila slot sudah dimuat dan tidak ada satu pun yang bisa dipesan di tanggal terpilih.
   bool get noBookableSlot => !_slotsLoading && _slotsError == null && _slots.isNotEmpty && !_slots.any((s) => s.bookable);

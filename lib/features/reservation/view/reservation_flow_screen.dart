@@ -122,7 +122,13 @@ class _ReservationBody extends StatelessWidget {
           if (p.step == ReservationStep.schedule) ...[
             DateTimePickerStep(provider: p),
             const SizedBox(height: 24),
-            PrimaryButton(label: 'Lanjut ke Pembayaran', icon: const Icon(Icons.arrow_forward, size: 16), onPressed: p.canContinue ? () => p.nextStep() : null),
+            PrimaryButton(
+              label: p.needsVariantSelection
+                  ? 'Pilih varian dulu'
+                  : (p.selectedVariantOutOfStock ? 'Stok varian ini kosong' : 'Lanjut ke Pembayaran'),
+              icon: const Icon(Icons.arrow_forward, size: 16),
+              onPressed: p.canContinue ? () => p.nextStep() : null,
+            ),
           ] else if (p.step == ReservationStep.payment) ...[
             PaymentMethodStep(provider: p),
             const SizedBox(height: 24),

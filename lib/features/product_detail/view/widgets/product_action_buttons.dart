@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -181,13 +182,15 @@ class ProductActionButtons extends StatelessWidget {
                     );
                   }
                 : () {
+                    final encodedSelection = Uri.encodeComponent(jsonEncode(variantProvider.selected));
+                    final reservationPath = '/reservasi/$productId?variants=$encodedSelection';
                     if (!auth.isAuthenticated) {
                       showAuthGateSheet(context,
-                          next: '/reservasi/$productId',
+                          next: reservationPath,
                           contextLabel: 'pesan pickup');
                       return;
                     }
-                    context.push('/reservasi/$productId');
+                    context.push(reservationPath);
                   }),
       ),
       const SizedBox(height: 8),

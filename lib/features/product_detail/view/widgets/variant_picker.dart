@@ -119,7 +119,9 @@ class VariantPicker extends StatelessWidget {
           );
         }),
         Text(
-          'Varian terpilih: ${provider.variantLabel}',
+          provider.matchedVariant == null
+              ? 'Belum memilih varian'
+              : 'Varian terpilih: ${provider.variantLabel}',
           style: AppTextStyles.caption,
         ),
       ],

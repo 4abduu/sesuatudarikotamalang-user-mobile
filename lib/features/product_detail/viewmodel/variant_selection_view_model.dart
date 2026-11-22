@@ -15,13 +15,9 @@ class VariantSelectionViewModel extends ChangeNotifier {
 
   static List<String?> _defaultSelection(ProductModel p) {
     if (!p.hasVariants) return [];
-    final sel = List<String?>.filled(p.variantOptions.length, null);
-    for (var i = 0; i < p.variantOptions.length; i++) {
-      for (final v in p.variantOptions[i].values) {
-        if (_isAvailable(p, i, v, sel)) { sel[i] = v; break; }
-      }
-    }
-    return sel;
+    // Detail produk dimulai tanpa varian aktif. Pengguna harus memilih
+    // varian sendiri; foto utama tetap tampil sampai ada pilihan varian.
+    return List<String?>.filled(p.variantOptions.length, null);
   }
 
   static bool _isAvailable(ProductModel p, int axis, String value, List<String?> cur) {
@@ -31,12 +27,28 @@ class VariantSelectionViewModel extends ChangeNotifier {
   bool isValueAvailable(int axis, String value) => _isAvailable(product, axis, value, _selected);
 
   void selectOption(int axis, String value) {
+    if (_selected[axis] == value) {
+      _selected[axis] = null;
+      for (var i = axis + 1; i < product.variantOptions.length; i++) {
+        _selected[i] = null;
+      }
+      notifyListeners();
+      return;
+    }
     _selected[axis] = value;
     for (var i = axis + 1; i < product.variantOptions.length; i++) {
       _selected[i] = null;
       for (final v in product.variantOptions[i].values) {
         if (_isAvailable(product, i, v, _selected)) { _selected[i] = v; break; }
       }
+    }
+    notifyListeners();
+  }
+
+  void restoreSelection(List<String?> values) {
+    if (!product.hasVariants) return;
+    for (var i = 0; i < _selected.length; i++) {
+      _selected[i] = i < values.length ? values[i] : null;
     }
     notifyListeners();
   }

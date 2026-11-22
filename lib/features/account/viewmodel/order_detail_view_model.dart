@@ -4,11 +4,16 @@ import '../../../core/network/api_exception.dart';
 import '../../../core/utils/order_status_helper.dart';
 import '../../../data/models/order_model.dart';
 import '../../../data/repositories/order_repository.dart';
+import '../../../data/repositories/catalog_repositories.dart';
 
 class OrderDetailViewModel extends ChangeNotifier {
-  OrderDetailViewModel(this.orderId, {required OrderRepository repository}) : _repository = repository;
+  OrderDetailViewModel(this.orderId, {
+    required OrderRepository repository,
+    required ReviewRepository reviews,
+  }) : _repository = repository, _reviews = reviews;
   final String orderId;
   final OrderRepository _repository;
+  final ReviewRepository _reviews;
   OrderModel? _order;
   OrderModel? get order => _order;
   bool _isLoading = false;
@@ -27,6 +32,25 @@ class OrderDetailViewModel extends ChangeNotifier {
   bool _polling = false;
   String? _completedOrderNumber;
   String? get completedOrderNumber => _completedOrderNumber;
+
+  Future<String?> findReviewIdForOrder(OrderModel order) async {
+    final orderItemIds = order.items.map((item) => item.id).where((id) => id.isNotEmpty).toSet();
+    if (orderItemIds.isEmpty) return null;
+
+    var page = 1;
+    var totalPages = 1;
+    while (page <= totalPages) {
+      final result = await _reviews.getMyReviews(page: page, limit: 20);
+      totalPages = result.totalPages;
+      for (final review in result.items) {
+        if (review.orderItemId != null && orderItemIds.contains(review.orderItemId)) {
+          return review.id;
+        }
+      }
+      page++;
+    }
+    return null;
+  }
 
   Future<void> load({bool silent = false}) async {
     if (_disposed) return;

@@ -80,7 +80,11 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
                         padding: const EdgeInsets.only(bottom: 8),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(20),
-                          onTap: hasProduct ? () => context.push('/produk/${r.productId}') : null,
+                          onTap: hasProduct
+                              ? () => context.push(
+                                    '/produk/${r.productId}/ulasan?reviewId=${Uri.encodeComponent(r.id)}',
+                                  )
+                              : null,
                           child: Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(12),

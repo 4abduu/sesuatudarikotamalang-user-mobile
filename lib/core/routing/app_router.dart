@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:go_router/go_router.dart';
 import '../theme/app_theme.dart';
 import 'route_names.dart';
@@ -129,11 +130,12 @@ GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
           path: '${RouteNames.productDetail}/:id/ulasan',
           builder: (_, s) {
             final id = s.pathParameters['id']!;
+            final targetReviewId = s.uri.queryParameters['reviewId'];
             return ChangeNotifierProvider(
               create: (_) => ProductReviewsViewModel(
                   productId: id,
                   repository: ReviewRepository(dependencies.api)),
-              child: ProductReviewsScreen(productId: id),
+              child: ProductReviewsScreen(productId: id, targetReviewId: targetReviewId),
             );
           }),
       GoRoute(
@@ -190,16 +192,31 @@ GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
       ),
       GoRoute(
           path: '${RouteNames.reservation}/:productId',
-          builder: (_, s) => ChangeNotifierProvider(
+          builder: (_, s) {
+            List<String?>? initialVariantSelection;
+            final rawSelection = s.uri.queryParameters['variants'];
+            if (rawSelection != null && rawSelection.isNotEmpty) {
+              try {
+                final decoded = jsonDecode(rawSelection);
+                if (decoded is List) {
+                  initialVariantSelection = decoded.map((value) => value?.toString()).toList();
+                }
+              } catch (_) {
+                initialVariantSelection = null;
+              }
+            }
+            return ChangeNotifierProvider(
                 create: (_) => ReservationFlowViewModel(
                   s.pathParameters['productId']!,
                    products: dependencies.products,
                   orders: OrderRepository(dependencies.api),
                   slots: SlotRepository(dependencies.api),
+                  initialVariantSelection: initialVariantSelection,
                 ),
                 child: ReservationFlowScreen(
                     productId: s.pathParameters['productId']!),
-              )),
+              );
+          }),
       GoRoute(
           path: RouteNames.daftarKreator,
           builder: (_, __) => ChangeNotifierProvider(
@@ -337,7 +354,8 @@ GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
             final id = s.pathParameters['id']!;
             return ChangeNotifierProvider(
               create: (_) => OrderDetailViewModel(id,
-                  repository: OrderRepository(dependencies.api))
+                  repository: OrderRepository(dependencies.api),
+                  reviews: ReviewRepository(dependencies.api))
                 ..init(),
               child: OrderDetailScreen(orderId: id),
             );

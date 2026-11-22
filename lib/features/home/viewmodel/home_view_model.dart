@@ -35,9 +35,15 @@ class HomeViewModel extends ChangeNotifier {
 
   List<ProductModel> get recommendedProducts {
     final result = [..._products];
+    final maxSold = result.fold<int>(
+      0,
+      (max, product) => product.soldCount > max ? product.soldCount : max,
+    );
     result.sort((a, b) {
-      final sold = b.soldCount.compareTo(a.soldCount);
-      return sold != 0 ? sold : b.rating.compareTo(a.rating);
+      final score = _productScore(b, maxSold).compareTo(_productScore(a, maxSold));
+      if (score != 0) return score;
+      final rating = b.rating.compareTo(a.rating);
+      return rating != 0 ? rating : b.soldCount.compareTo(a.soldCount);
     });
     return result.take(4).toList();
   }
@@ -58,7 +64,13 @@ class HomeViewModel extends ChangeNotifier {
   double _creatorScore(CreatorModel creator, int maxSold) {
     final salesScore = maxSold == 0 ? 0.0 : creator.soldCount / maxSold;
     final ratingScore = creator.rating.clamp(0.0, 5.0).toDouble() / 5;
-    return salesScore * 0.65 + ratingScore * 0.35;
+    return salesScore * 0.6 + ratingScore * 0.4;
+  }
+
+  double _productScore(ProductModel product, int maxSold) {
+    final salesScore = maxSold == 0 ? 0.0 : product.soldCount / maxSold;
+    final ratingScore = product.rating.clamp(0.0, 5.0).toDouble() / 5;
+    return salesScore * 0.6 + ratingScore * 0.4;
   }
 
   Future<void> init() async {

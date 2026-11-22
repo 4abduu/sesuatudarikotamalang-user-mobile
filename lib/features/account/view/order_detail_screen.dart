@@ -249,12 +249,17 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       SecondaryButton(
                         label: 'Lihat Ulasan Saya',
                         icon: const Icon(Icons.rate_review_outlined, size: 16, color: AppColors.primary),
-                        onPressed: () {
+                        onPressed: () async {
                           final pId = o.productId.isNotEmpty
                               ? o.productId
                               : (o.items.isNotEmpty ? o.items.first.productId : '');
                           if (pId.isNotEmpty) {
-                            context.push('/produk/$pId/ulasan');
+                            final reviewId = await vm.findReviewIdForOrder(o);
+                            if (!context.mounted) return;
+                            final query = reviewId == null
+                                ? ''
+                                : '?reviewId=${Uri.encodeComponent(reviewId)}';
+                            context.push('/produk/$pId/ulasan$query');
                           } else {
                             context.push('/akun/ulasan');
                           }

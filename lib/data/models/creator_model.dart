@@ -24,7 +24,7 @@ class CreatorModel {
     this.joinedYear = 2024,
     this.productCount = 0,
     this.soldCount = 0,
-    this.rating = 5.0,
+    this.rating = 0.0,
     this.accent = '8B4513',
     this.avatarUrl,
     this.status = 'aktif',
@@ -49,8 +49,9 @@ class CreatorModel {
       productCount: (j['productCount'] as num?)?.toInt() ??
           ((j['products'] as List<dynamic>?)?.length ?? 0),
       soldCount: (j['soldCount'] as num?)?.toInt() ?? 0,
+      // Kreator tanpa ulasan harus tampil 0, bukan rating sempurna palsu.
       rating: (j['rating'] as num?)?.toDouble() ??
-          ((j['avgRating'] as num?)?.toDouble() ?? 5.0),
+          ((j['avgRating'] as num?)?.toDouble() ?? 0.0),
       accent: j['accent'] ?? '8B4513',
       avatarUrl: j['avatarUrl'],
       status: j['status'] ?? 'aktif',

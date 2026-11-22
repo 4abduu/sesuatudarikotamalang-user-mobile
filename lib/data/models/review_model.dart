@@ -41,7 +41,7 @@ class ReviewModel {
       orderItemId: json['orderItemId'] as String?,
       author: authorName,
       city: json['city'] as String? ?? 'Malang',
-      rating: (json['rating'] as num?)?.toInt() ?? 5,
+      rating: (json['rating'] as num?)?.toInt() ?? 0,
       comment: json['comment'] as String? ?? '',
       date: (json['createdAt'] ?? json['date'] ?? '').toString(),
       status: json['status'] as String? ?? 'tampil',

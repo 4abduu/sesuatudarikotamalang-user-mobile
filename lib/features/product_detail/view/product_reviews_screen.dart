@@ -14,8 +14,9 @@ import '../viewmodel/product_reviews_view_model.dart';
 
 class ProductReviewsScreen extends StatefulWidget {
   final String productId;
+  final String? targetReviewId;
 
-  const ProductReviewsScreen({super.key, required this.productId});
+  const ProductReviewsScreen({super.key, required this.productId, this.targetReviewId});
 
   @override
   State<ProductReviewsScreen> createState() => _ProductReviewsScreenState();
@@ -23,8 +24,14 @@ class ProductReviewsScreen extends StatefulWidget {
 
 class _ProductReviewsScreenState extends State<ProductReviewsScreen> {
   final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _reviewKeys = <String, GlobalKey>{};
 
   int? _selectedRating; // null = Semua
+  String? _targetReviewId;
+  bool _isFindingTarget = false;
+
+  GlobalKey _keyForReview(ReviewModel review) =>
+      _reviewKeys.putIfAbsent(review.id, () => GlobalKey());
 
   @override
   void initState() {
@@ -35,6 +42,7 @@ class _ProductReviewsScreenState extends State<ProductReviewsScreen> {
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      _targetReviewId = widget.targetReviewId;
       _initialLoad();
     });
   }
@@ -47,6 +55,57 @@ class _ProductReviewsScreenState extends State<ProductReviewsScreen> {
 
   Future<void> _initialLoad() async {
     await context.read<ProductReviewsViewModel>().load(rating: _selectedRating);
+    if (!mounted || _targetReviewId == null) return;
+    await _findAndRevealTargetReview();
+  }
+
+  Future<void> _findAndRevealTargetReview() async {
+    if (_isFindingTarget || _targetReviewId == null) return;
+    _isFindingTarget = true;
+    try {
+      final viewModel = context.read<ProductReviewsViewModel>();
+      while (mounted) {
+        if (viewModel.errorMessage != null) return;
+        final targetIndex = viewModel.reviews.indexWhere((review) => review.id == _targetReviewId);
+        if (targetIndex >= 0) {
+          await _revealTargetReview(targetIndex, viewModel.reviews.length);
+          return;
+        }
+
+        if (!viewModel.hasMore || viewModel.isLoadingMore) return;
+        await viewModel.loadMore();
+      }
+    } finally {
+      _isFindingTarget = false;
+    }
+  }
+
+  Future<void> _revealTargetReview(int targetIndex, int reviewCount) async {
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+
+    BuildContext? targetContext = _reviewKeys[_targetReviewId]?.currentContext;
+    if (targetContext == null && _scrollController.hasClients && reviewCount > 1) {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final estimatedOffset = maxScroll * targetIndex / (reviewCount - 1);
+      await _scrollController.animateTo(
+        estimatedOffset,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOut,
+      );
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+      targetContext = _reviewKeys[_targetReviewId]?.currentContext;
+    }
+
+    if (targetContext != null && targetContext.mounted) {
+      await Scrollable.ensureVisible(
+        targetContext,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOut,
+        alignment: 0.2,
+      );
+    }
   }
 
   Future<void> _refresh() async {
@@ -63,6 +122,7 @@ class _ProductReviewsScreenState extends State<ProductReviewsScreen> {
     if (_selectedRating == rating) return;
     setState(() {
       _selectedRating = rating;
+      _targetReviewId = null;
     });
     _initialLoad();
   }
@@ -125,9 +185,20 @@ class _ProductReviewsScreenState extends State<ProductReviewsScreen> {
                                     isEmpty: reviews.isEmpty,
                                   );
                                 }
+                                final review = reviews[index];
+                                final isTarget = review.id == _targetReviewId;
                                 return Padding(
+                                  key: _keyForReview(review),
                                   padding: const EdgeInsets.only(bottom: 8),
-                                  child: ReviewCard(review: reviews[index]),
+                                  child: DecoratedBox(
+                                    decoration: isTarget
+                                        ? BoxDecoration(
+                                            border: Border.all(color: AppColors.primary, width: 2),
+                                            borderRadius: BorderRadius.circular(20),
+                                          )
+                                        : const BoxDecoration(),
+                                    child: ReviewCard(review: review),
+                                  ),
                                 );
                               },
                               childCount: reviews.length + 1,

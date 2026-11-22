@@ -75,6 +75,15 @@ class _ProductGalleryState extends State<ProductGallery> {
       selected: widget.selected,
       changedAxis: axis,
     );
+    if (axis != null && widget.selected.any((value) => value == null)) {
+      if (_index != 0) {
+        _index = 0;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _controller.hasClients) _controller.jumpToPage(0);
+        });
+      }
+      return;
+    }
     if (target != null && target != _index) {
       // Tidak memanggil setState di sini (build menyusul otomatis); animasi
       // dijalankan setelah frame agar PageView sudah terpasang.

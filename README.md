@@ -1,86 +1,176 @@
-# Sesuatu DariKota Malang — Flutter (Customer & Creator)
+# Sesuatu DariKota Malang — Mobile
 
-Flutter app yang mereplikasi customer storefront dari versi Next.js.
-**Tidak ada admin** — admin hanya di web.
+> **Release v1.0.0** · Flutter · Android · Customer & Creator
 
-## Menjalankan aplikasi
+Aplikasi mobile untuk pembeli dan kreator. Dashboard admin berada di aplikasi
+web terpisah; aplikasi ini tidak menyediakan role admin.
 
-```bash
-cd user_mobile
-flutter pub get
+## Daftar isi
 
-# Lokal dengan backend Android emulator
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:4000
-
-# Lokal dengan backend perangkat fisik/LAN
-flutter run --dart-define=API_BASE_URL=http://ALAMAT_IP_KOMPUTER:4000
-```
-
-Jika tidak memberikan `API_BASE_URL`, aplikasi memakai backend production:
-`https://api.sesuatudarikotamalang.my.id`.
-
-## Build APK release
-
-```bash
-cd user_mobile
-flutter pub get
-flutter build apk --release --dart-define=API_BASE_URL=https://api.sesuatudarikotamalang.my.id
-```
-
-APK hasil build berada di:
-
-```text
-build/app/outputs/flutter-apk/app-release.apk
-```
-
-APK dapat dipasang dengan drag-and-drop ke LDPlayer atau memakai:
-
-```bash
-adb install -r build/app/outputs/flutter-apk/app-release.apk
-```
-
-Build release demo saat ini memakai signing debug. Untuk publikasi ke Play Store,
-buat release keystore sendiri dan daftarkan SHA-1 release di Google Cloud Console.
-
-## Konfigurasi Google Sign-In
-
-Untuk mengambil SHA-1 signing debug Android:
-
-```bash
-cd android
-gradlew.bat signingReport
-```
-
-Gunakan package name dan SHA-1 yang dihasilkan untuk OAuth Android di Google Cloud
-Console. OAuth Web Client ID tetap dikonfigurasi di aplikasi dan backend.
-
-## Demo Login
-
-Di halaman login ada 2 tombol demo:
-- **Pembeli** — Maya Anggraini (buyer, bisa beli + beri ulasan)
-- **Kreator** — Dini Aulia (creator, + akses dashboard kreator)
-
-## Struktur
-
-```
-lib/
-  core/         # theme, constants, routing, utils, widgets generik
-  data/         # models + dummy data (12 produk, 6 kreator, 8 kategori)
-  features/     # auth, home, catalog, product_detail, creators, reservation,
-                # creator_application, creator_dashboard, notifications, account
-  shared/       # app_scaffold + bottom_nav_bar
-```
+- [Fitur](#fitur)
+- [Menjalankan lokal](#menjalankan-lokal)
+- [Menjalankan di emulator Android](#menjalankan-di-emulator-android)
+- [Build APK release](#build-apk-release)
+- [Konfigurasi Google Sign-In](#konfigurasi-google-sign-in)
+- [Testing](#testing)
+- [Struktur project](#struktur-project)
+- [Nama dan branding aplikasi](#nama-dan-branding-aplikasi)
 
 ## Fitur
 
-- Guest browse-only (katalog, detail produk, profil kreator)
-- AuthGate modal (bottom sheet) untuk aksi butuh login
-- Sistem varian 2D (Motif × Ukuran) dengan chip selector
-- Reservasi 3-step (jadwal → bayar → tiket QR)
-- Check-at-submit: stok dicek di tombol "Pesan Sekarang"
-- Dua siklus: Midtrans (Lunas permanen) vs Cash/QRIS (hold 2 jam)
-- Status order: Menunggu Bayar / Lunas / Selesai / Dibatalkan / Kedaluwarsa / Lewat Batas Pengambilan
-- Akun: riwayat pesanan, detail tiket QR, beri ulasan, status pengajuan kreator, pengaturan (ganti nama/foto/email-OTP/password)
-- Dashboard kreator (khusus role creator)
-- Bottom nav 5 tab: Beranda, Katalog, Kreator, Notif, Akun
-```
+### Pembeli
+
+- Browse katalog dan detail produk.
+- Pilih kombinasi varian dan melihat foto yang terkait.
+- Reservasi, pembayaran Midtrans, Cash/QRIS, dan resume pembayaran.
+- Tiket QR, riwayat order, ulasan, notifikasi, OTP, dan pengaturan akun.
+- Login email/password dan Google Sign-In.
+
+### Kreator
+
+- Pengajuan menjadi kreator.
+- Dashboard kreator dan pengelolaan produk.
+- Opsi varian, foto yang ditautkan ke varian, dan stok per kombinasi.
+- Bantuan AI untuk membuat draft cerita produk.
+- Panduan penggunaan dan coach mark pada fitur penting.
+
+### UX dan keamanan
+
+- Foto yang ditolak moderasi atau signature backend ditandai border merah.
+- Badge detail produk menampilkan label varian, misalnya \`XL / Hitam\`.
+- Foto galeri mengikuti urutan opsi varian.
+- Upload profil memakai crop berbentuk lingkaran.
+- API production dapat langsung dipakai melalui \`API_BASE_URL\`.
+
+## Menjalankan lokal
+
+### Prasyarat
+
+- Flutter SDK sesuai constraint project.
+- Android Studio dan Android SDK.
+- Emulator Android aktif atau perangkat Android dengan USB debugging.
+- Backend lokal atau URL production.
+
+### Instalasi
+
+\`\`\`bash
+flutter pub get
+\`\`\`
+
+Jika tidak memberikan \`API_BASE_URL\`, aplikasi memakai backend production:
+
+\`\`\`text
+https://api.sesuatudarikotamalang.my.id
+\`\`\`
+
+## Menjalankan di emulator Android
+
+Cek device:
+
+\`\`\`bash
+flutter devices
+\`\`\`
+
+Jalankan pada emulator Android Studio, bukan Chrome atau Edge:
+
+\`\`\`bash
+flutter run -d emulator-5554 --dart-define=API_BASE_URL=https://api.sesuatudarikotamalang.my.id
+\`\`\`
+
+Untuk backend lokal dari emulator Android, gunakan \`10.0.2.2\`:
+
+\`\`\`bash
+flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:4000
+\`\`\`
+
+\`localhost\` dari emulator menunjuk ke emulator itu sendiri, bukan komputer
+developer.
+
+## Build APK release
+
+\`\`\`bash
+flutter pub get
+flutter build apk --release --dart-define=API_BASE_URL=https://api.sesuatudarikotamalang.my.id
+\`\`\`
+
+Output:
+
+\`\`\`text
+build/app/outputs/flutter-apk/app-release.apk
+\`\`\`
+
+Instal ke emulator/perangkat:
+
+\`\`\`bash
+adb install -r build/app/outputs/flutter-apk/app-release.apk
+\`\`\`
+
+Build demo saat ini memakai signing debug. Untuk Play Store, buat release
+keystore sendiri dan daftarkan SHA-1 release di Google Cloud Console.
+
+## Konfigurasi Google Sign-In
+
+Ambil SHA-1 signing debug Android:
+
+\`\`\`bash
+cd android
+gradlew.bat signingReport
+\`\`\`
+
+Gunakan package name dan SHA-1 tersebut pada OAuth Android di Google Cloud
+Console. OAuth Web Client ID tetap dikonfigurasi pada aplikasi dan backend.
+
+## Testing
+
+Static analysis dan test suite:
+
+\`\`\`bash
+flutter analyze
+flutter test
+\`\`\`
+
+Quality check release:
+
+\`\`\`bash
+flutter build apk --release --dart-define=API_BASE_URL=https://api.sesuatudarikotamalang.my.id
+\`\`\`
+
+Smoke test minimum:
+
+1. Buka katalog sebagai guest.
+2. Login email/password dan Google.
+3. Buka detail produk, pilih varian, lalu cek foto dan badge.
+4. Buat order sandbox Midtrans dan uji resume pembayaran.
+5. Uji OTP, lupa password, ganti email, dan ganti password.
+6. Login sebagai kreator, buka panduan, tambah produk, ubah stok, dan upload foto.
+7. Uji perangkat kecil untuk memastikan badge, tombol, dan form tidak terpotong.
+
+## Struktur project
+
+\`\`\`text
+lib/
+├── core/          # config, routing, theme, helper, dan widget umum
+├── data/          # model, repository, API service
+├── domain/        # use case dan validasi
+├── features/      # auth, home, katalog, produk, order, akun, kreator, guide
+└── shared/        # scaffold dan bottom navigation
+assets/
+└── images/        # logo, kategori, dan aset aplikasi
+android/
+└── app/           # konfigurasi Android dan launcher icon
+\`\`\`
+
+## Nama dan branding aplikasi
+
+Nama aplikasi: **Sesuatu DariKota Malang**.
+
+Launcher icon menggunakan logo crop brand lokal, bukan ikon default Flutter.
+Nama teknis folder/repository boleh tetap \`user_mobile\`; nama yang terlihat oleh
+pengguna ditentukan pada konfigurasi Android dan metadata aplikasi.
+
+## Release v1.0.0
+
+Rilis pertama untuk demo akademik dan pengujian end-to-end customer serta
+creator. Sebelum publikasi, gunakan release keystore, naikkan version code,
+verifikasi Google OAuth release SHA-1, dan uji pembayaran sandbox secara
+menyeluruh.
