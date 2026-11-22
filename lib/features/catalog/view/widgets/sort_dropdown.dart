@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_colors.dart';
 
-enum SortOption { terbaru, termurah, termahal, terlaris }
+enum SortOption { rekomendasi, terbaru, termurah, termahal, terlaris }
 
 class SortDropdown extends StatelessWidget {
   final SortOption value;
@@ -27,6 +27,7 @@ class SortDropdown extends StatelessWidget {
         child: Icon(Icons.keyboard_arrow_down, size: 14, color: AppColors.muted),
       ),
       items: [
+        DropdownMenuItem(value: SortOption.rekomendasi, child: Text('Rekomendasi', style: _itemStyle)),
         DropdownMenuItem(value: SortOption.terbaru, child: Text('Terbaru', style: _itemStyle)),
         DropdownMenuItem(value: SortOption.termurah, child: Text('Termurah', style: _itemStyle)),
         DropdownMenuItem(value: SortOption.termahal, child: Text('Termahal', style: _itemStyle)),

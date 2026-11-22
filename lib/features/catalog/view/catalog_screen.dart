@@ -24,7 +24,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
   Timer? _searchDebounce;
 
   String? _category;
-  SortOption _sort = SortOption.terbaru;
+  SortOption _sort = SortOption.rekomendasi;
   bool _initializedFromUrl = false;
 
   @override
@@ -63,6 +63,8 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   String? _serverSort(SortOption s) {
     switch (s) {
+      case SortOption.rekomendasi:
+        return 'rekomendasi';
       case SortOption.termurah:
         return 'termurah';
       case SortOption.termahal:

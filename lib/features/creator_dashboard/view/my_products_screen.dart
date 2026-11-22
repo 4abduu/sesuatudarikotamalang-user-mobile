@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'widgets/product_status_badge.dart';
 import 'widgets/product_status_notice.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +26,8 @@ class MyProductsScreen extends StatefulWidget {
 }
 
 class _MyProductsScreenState extends State<MyProductsScreen> {
+  Timer? _refreshTimer;
+
   @override
   void initState() {
     super.initState();
@@ -33,8 +36,21 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
       final auth = context.read<AuthViewModel>();
       if (mounted && auth.isAuthenticated && auth.isCreator) {
         context.read<CreatorDashboardViewModel>().fetchDashboardData();
+        _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+          if (!mounted) return;
+          final currentAuth = context.read<AuthViewModel>();
+          if (currentAuth.isAuthenticated && currentAuth.isCreator) {
+            context.read<CreatorDashboardViewModel>().fetchDashboardData();
+          }
+        });
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _open(String location) async {
@@ -42,6 +58,9 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
     if (!mounted) return;
     final auth = context.read<AuthViewModel>();
     if (auth.isAuthenticated && auth.isCreator) {
+      // Produk baru berstatus menunggu tetap dikembalikan oleh /products/mine.
+      // Refresh dilakukan setelah form mengembalikan hasil sukses agar item
+      // langsung muncul tanpa harus keluar-masuk dashboard.
       await context.read<CreatorDashboardViewModel>().fetchDashboardData();
     }
   }
