@@ -7,6 +7,7 @@ Future<void> showPhotoViewer(
   BuildContext context, {
   required List<ImageProvider> images,
   int initialIndex = 0,
+  ValueChanged<int>? onPageChanged,
 }) {
   if (images.isEmpty) return Future.value();
   return Navigator.of(context).push(
@@ -15,6 +16,7 @@ Future<void> showPhotoViewer(
       builder: (_) => _PhotoViewerScreen(
         images: images,
         initialIndex: initialIndex,
+        onPageChanged: onPageChanged,
       ),
     ),
   );
@@ -23,10 +25,12 @@ Future<void> showPhotoViewer(
 class _PhotoViewerScreen extends StatefulWidget {
   final List<ImageProvider> images;
   final int initialIndex;
+  final ValueChanged<int>? onPageChanged;
 
   const _PhotoViewerScreen({
     required this.images,
     required this.initialIndex,
+    this.onPageChanged,
   });
 
   @override
@@ -63,6 +67,7 @@ class _PhotoViewerScreenState extends State<_PhotoViewerScreen> {
             itemCount: total,
             onPageChanged: (index) {
               setState(() => _currentIndex = index);
+              widget.onPageChanged?.call(index);
             },
             builder: (context, index) {
               return PhotoViewGalleryPageOptions(

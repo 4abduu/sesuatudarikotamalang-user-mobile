@@ -3,11 +3,44 @@ import '../../data/models/image_variant_link.dart';
 /// Urutan galeri: foto tanpa tautan varian lebih dulu, foto bertautan di akhir
 /// (stable partition). Sama dengan normalisasi di backend, jadi aman dipakai
 /// ulang di klien.
-List<String> galleryOrder(List<String> images, List<ImageVariantLink> links) {
+List<String> galleryOrder(
+  List<String> images,
+  List<ImageVariantLink> links, {
+  List<String> optionNames = const [],
+  List<List<String>> optionValues = const [],
+}) {
   final linkedUrls = links.map((l) => l.url).toSet();
+  final originalIndex = {for (var i = 0; i < images.length; i++) images[i]: i};
+  final linkByUrl = {for (final link in links) link.url: link};
+
+  int compareLinked(String a, String b) {
+    final aLink = linkByUrl[a];
+    final bLink = linkByUrl[b];
+    if (aLink == null || bLink == null) return originalIndex[a]!.compareTo(originalIndex[b]!);
+    for (var axis = 0; axis < optionNames.length; axis++) {
+      final option = optionNames[axis];
+      Map<String, String>? partFor(ImageVariantLink link) {
+        for (final part in link.combination) {
+          if (part['option'] == option) return part;
+        }
+        return null;
+      }
+      final values = axis < optionValues.length ? optionValues[axis] : const <String>[];
+      final aPart = partFor(aLink);
+      final bPart = partFor(bLink);
+      final aRank = aPart == null ? values.length + 1 : values.indexOf(aPart['value'] ?? '');
+      final bRank = bPart == null ? values.length + 1 : values.indexOf(bPart['value'] ?? '');
+      final normalizedA = aRank < 0 ? values.length : aRank;
+      final normalizedB = bRank < 0 ? values.length : bRank;
+      if (normalizedA != normalizedB) return normalizedA.compareTo(normalizedB);
+    }
+    return originalIndex[a]!.compareTo(originalIndex[b]!);
+  }
+
+  final linked = images.where(linkedUrls.contains).toList()..sort(compareLinked);
   return [
     ...images.where((u) => !linkedUrls.contains(u)),
-    ...images.where((u) => linkedUrls.contains(u)),
+    ...linked,
   ];
 }
 

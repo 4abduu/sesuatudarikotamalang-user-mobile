@@ -323,13 +323,15 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
     final image = _decoded;
     if (image == null) return null;
     final renderedScale = _baseScale(image) * _zoom;
-    final cropSize = _viewport / renderedScale;
-    final center = Offset(
-      image.width / 2 - _offset.dx / renderedScale,
-      image.height / 2 - _offset.dy / renderedScale,
+    final renderedWidth = image.width * renderedScale;
+    final renderedHeight = image.height * renderedScale;
+    final topLeft = Offset(
+      (_viewport - renderedWidth) / 2 + _offset.dx,
+      (_viewport - renderedHeight) / 2 + _offset.dy,
     );
-    final left = (center.dx - cropSize / 2).clamp(0.0, image.width - cropSize);
-    final top = (center.dy - cropSize / 2).clamp(0.0, image.height - cropSize);
+    final cropSize = _viewport / renderedScale;
+    final left = (-topLeft.dx / renderedScale).clamp(0.0, image.width - cropSize);
+    final top = (-topLeft.dy / renderedScale).clamp(0.0, image.height - cropSize);
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     canvas.drawImageRect(
@@ -346,6 +348,16 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
 
   double _baseScale(ui.Image image) =>
       _viewport / (image.width < image.height ? image.width.toDouble() : image.height.toDouble());
+
+  Offset _clampOffset(Offset value, ui.Image image, double zoom) {
+    final scale = _baseScale(image) * zoom;
+    final maxX = ((image.width * scale) - _viewport) / 2;
+    final maxY = ((image.height * scale) - _viewport) / 2;
+    return Offset(
+      value.dx.clamp(-maxX, maxX).toDouble(),
+      value.dy.clamp(-maxY, maxY).toDouble(),
+    );
+  }
 
   @override
   void dispose() {
@@ -374,13 +386,10 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
                           child: ColoredBox(
                             color: Colors.black,
                             child: GestureDetector(
-                              onPanUpdate: (details) => setState(() => _offset += details.delta),
-                              child: Transform.translate(
-                                offset: _offset,
-                                child: Transform.scale(
-                                  scale: _baseScale(image) * _zoom,
-                                  child: RawImage(image: image, fit: BoxFit.contain),
-                                ),
+                              onPanUpdate: (details) => setState(() => _offset = _clampOffset(_offset + details.delta, image, _zoom)),
+                              child: CustomPaint(
+                                size: const Size.square(_viewport),
+                                painter: _AvatarCropPainter(image, _baseScale(image) * _zoom, _offset, _viewport),
                               ),
                             ),
                           ),
@@ -389,7 +398,7 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
                       const SizedBox(height: 12),
                       Row(children: [
                         const Icon(Icons.zoom_out, size: 18),
-                        Expanded(child: Slider(value: _zoom, min: 1, max: 3, onChanged: (v) => setState(() => _zoom = v))),
+                        Expanded(child: Slider(value: _zoom, min: 1, max: 3, onChanged: (v) => setState(() { _zoom = v; _offset = _clampOffset(_offset, image, v); }))),
                         const Icon(Icons.zoom_in, size: 18),
                       ]),
                       const Text('Geser foto dan atur zoom di dalam bingkai.', style: TextStyle(fontSize: 12)),
@@ -408,6 +417,34 @@ class _AvatarCropDialogState extends State<_AvatarCropDialog> {
       ],
     );
   }
+}
+
+class _AvatarCropPainter extends CustomPainter {
+  final ui.Image image;
+  final double scale;
+  final Offset offset;
+  final double viewport;
+
+  const _AvatarCropPainter(this.image, this.scale, this.offset, this.viewport);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rendered = Size(image.width * scale, image.height * scale);
+    final topLeft = Offset(
+      (viewport - rendered.width) / 2 + offset.dx,
+      (viewport - rendered.height) / 2 + offset.dy,
+    );
+    canvas.drawImageRect(
+      image,
+      Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+      Rect.fromLTWH(topLeft.dx, topLeft.dy, rendered.width, rendered.height),
+      Paint()..filterQuality = FilterQuality.high,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _AvatarCropPainter oldDelegate) =>
+      oldDelegate.image != image || oldDelegate.scale != scale || oldDelegate.offset != offset;
 }
 
 class _ChangeEmailOtpSection extends StatefulWidget {

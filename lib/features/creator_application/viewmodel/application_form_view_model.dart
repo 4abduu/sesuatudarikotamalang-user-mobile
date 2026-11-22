@@ -76,7 +76,7 @@ class ApplicationFormViewModel extends ChangeNotifier {
   bool _validate() {
     if (_applicantName.trim().isEmpty || _description.trim().isEmpty) {
       _actionError = 'Lengkapi nama lengkap dan deskripsi produk';
-    } else if (!RegExp(r'^(?:\+62|62|0)[0-9]{8,13}$').hasMatch(_contact.trim())) {
+    } else if (!RegExp(r'^(?:\+62|62|0)[0-9]{8,12}$').hasMatch(_contact.trim())) {
       _actionError = 'Masukkan nomor WhatsApp yang valid, misalnya 081234567890';
     } else if (photos.items.isEmpty) {
       _photoError = 'Minimal 1 foto sampel produk';

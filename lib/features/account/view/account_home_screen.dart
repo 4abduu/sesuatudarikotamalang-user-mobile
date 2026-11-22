@@ -157,6 +157,13 @@ class _GuestBody extends StatelessWidget {
             subtitle: 'Kenali toko, cerita kriya Kayutangan & hubungi kami',
             onTap: () => context.push('/tentang'),
           ),
+          const SizedBox(height: 10),
+          MenuCard(
+            icon: Icons.menu_book_outlined,
+            title: 'Panduan Penggunaan',
+            subtitle: 'Pelajari cara memakai fitur aplikasi',
+            onTap: () => context.push('/panduan'),
+          ),
           const SizedBox(height: 32),
           Center(
             child: Text(
@@ -246,6 +253,13 @@ class _LoggedInBody extends StatelessWidget {
             title: 'Tentang Kami',
             subtitle: 'Kenali toko dan hubungi kami',
             onTap: () => context.push('/tentang'),
+          ),
+          const SizedBox(height: 10),
+          MenuCard(
+            icon: Icons.menu_book_outlined,
+            title: 'Panduan Penggunaan',
+            subtitle: 'Pelajari cara memakai fitur aplikasi',
+            onTap: () => context.push('/panduan'),
           ),
           const SizedBox(height: 20),
           SizedBox(

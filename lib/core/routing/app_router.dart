@@ -41,6 +41,7 @@ import '../../features/account/view/application_status_screen.dart';
 import '../../features/account/view/account_settings_screen.dart';
 import '../../features/search/view/search_results_screen.dart';
 import '../../features/about/view/about_screen.dart';
+import '../../features/guide/view/guide_screen.dart';
 import '../../features/product_detail/view/product_reviews_screen.dart';
 import '../../features/product_detail/viewmodel/product_detail_view_model.dart';
 import '../../features/product_detail/viewmodel/product_reviews_view_model.dart';
@@ -393,6 +394,7 @@ GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
                   repository: SearchRepository(dependencies.api)),
               child: const SearchResultsScreen())),
       GoRoute(path: RouteNames.about, builder: (_, __) => const AboutScreen()),
+      GoRoute(path: RouteNames.guide, builder: (_, __) => const GuideScreen()),
     ],
     errorBuilder: (_, __) => Scaffold(
         body: Center(

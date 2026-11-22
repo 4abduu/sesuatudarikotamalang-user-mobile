@@ -113,6 +113,14 @@ class _AboutScreenState extends State<AboutScreen> {
                       onTap: () => _open(Uri(scheme: 'mailto', path: email)),
                     ),
                 ],
+                const SizedBox(height: 28),
+                Center(
+                  child: Text(
+                    'Sesuatu DariKota Malang\nVersi aplikasi 1.0.0 (1)',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.caption.copyWith(color: AppColors.muted),
+                  ),
+                ),
               ],
             ),
           );

@@ -41,6 +41,36 @@ class VariantSelectionViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Sinkronkan selector saat pembeli memilih foto yang sudah ditautkan ke
+  /// satu nilai atau kombinasi varian.
+  void selectImageCombination(List<Map<String, String>> combination) {
+    if (!product.hasVariants || combination.isEmpty) return;
+    final next = List<String?>.of(_selected);
+    for (final part in combination) {
+      final axis = product.variantOptions.indexWhere((option) => option.name == part['option']);
+      final value = part['value'];
+      if (axis >= 0 && value != null && product.variantOptions[axis].values.contains(value)) {
+        next[axis] = value;
+      }
+    }
+    for (var axis = 0; axis < product.variantOptions.length; axis++) {
+      if (next[axis] != null && _isAvailable(product, axis, next[axis]!, next)) continue;
+      next[axis] = null;
+      for (final value in product.variantOptions[axis].values) {
+        if (_isAvailable(product, axis, value, next)) {
+          next[axis] = value;
+          break;
+        }
+      }
+    }
+    var changed = false;
+    for (var i = 0; i < next.length; i++) {
+      if (_selected[i] != next[i]) changed = true;
+      _selected[i] = next[i];
+    }
+    if (changed) notifyListeners();
+  }
+
   VariantModel? get matchedVariant {
     if (!product.hasVariants) return product.variants.isNotEmpty ? product.variants.first : null;
     if (_selected.any((s) => s == null)) return null;

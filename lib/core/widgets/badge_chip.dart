@@ -19,7 +19,7 @@ class BadgeChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final (label, icon, bg, fg) = switch (badge) {
       BadgeType.limited => ('Limited Edition', Icons.local_fire_department_outlined, AppColors.moss, AppColors.onMoss),
-      BadgeType.story => ('Ada Cerita di Baliknya', Icons.menu_book_outlined, AppColors.primary, AppColors.onPrimary),
+      BadgeType.story => ('Ada Cerita', Icons.menu_book_outlined, AppColors.primary, AppColors.onPrimary),
       BadgeType.bestseller => ('Best Seller', Icons.auto_awesome, AppColors.mustard, AppColors.foreground),
       BadgeType.none => ('', Icons.circle, AppColors.surface, AppColors.foreground),
     };

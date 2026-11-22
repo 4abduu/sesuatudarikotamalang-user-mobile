@@ -19,8 +19,10 @@ class ProductGallery extends StatefulWidget {
   final List<String> images;
   final List<ImageVariantLink> links;
   final List<String> optionNames;
+  final List<List<String>> optionValues;
   final List<String?> selected;
   final bool isOutOfStock;
+  final ValueChanged<ImageVariantLink>? onImageVariantSelected;
 
   const ProductGallery({
     super.key,
@@ -28,8 +30,10 @@ class ProductGallery extends StatefulWidget {
     this.images = const [],
     this.links = const [],
     this.optionNames = const [],
+    this.optionValues = const [],
     this.selected = const [],
     this.isOutOfStock = false,
+    this.onImageVariantSelected,
   });
 
   @override
@@ -44,7 +48,7 @@ class _ProductGalleryState extends State<ProductGallery> {
   @override
   void initState() {
     super.initState();
-    _ordered = galleryOrder(widget.images, widget.links);
+    _ordered = _order(widget);
   }
 
   @override
@@ -59,7 +63,7 @@ class _ProductGalleryState extends State<ProductGallery> {
     final listChanged = !listEquals(oldWidget.images, widget.images) ||
         oldWidget.links.length != widget.links.length;
     if (listChanged) {
-      _ordered = galleryOrder(widget.images, widget.links);
+      _ordered = _order(widget);
       if (_index >= _ordered.length) _index = 0;
       if (_controller.hasClients) _controller.jumpToPage(_index);
     }
@@ -80,6 +84,13 @@ class _ProductGalleryState extends State<ProductGallery> {
       });
     }
   }
+
+  List<String> _order(ProductGallery value) => galleryOrder(
+        value.images,
+        value.links,
+        optionNames: value.optionNames,
+        optionValues: value.optionValues,
+      );
 
   void _animateTo(int i) {
     _controller.animateToPage(i, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
@@ -117,7 +128,13 @@ class _ProductGalleryState extends State<ProductGallery> {
     for (final l in widget.links) {
       if (l.url == url) {
         if (l.combination.isNotEmpty) {
-          final values = l.combination.map((e) => e['value']).where((v) => v != null && v.isNotEmpty).join(' / ');
+          final parts = [...l.combination];
+          if (widget.optionNames.isNotEmpty) {
+            parts.sort((a, b) => widget.optionNames
+                .indexOf(a['option'] ?? '')
+                .compareTo(widget.optionNames.indexOf(b['option'] ?? '')));
+          }
+          final values = parts.map((e) => e['value']).where((v) => v != null && v.isNotEmpty).join(' / ');
           if (values.isNotEmpty) return values;
         }
         if (l.value.isNotEmpty) return l.value;
@@ -166,12 +183,32 @@ class _ProductGalleryState extends State<ProductGallery> {
                         context,
                         images: imageProviders,
                         initialIndex: _index,
+                        onPageChanged: (i) {
+                          if (!mounted || i < 0 || i >= _ordered.length) return;
+                          _goTo(i);
+                          final url = _ordered[i];
+                          for (final link in widget.links) {
+                            if (link.url == url) {
+                              widget.onImageVariantSelected?.call(link);
+                              break;
+                            }
+                          }
+                        },
                       );
                     },
                     child: PageView.builder(
                       controller: _controller,
                       itemCount: _ordered.length,
-                      onPageChanged: (i) => setState(() => _index = i),
+                      onPageChanged: (i) {
+                        setState(() => _index = i);
+                        final url = _ordered[i];
+                        for (final link in widget.links) {
+                          if (link.url == url) {
+                            widget.onImageVariantSelected?.call(link);
+                            break;
+                          }
+                        }
+                      },
                       itemBuilder: (_, i) => _network(_ordered[i]),
                     ),
                   ),
@@ -202,34 +239,41 @@ class _ProductGalleryState extends State<ProductGallery> {
                   Positioned(
                     bottom: 12,
                     right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: AppColors.foreground.withValues(alpha: 0.82),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.style_outlined, size: 12, color: Colors.white70),
-                          const SizedBox(width: 4),
-                          Text(
-                            _getVariantBadge(_ordered[_index])!,
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.72),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: AppColors.foreground.withValues(alpha: 0.82),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.style_outlined, size: 12, color: Colors.white70),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                _getVariantBadge(_ordered[_index])!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

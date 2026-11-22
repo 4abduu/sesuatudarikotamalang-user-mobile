@@ -9,5 +9,12 @@ ImageProvider? safeImageProvider(String? path) {
   if (kIsWeb) {
     return NetworkImage(path);
   }
+  // URL dari Cloudinary/API tetap harus diambil lewat jaringan di Android/iOS.
+  // Sebelumnya semua path non-web dipaksa menjadi FileImage, sehingga URL
+  // https://... dianggap sebagai nama file lokal dan memunculkan
+  // PathNotFoundException.
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return NetworkImage(path);
+  }
   return FileImage(io.File(path));
 }
