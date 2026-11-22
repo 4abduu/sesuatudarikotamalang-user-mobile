@@ -236,7 +236,7 @@ class _ProductReviewsScreenState extends State<ProductReviewsScreen> {
                   style: AppTextStyles.h1.copyWith(fontSize: 36, height: 1.1),
                 ),
                 const SizedBox(height: 6),
-                RatingStars(value: summary.avgRating, size: 14),
+                RatingStars(value: summary.avgRating, size: 14, showValue: true),
                 const SizedBox(height: 6),
                 Text(
                   '${summary.reviewCount} ulasan',

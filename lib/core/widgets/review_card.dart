@@ -43,7 +43,7 @@ class ReviewCard extends StatelessWidget {
                   ),
                 ],
               ),
-              RatingStars(value: review.rating.toDouble(), size: 12),
+              RatingStars(value: review.rating.toDouble(), size: 12, showValue: true),
             ],
           ),
         ],

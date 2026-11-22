@@ -108,7 +108,7 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 4),
-                                RatingStars(value: r.rating.toDouble(), size: 14),
+                                RatingStars(value: r.rating.toDouble(), size: 14, showValue: true),
                                 const SizedBox(height: 8),
                                 Text(r.comment, style: AppTextStyles.body.copyWith(height: 1.375)),
                                 const SizedBox(height: 4),

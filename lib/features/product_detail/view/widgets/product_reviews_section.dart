@@ -60,7 +60,7 @@ class _ProductReviewsSectionState extends State<ProductReviewsSection> {
             Text(widget.product.rating.toStringAsFixed(1),
                 style: AppTextStyles.h1),
             const SizedBox(width: 8),
-            RatingStars(value: widget.product.rating, size: 16),
+            RatingStars(value: widget.product.rating, size: 16, showValue: true),
             const SizedBox(width: 8),
             Text('$totalCount ulasan', style: AppTextStyles.caption),
           ],

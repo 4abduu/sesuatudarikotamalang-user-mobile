@@ -61,7 +61,7 @@ class CreatorCard extends StatelessWidget {
               Row(children: [
                 Text('${creator.productCount} produk', style: caption11),
                 const SizedBox(width: 8),
-                RatingStars(value: creator.rating, size: 10),
+                RatingStars(value: creator.rating, size: 10, showValue: true),
               ]),
             ]),
           ),

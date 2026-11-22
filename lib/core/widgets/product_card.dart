@@ -138,7 +138,7 @@ class ProductCard extends StatelessWidget {
                   color: product.isOutOfStock ? AppColors.muted : AppColors.primary,
                 ),
               ),
-              RatingStars(value: product.rating, size: 11),
+              RatingStars(value: product.rating, size: 11, showValue: true),
             ]),
             const SizedBox(height: 2),
             Text('${product.soldCount} terjual', style: GoogleFonts.poppins(fontSize: 10, color: AppColors.muted)),
