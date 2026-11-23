@@ -20,6 +20,7 @@ import 'widgets/behind_the_design_section.dart';
 import 'widgets/product_reviews_section.dart';
 import 'widgets/related_products_section.dart';
 import '../../../core/widgets/creator_avatar.dart';
+import '../../auth/viewmodel/auth_view_model.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String productId;
@@ -55,6 +56,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
 
     final creator = detail.creator;
+    final isOwnProduct = detail.isOwnProduct ||
+        (context.read<AuthViewModel>().user?.creatorId?.isNotEmpty == true &&
+            context.read<AuthViewModel>().user!.creatorId == product.creatorId);
 
     return ChangeNotifierProvider(
       key: ValueKey(product.id),
@@ -149,6 +153,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 productId: product.id,
                 productName: product.name,
                 creatorId: product.creatorId,
+                isOwnProduct: isOwnProduct,
                 olshopLinks: product.olshopLinks,
               ),
               if (creator != null) ...[
@@ -234,16 +239,35 @@ class _VariantCard extends StatelessWidget {
     if (!product.hasVariants) return const SizedBox.shrink();
     final provider = context.watch<VariantSelectionViewModel>();
     // Kartu varian: radius 20, surface, border 1px, soft shadow, p-4.
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-        boxShadow: AppShadows.soft,
+    return GestureDetector(
+      onTap: () {
+        showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: AppColors.surface,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+          builder: (_) => SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Pilih varian', style: AppTextStyles.h3),
+                  const SizedBox(height: 12),
+                  VariantPicker(product: product, provider: provider),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border), boxShadow: AppShadows.soft),
+        child: VariantPicker(product: product, provider: provider),
       ),
-      child: VariantPicker(product: product, provider: provider),
     );
   }
 }

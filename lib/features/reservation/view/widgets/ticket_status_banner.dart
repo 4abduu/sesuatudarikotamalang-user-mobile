@@ -48,7 +48,7 @@ class TicketStatusBanner extends StatelessWidget {
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 250),
             child: Text(
-              accepted ? 'RESERVASI DITERIMA' : 'SCAN TIKET DI KASIR',
+              accepted ? 'PICKUP DIKONFIRMASI' : 'SCAN TIKET DI KASIR',
               key: ValueKey<String>(accepted ? 'accepted_title' : 'scan_title'),
               style: AppTextStyles.eyebrow.copyWith(
                 color: AppColors.primary,

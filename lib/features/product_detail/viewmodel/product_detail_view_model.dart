@@ -21,6 +21,8 @@ class ProductDetailViewModel extends ChangeNotifier {
   List<ProductModel> get relatedProducts => _relatedProducts;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  bool _isOwnProduct = false;
+  bool get isOwnProduct => _isOwnProduct;
 
   Future<void> load(String productId, {bool includeRelated = true}) async {
     _isLoading = true;
@@ -29,6 +31,14 @@ class ProductDetailViewModel extends ChangeNotifier {
     try {
       _product = await _productsRepository.getProduct(productId);
       final product = _product!;
+      // /auth/me belum selalu membawa creatorId setelah refresh sesi. Endpoint
+      // /artisans/mine adalah sumber identitas pemilik yang stabil untuk guard UI.
+      try {
+        final mine = await _artisansRepository.getMine();
+        _isOwnProduct = mine?.id.isNotEmpty == true && mine!.id == product.creatorId;
+      } catch (_) {
+        _isOwnProduct = false;
+      }
       if (!includeRelated) return;
       final results = await Future.wait<Object>([
         _artisansRepository.getArtisans(),

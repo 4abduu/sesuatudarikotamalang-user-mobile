@@ -25,4 +25,5 @@ class RouteNames {
   static const pencarian = '/pencarian';
   static const about = '/tentang';
   static const guide = '/panduan';
+  static const cart = '/keranjang';
 }

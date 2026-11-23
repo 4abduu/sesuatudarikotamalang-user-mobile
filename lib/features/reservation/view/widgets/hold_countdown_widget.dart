@@ -32,7 +32,7 @@ class _HoldCountdownWidgetState extends State<HoldCountdownWidget> {
   void dispose() { _timer?.cancel(); super.dispose(); }
 
   Future<void> _openWhatsApp() async {
-    const text = 'Halo, saya mengalami kendala dengan reservasi yang stoknya sedang di-hold. Bisa dibantu?';
+    const text = 'Halo, saya mengalami kendala dengan pembelian pickup yang stoknya sedang di-hold. Bisa dibantu?';
     final uri = Uri.parse('https://wa.me/6281234567890?text=${Uri.encodeComponent(text)}');
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (mounted) {
@@ -47,7 +47,7 @@ class _HoldCountdownWidgetState extends State<HoldCountdownWidget> {
   Widget build(BuildContext context) {
     if (_remaining.isNegative) {
       return Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: AppColors.destructive.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-        child: const Row(children: [Icon(Icons.error, color: AppColors.destructive), SizedBox(width: 8), Expanded(child: Text('Waktu habis, silakan reservasi ulang.', style: TextStyle(color: AppColors.destructive)))]));
+        child: const Row(children: [Icon(Icons.error, color: AppColors.destructive), SizedBox(width: 8), Expanded(child: Text('Waktu habis, silakan ulangi pembelian pickup.', style: TextStyle(color: AppColors.destructive)))]));
     }
     final h = _remaining.inHours;
     final m = _remaining.inMinutes.remainder(60);

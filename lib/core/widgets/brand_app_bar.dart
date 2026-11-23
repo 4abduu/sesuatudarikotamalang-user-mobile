@@ -6,6 +6,8 @@ import '../theme/app_colors.dart';
 import '../routing/route_names.dart';
 import '../routing/back_navigation.dart';
 import '../../features/auth/viewmodel/auth_view_model.dart';
+import '../../data/repositories/cart_repository.dart';
+import '../../features/auth/view/widgets/auth_gate_bottom_sheet.dart';
 
 /// Brand-flavored AppBar used by AppScaffold on every screen.
 ///
@@ -21,6 +23,7 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget? leading;
   final List<Widget>? actions;
   final bool showSearchAction;
+  final bool showCartAction;
 
   const BrandAppBar({
     super.key,
@@ -28,6 +31,7 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.leading,
     this.actions,
     this.showSearchAction = true,
+    this.showCartAction = true,
   });
 
   @override
@@ -204,6 +208,22 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
               onPressed: () => context.push(RouteNames.pencarian),
             ),
+          if (showCartAction)
+            Consumer<CartRepository>(builder: (context, cart, _) => IconButton(
+            tooltip: 'Keranjang',
+            icon: Badge(
+              isLabelVisible: cart.lineCount > 0,
+              label: Text(cart.lineCount > 10 ? '10+' : '${cart.lineCount}'),
+              child: const Icon(Icons.shopping_cart_outlined, size: 20),
+            ),
+            onPressed: () async {
+              if (!context.read<AuthViewModel>().isAuthenticated) {
+                showAuthGateSheet(context, next: RouteNames.cart, contextLabel: 'membuka keranjang');
+                return;
+              }
+              await context.push(RouteNames.cart);
+            },
+            )),
           Consumer<AuthViewModel>(
             builder: (context, auth, _) {
               if (auth.isAuthenticated) {

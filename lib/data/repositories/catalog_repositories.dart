@@ -79,11 +79,12 @@ class ArtisanRepository {
   ArtisanRepository(this._api);
   final ApiService _api;
 
-  Future<({String name, String bio, String? avatarUrl, String? ownAvatarUrl})?> getMine() async {
+  Future<({String id, String name, String bio, String? avatarUrl, String? ownAvatarUrl})?> getMine() async {
     final res = await _api.get('/artisans/mine');
     final a = res is Map<String, dynamic> ? res['artisan'] : null;
     if (a is! Map<String, dynamic>) return null;
     return (
+      id: (a['id'] ?? '').toString(),
       name: (a['brandName'] ?? '').toString(),
       bio: (a['bio'] ?? '').toString(),
       avatarUrl: a['avatarUrl'] as String?,

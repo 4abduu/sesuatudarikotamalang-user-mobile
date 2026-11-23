@@ -4,6 +4,7 @@ import '../network/token_storage.dart';
 import '../../data/services/upload_service.dart';
 import '../../data/repositories/catalog_repositories.dart';
 import '../../data/repositories/upload_repository.dart';
+import '../../data/repositories/cart_repository.dart';
 
 class AppDependencies {
   AppDependencies({TokenStorage? tokenStorage, ApiService? api})
@@ -16,4 +17,5 @@ class AppDependencies {
   late final ApiService api;
   late final UploadRepository upload;
   late final ProductRepository products = ProductRepository(api);
+  late final CartRepository cart = CartRepository(api);
 }

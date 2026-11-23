@@ -11,6 +11,7 @@ import 'features/auth/viewmodel/auth_view_model.dart';
 import 'features/notifications/viewmodel/notifications_view_model.dart';
 import 'features/catalog/viewmodel/app_config_view_model.dart';
 import 'data/repositories/notification_repository.dart';
+import 'data/repositories/cart_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +24,7 @@ void main() async {
       repository: AuthRepository(
           dependencies.api, dependencies.tokenStorage, SessionStore()));
   dependencies.api.onUnauthorized = auth.handleUnauthorized;
+  auth.addListener(() => dependencies.cart.syncUser(auth.user?.id));
   final config = AppConfigViewModel(
     categories: CategoryRepository(dependencies.api),
     settings: SettingsRepository(dependencies.api),
@@ -34,6 +36,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider.value(value: auth),
         ChangeNotifierProvider.value(value: config),
+        ChangeNotifierProvider<CartRepository>.value(value: dependencies.cart),
         ChangeNotifierProxyProvider<AuthViewModel, NotificationsViewModel>(
           create: (_) => notifications,
           update: (_, authState, vm) {

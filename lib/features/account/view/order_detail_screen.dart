@@ -59,8 +59,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Batalkan Reservasi'),
-        content: const Text('Apakah Anda yakin ingin membatalkan reservasi ini?'),
+        title: const Text('Batalkan Pembelian Pickup'),
+        content: const Text('Apakah Anda yakin ingin membatalkan pembelian pickup ini?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Tidak')),
           TextButton(
@@ -197,8 +197,27 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           children: [
                             Text('Detail Pesanan', style: AppTextStyles.h3),
                             const SizedBox(height: 12),
-                            _Row(label: 'Produk', value: o.productName),
-                            _Row(label: 'Varian', value: o.variantLabel),
+                            Text('Item Pesanan', style: AppTextStyles.caption),
+                            ...o.items.map((item) => Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: item.image == null
+                                      ? const SizedBox(width: 52, height: 52, child: Icon(Icons.image_outlined, color: AppColors.muted))
+                                      : Image.network(
+                                          item.image!,
+                                          width: 52,
+                                          height: 52,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => const SizedBox(width: 52, height: 52, child: Icon(Icons.broken_image_outlined, color: AppColors.muted)),
+                                        ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(child: Text('${item.quantity} × ${item.productName} · ${item.variantLabel} · ${formatRupiah(item.price)}', style: AppTextStyles.body)),
+                              ]),
+                            )),
+                            _Row(label: 'Jumlah unit', value: '${o.totalQuantity}'),
                             _Row(label: 'Tanggal Ambil', value: formatDateID(o.pickupDate)),
                             _Row(label: 'Waktu', value: o.pickupSlot),
                             _Row(label: 'Pembayaran', value: '${o.paymentMethodLabel} (${status.label})'),
@@ -237,36 +256,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
                     const SizedBox(height: 16),
 
-                    if (isCompleted && !o.reviewed) ...[
-                      PrimaryButton(
-                        label: 'Beri Ulasan',
-                        icon: const Icon(Icons.star_outline, size: 16),
-                        onPressed: () async {
-                          await context.push('/akun/ulasan/write?order=${widget.orderId}');
-                          if (context.mounted) await vm.load();
-                        },
-                      ),
-                    ] else if (isCompleted && o.reviewed) ...[
-                      SecondaryButton(
-                        label: 'Lihat Ulasan Saya',
-                        icon: const Icon(Icons.rate_review_outlined, size: 16, color: AppColors.primary),
-                        onPressed: () async {
-                          final pId = o.productId.isNotEmpty
-                              ? o.productId
-                              : (o.items.isNotEmpty ? o.items.first.productId : '');
-                          if (pId.isNotEmpty) {
-                            final reviewId = await vm.findReviewIdForOrder(o);
-                            if (!context.mounted) return;
-                            final query = reviewId == null
-                                ? ''
-                                : '?reviewId=${Uri.encodeComponent(reviewId)}';
-                            context.push('/produk/$pId/ulasan$query');
-                          } else {
-                            context.push('/akun/ulasan');
-                          }
-                        },
-                      ),
-                    ],
+                    if (isCompleted) ...o.items.map((item) => Padding(padding: const EdgeInsets.only(bottom: 8), child: item.reviewId == null ? PrimaryButton(label: 'Beri Ulasan: ${item.productName}', icon: const Icon(Icons.star_outline, size: 16), onPressed: () async { await context.push('/akun/ulasan/write?order=${widget.orderId}&item=${Uri.encodeComponent(item.id)}'); if (context.mounted) await vm.load(); }) : SecondaryButton(label: 'Lihat Ulasan: ${item.productName}', icon: const Icon(Icons.rate_review_outlined, size: 16, color: AppColors.primary), onPressed: () => context.push('/produk/${item.productId}/ulasan?reviewId=${Uri.encodeComponent(item.reviewId!)}')))),
 
                     if (o.refund != null && o.refund!.shouldShowSection) ...[
                       const SizedBox(height: 16),
@@ -279,7 +269,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         width: double.infinity,
                         child: OutlinedButton.icon(
                           icon: const Icon(Icons.cancel_outlined, size: 16, color: AppColors.destructive),
-                          label: const Text('Batalkan Reservasi', style: TextStyle(color: AppColors.destructive)),
+                          label: const Text('Batalkan Pembelian Pickup', style: TextStyle(color: AppColors.destructive)),
                           onPressed: vm.isProcessingAction ? null : () => _handleCancel(o),
                         ),
                       ),

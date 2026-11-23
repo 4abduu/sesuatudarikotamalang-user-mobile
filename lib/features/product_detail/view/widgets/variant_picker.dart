@@ -89,7 +89,7 @@ class VariantPicker extends StatelessWidget {
                   final chipText = isOutOfStock ? '$v (Habis)' : v;
 
                   return GestureDetector(
-                    onTap: available ? () => provider.selectOption(i, v) : null,
+                    onTap: () => provider.selectOption(i, v),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(

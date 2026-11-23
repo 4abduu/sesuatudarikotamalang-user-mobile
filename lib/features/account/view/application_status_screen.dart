@@ -109,6 +109,9 @@ class _ApplicationStatusScreenState extends State<ApplicationStatusScreen> {
                             ),
                             PrimaryButton(
                               label: 'Daftar Jadi Kreator',
+                              fullWidth: false,
+                              verticalPadding: 10,
+                              fontSize: 13,
                               onPressed: () => context.push('/daftar-kreator'),
                             ),
                           ],

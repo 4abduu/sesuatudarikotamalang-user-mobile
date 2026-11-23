@@ -7,7 +7,8 @@ bool isTopLevelPath(String path) =>
     path == RouteNames.home ||
     path == RouteNames.catalog ||
     path == RouteNames.creatorsList ||
-    path == RouteNames.account;
+    path == RouteNames.account ||
+    path == RouteNames.notifications;
 
 /// Menentukan induk halaman ketika halaman dibuka langsung melalui URL.
 String parentLocationOf(String path) {

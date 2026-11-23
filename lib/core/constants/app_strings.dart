@@ -3,7 +3,7 @@ class AppStrings {
   static const appName = 'Sesuatu DariKota Malang';
   static const lihatKatalog = 'Lihat Katalog';
   static const meetArtisans = 'Meet The Artisans';
-  static const pesanPickup = 'Pesan untuk Pick-up di Toko';
+  static const pesanPickup = 'Beli untuk Pickup di Toko';
   static const tanyaStokWa = 'Tanya Stok via WhatsApp';
   static const beliShopee = 'Beli via Shopee';
   static const masuk = 'Masuk';

@@ -14,16 +14,19 @@ import '../../../auth/viewmodel/auth_view_model.dart';
 import '../../../auth/view/widgets/auth_gate_bottom_sheet.dart';
 import '../../../catalog/viewmodel/app_config_view_model.dart';
 import '../../viewmodel/variant_selection_view_model.dart';
+import '../../../cart/viewmodel/cart_view_model.dart';
+import 'cart_options_sheet.dart';
 
 class ProductActionButtons extends StatelessWidget {
   final String productId;
   final String productName;
   final String creatorId;
+  final bool isOwnProduct;
 
   /// Link marketplace siap tampil dari backend. Kosong = tombol marketplace disembunyikan
   /// dan tombol WhatsApp memanjang satu baris penuh.
   final List<OlshopLink> olshopLinks;
-  const ProductActionButtons({super.key, required this.productId, required this.productName, this.creatorId = '', this.olshopLinks = const []});
+  const ProductActionButtons({super.key, required this.productId, required this.productName, this.creatorId = '', this.isOwnProduct = false, this.olshopLinks = const []});
 
   Future<void> _openLink(BuildContext context, OlshopLink link) async {
     final label = link.platform.label;
@@ -44,8 +47,8 @@ class ProductActionButtons extends StatelessWidget {
     final uri = Uri.tryParse(link.url);
     var opened = false;
     if (uri != null) {
-      // Untuk platform seperti TikTok Shop, coba skema aplikasi asli terlebih dahulu
-      // agar tidak terbuka di dalam WebView aplikasi mobile sendiri.
+      // TikTok Shop perlu dicoba dengan skema aplikasi agar tidak jatuh ke
+      // browser/WebView internal ketika aplikasi TikTok tersedia.
       if (link.platform == OlshopPlatform.tiktokshop) {
         final rawUrl = link.url.trim();
         final tiktokScheme = Uri.tryParse(rawUrl.replaceFirst(RegExp(r'^https?:\/\/'), 'tiktok://'));
@@ -55,7 +58,6 @@ class ProductActionButtons extends StatelessWidget {
           } catch (_) {}
         }
       }
-
       if (!opened) {
         try {
           opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -147,9 +149,12 @@ class ProductActionButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.read<AuthViewModel>();
     final variantProvider = context.watch<VariantSelectionViewModel>();
-    final isOwn = auth.user?.creatorId != null &&
+    final isOwn = isOwnProduct || (auth.user?.creatorId != null &&
         auth.user!.creatorId!.isNotEmpty &&
-        auth.user!.creatorId == creatorId;
+        auth.user!.creatorId == creatorId);
+    if (isOwn) {
+      return const Card(child: Padding(padding: EdgeInsets.all(16), child: Text('Ini produk milikmu. Kamu tidak dapat membeli atau menambahkannya ke keranjang.')));
+    }
     final matched = variantProvider.matchedVariant;
     // Produk tanpa varian memakai satu baris varian standar di backend.
     // Jika data lama belum memiliki baris itu, totalStock tetap menjadi sumber
@@ -160,39 +165,77 @@ class ProductActionButtons extends StatelessWidget {
     final bool isOutOfStock = stockAvailable <= 0;
 
     return Column(children: [
-      PrimaryButton(
-        label: isOutOfStock ? 'Stok Habis' : 'Pesan untuk Pick-up di Toko',
-        icon: isOutOfStock ? null : const Icon(Icons.storefront_outlined, size: 16),
-        onPressed: isOutOfStock
-            ? null
-            : (isOwn
-                ? () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text('Ini produkmu sendiri'),
-                        content: const Text(
-                            'Kamu tidak bisa memesan produk sendiri. Untuk uji coba, gunakan akun pembeli lain atau logout dulu.'),
-                        actions: [
-                          TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('Mengerti')),
-                        ],
-                      ),
-                    );
-                  }
-                : () {
-                    final encodedSelection = Uri.encodeComponent(jsonEncode(variantProvider.selected));
-                    final reservationPath = '/reservasi/$productId?variants=$encodedSelection';
-                    if (!auth.isAuthenticated) {
-                      showAuthGateSheet(context,
-                          next: reservationPath,
-                          contextLabel: 'pesan pickup');
-                      return;
-                    }
-                    context.push(reservationPath);
-                  }),
-      ),
+      Row(children: [
+        Expanded(
+          child: PrimaryButton(
+            label: isOutOfStock ? 'Stok Habis' : 'Pickup',
+            icon: isOutOfStock ? null : const Icon(Icons.storefront_outlined, size: 16),
+            fontSize: 13,
+            onPressed: isOutOfStock
+                ? null
+                : (isOwn
+                    ? () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text('Ini produkmu sendiri'),
+                            content: const Text(
+                                'Kamu tidak bisa memesan produk sendiri. Untuk uji coba, gunakan akun pembeli lain atau logout dulu.'),
+                            actions: [
+                              TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('Mengerti')),
+                            ],
+                          ),
+                        );
+                      }
+                    : () async {
+                        final repository = context.read<CartViewModel>().repository;
+                        final picked = await showModalBottomSheet<PickupSelection>(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (_) => CartOptionsSheet(repository: repository, productId: productId, pickup: true, initialSelection: variantProvider.selected),
+                        );
+                        if (picked == null || !context.mounted) return;
+                        final encodedSelection = Uri.encodeComponent(jsonEncode(picked.options));
+                        final reservationPath = '/reservasi/$productId?variants=$encodedSelection&quantity=${picked.quantity}';
+                        if (!auth.isAuthenticated) {
+                          showAuthGateSheet(context,
+                              next: reservationPath,
+                              contextLabel: 'pembelian pickup');
+                          return;
+                        }
+                        context.push(reservationPath);
+                      }),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: isOutOfStock || isOwn ? null : () async {
+              if (!auth.isAuthenticated) {
+                showAuthGateSheet(context, next: '/produk/$productId', contextLabel: 'menambah ke keranjang');
+                return;
+              }
+              final added = await showModalBottomSheet<bool>(
+                context: context,
+                isScrollControlled: true,
+                builder: (_) => CartOptionsSheet(repository: context.read<CartViewModel>().repository, productId: productId, initialSelection: variantProvider.selected),
+              );
+              if (added == true && context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Produk ditambahkan ke keranjang.')));
+            },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.foreground,
+              side: const BorderSide(color: AppColors.primary, width: 1.5),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+              textStyle: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+            icon: const Icon(Icons.add_shopping_cart_outlined, size: 17),
+            label: const Text('Keranjang'),
+          ),
+        ),
+      ]),
       const SizedBox(height: 8),
       Row(children: [
         Expanded(child: SecondaryButton(fullWidth: true, compact: true, borderColor: AppColors.moss, label: 'WhatsApp', icon: const Icon(Icons.chat_bubble_outline, size: 16, color: AppColors.moss), onPressed: () {

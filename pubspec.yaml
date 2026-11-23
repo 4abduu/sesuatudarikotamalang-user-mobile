@@ -1,7 +1,7 @@
 name: sesuatu_darikota_malang
 description: "Sesuatu DariKota Malang — customer & creator storefront (Flutter, frontend only)."
 publish_to: "none"
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ">=3.3.0 <4.0.0"

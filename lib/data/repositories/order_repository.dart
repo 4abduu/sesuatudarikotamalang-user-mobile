@@ -59,15 +59,24 @@ class OrderRepository {
   }
 
   Future<OrderModel> create({required String productId, String? variantId,
-    required DateTime pickupDate, required String pickupSlot, required String paymentMethod}) async {
+    required DateTime pickupDate, required String pickupSlot, required String paymentMethod, int quantity = 1}) async {
     final res = await _api.post('/orders', body: {
       'productId': productId,
       if (variantId != null && variantId.isNotEmpty) 'variantId': variantId,
       'pickupDate': pickupDate.toIso8601String().substring(0, 10),
       'pickupSlot': pickupSlot,
       'paymentMethod': paymentMethod.toLowerCase(),
+      'quantity': quantity,
     });
-    if (res?['order'] == null) throw ApiException(500, 'Gagal membuat reservasi.');
+    if (res?['order'] == null) throw ApiException(500, 'Gagal membuat pembelian.');
+    final order = Map<String, dynamic>.from(res['order'] as Map);
+    if (res['snap'] != null) order['snap'] = res['snap'];
+    return OrderModel.fromJson(order);
+  }
+
+  Future<OrderModel> createMany({required List<Map<String, dynamic>> items, required DateTime pickupDate, required String pickupSlot, required String paymentMethod, String source = 'direct'}) async {
+    final res = await _api.post('/orders', body: {'items': items, 'source': source, 'pickupDate': pickupDate.toIso8601String().substring(0, 10), 'pickupSlot': pickupSlot, 'paymentMethod': paymentMethod.toLowerCase()});
+    if (res?['order'] == null) throw ApiException(500, 'Gagal membuat pembelian.');
     final order = Map<String, dynamic>.from(res['order'] as Map);
     if (res['snap'] != null) order['snap'] = res['snap'];
     return OrderModel.fromJson(order);

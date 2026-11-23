@@ -22,10 +22,14 @@ class ReservationFlowViewModel extends ChangeNotifier {
   final ProductRepository _products;
   final OrderRepository _orders;
   final SlotRepository _slotRepository;
+  final ArtisanRepository _artisans;
   final List<String?>? _initialVariantSelection;
+  final int initialQuantity;
   ProductModel? _product;
   ProductModel get product => _product!;
   bool get hasProduct => _product != null;
+  bool _isOwnProduct = false;
+  bool get isOwnProduct => _isOwnProduct;
   bool _isLoading = false;
   bool get isLoading => _isLoading;
   String? _errorMessage;
@@ -55,10 +59,13 @@ class ReservationFlowViewModel extends ChangeNotifier {
     required ProductRepository products,
     required OrderRepository orders,
     required SlotRepository slots,
+    required ArtisanRepository artisans,
     List<String?>? initialVariantSelection,
+    this.initialQuantity = 1,
   }) : _products = products,
        _orders = orders,
        _slotRepository = slots,
+       _artisans = artisans,
        _initialVariantSelection = initialVariantSelection {
     _selectedDate = dateOnly(DateTime.now());
     calendar = PickupCalendarViewModel(slots);
@@ -74,10 +81,17 @@ class ReservationFlowViewModel extends ChangeNotifier {
       if (_disposed || id != _productRequestId) return;
       _variantProvider?.dispose();
       _product = loaded;
+      try {
+        final mine = await _artisans.getMine();
+        _isOwnProduct = mine?.id.isNotEmpty == true && mine!.id == loaded.creatorId;
+      } catch (_) {
+        _isOwnProduct = false;
+      }
       _variantProvider = VariantSelectionViewModel(loaded)..addListener(_safeNotify);
       if (_initialVariantSelection != null) {
         _variantProvider!.restoreSelection(_initialVariantSelection);
       }
+      if (_isOwnProduct) return;
       await loadSlots();
     } catch (e) {
       if (_disposed || id != _productRequestId) return;
@@ -249,6 +263,7 @@ class ReservationFlowViewModel extends ChangeNotifier {
         variantId: product.hasVariants ? variant?.id : null,
         pickupDate: _selectedDate!, pickupSlot: _selectedSlot!,
         paymentMethod: method.name,
+        quantity: initialQuantity,
       );
       if (_disposed) return ReservationSubmitResult.failed;
       _createdOrder = created;

@@ -29,19 +29,10 @@ class VariantSelectionViewModel extends ChangeNotifier {
   void selectOption(int axis, String value) {
     if (_selected[axis] == value) {
       _selected[axis] = null;
-      for (var i = axis + 1; i < product.variantOptions.length; i++) {
-        _selected[i] = null;
-      }
       notifyListeners();
       return;
     }
     _selected[axis] = value;
-    for (var i = axis + 1; i < product.variantOptions.length; i++) {
-      _selected[i] = null;
-      for (final v in product.variantOptions[i].values) {
-        if (_isAvailable(product, i, v, _selected)) { _selected[i] = v; break; }
-      }
-    }
     notifyListeners();
   }
 

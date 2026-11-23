@@ -5,9 +5,10 @@ import '../../../data/repositories/order_repository.dart';
 import '../../../data/repositories/catalog_repositories.dart';
 
 class WriteReviewViewModel extends ChangeNotifier {
-  WriteReviewViewModel(this.orderId, {required OrderRepository orders, required ReviewRepository reviews})
+  WriteReviewViewModel(this.orderId, {this.itemId, required OrderRepository orders, required ReviewRepository reviews})
       : _orders = orders, _reviews = reviews;
   final String orderId;
+  final String? itemId;
   final OrderRepository _orders;
   final ReviewRepository _reviews;
   OrderModel? _order;
@@ -35,7 +36,13 @@ class WriteReviewViewModel extends ChangeNotifier {
       _order = await _orders.getOrder(orderId);
       if (_disposed) return false;
       final items = _order!.items;
-      final targetItemId = items.isNotEmpty ? items.first.id : null;
+      final matching = itemId == null || itemId!.isEmpty ? items : items.where((item) => item.id == itemId).toList();
+      final target = matching.length == 1 ? matching.first : null;
+      if (target == null) {
+        _errorMessage = 'Pilih item pesanan yang akan diulas.';
+        return false;
+      }
+      final targetItemId = target.id;
       await _reviews.submit(orderItemId: targetItemId,
           rating: _rating, comment: comment.trim());
       // Catat secara lokal bahwa order ini sudah diulas

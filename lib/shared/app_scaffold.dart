@@ -11,6 +11,7 @@ class AppScaffold extends StatelessWidget {
   final List<Widget>? actions;
   final Widget? leading;
   final bool showSearchAction;
+  final bool showCartAction;
   const AppScaffold({
     super.key,
     this.title,
@@ -20,18 +21,21 @@ class AppScaffold extends StatelessWidget {
     this.actions,
     this.leading,
     this.showSearchAction = true,
+    this.showCartAction = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final path = GoRouterState.of(context).uri.path;
     final shouldShowBottomNav = showBottomNav && _isPrimaryNavigationPath(path);
+    final isAuthPath = path == '/login' || path == '/register' || path.startsWith('/lupa-password');
     return Scaffold(
       appBar: BrandAppBar(
         title: title,
         leading: leading,
         actions: actions,
-        showSearchAction: showSearchAction,
+        showSearchAction: showSearchAction && !isAuthPath,
+        showCartAction: showCartAction && !isAuthPath,
       ),
       body: body,
       floatingActionButton: floatingActionButton,

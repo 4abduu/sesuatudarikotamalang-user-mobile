@@ -53,6 +53,8 @@ class OrderItemModel {
   final String variantLabel;
   final int price;
   final int quantity;
+  final String? reviewId;
+  final String? image;
 
   const OrderItemModel({
     required this.id,
@@ -62,6 +64,8 @@ class OrderItemModel {
     required this.variantLabel,
     required this.price,
     this.quantity = 1,
+    this.reviewId,
+    this.image,
   });
 
   factory OrderItemModel.fromJson(Map<String, dynamic> j) {
@@ -84,6 +88,10 @@ class OrderItemModel {
       variantLabel: j['variantLabel'] ?? vLabel,
       price: (j['priceSnapshot'] as num?)?.toInt() ?? ((j['price'] as num?)?.toInt() ?? 0),
       quantity: (j['quantity'] as num?)?.toInt() ?? 1,
+      reviewId: (j['review'] as Map?)?['id']?.toString(),
+      image: ((prod?['images'] as List?)?.isNotEmpty == true)
+          ? (prod!['images'] as List).first?.toString()
+          : prod?['image']?.toString(),
     );
   }
 
@@ -124,6 +132,9 @@ class OrderModel {
   final RefundInfo? refund;
   final bool affectedByHoliday;
   final String? holidayReason;
+
+  int get totalQuantity => items.fold(0, (sum, item) => sum + item.quantity);
+  String? get primaryImage => items.map((item) => item.image).whereType<String>().firstOrNull;
 
   String get paymentMethodLabel {
     final lower = paymentMethod.toLowerCase();

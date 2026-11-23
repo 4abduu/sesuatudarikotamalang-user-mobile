@@ -64,6 +64,8 @@ import '../../features/creator_dashboard/viewmodel/my_stories_view_model.dart';
 import '../../features/creator_dashboard/viewmodel/story_form_view_model.dart';
 import '../../features/creator_dashboard/viewmodel/story_ai_view_model.dart';
 import '../../data/repositories/order_repository.dart';
+import '../../features/cart/view/cart_selection_screen.dart';
+import '../../features/cart/viewmodel/cart_view_model.dart';
 import '../../data/repositories/catalog_repositories.dart';
 import '../../data/repositories/application_repository.dart';
 import '../../data/repositories/report_repository.dart';
@@ -84,7 +86,8 @@ bool _isProtectedRoute(String location) {
   return location.startsWith('/notifikasi') ||
       location.startsWith('/akun') ||
       location.startsWith('/dashboard-kreator') ||
-      location.startsWith('/reservasi');
+      location.startsWith('/reservasi') ||
+      location.startsWith('/keranjang');
 }
 
 GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
@@ -107,6 +110,8 @@ GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
       return null;
     },
     routes: [
+      GoRoute(path: RouteNames.cart, builder: (_, __) => ChangeNotifierProvider(create: (_) => CartViewModel(dependencies.cart), child: const CartScreen())),
+      GoRoute(path: '/reservasi/keranjang', builder: (_, __) => ChangeNotifierProvider(create: (_) => CartViewModel(dependencies.cart)..refresh(), child: CartCheckoutScreen(orders: OrderRepository(dependencies.api), slots: SlotRepository(dependencies.api)))),
       GoRoute(
           path: RouteNames.home,
           builder: (_, __) => ChangeNotifierProvider(
@@ -155,6 +160,7 @@ GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
                           productId: id,
                           repository: ReviewRepository(dependencies.api),
                         )),
+                ChangeNotifierProvider(create: (_) => CartViewModel(dependencies.cart)),
               ],
               child: ProductDetailScreen(productId: id),
             );
@@ -209,9 +215,11 @@ GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
                 create: (_) => ReservationFlowViewModel(
                   s.pathParameters['productId']!,
                    products: dependencies.products,
+                  artisans: ArtisanRepository(dependencies.api),
                   orders: OrderRepository(dependencies.api),
                   slots: SlotRepository(dependencies.api),
                   initialVariantSelection: initialVariantSelection,
+                  initialQuantity: int.tryParse(s.uri.queryParameters['quantity'] ?? '') ?? 1,
                 ),
                 child: ReservationFlowScreen(
                     productId: s.pathParameters['productId']!),
@@ -371,8 +379,9 @@ GoRouter buildAppRouter(AuthViewModel auth, AppDependencies dependencies) {
           path: '/akun/ulasan/write',
           builder: (_, s) {
             final orderId = s.uri.queryParameters['order'] ?? '';
+            final itemId = s.uri.queryParameters['item'];
             return ChangeNotifierProvider(
-              create: (_) => WriteReviewViewModel(orderId,
+              create: (_) => WriteReviewViewModel(orderId, itemId: itemId,
                   orders: OrderRepository(dependencies.api),
                   reviews: ReviewRepository(dependencies.api)),
               child: WriteReviewScreen(orderId: orderId),

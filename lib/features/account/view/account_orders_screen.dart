@@ -145,8 +145,26 @@ class _AccountOrdersScreenState extends State<AccountOrdersScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 4),
-                                Text(o.productName, style: AppTextStyles.body),
-                                Text(o.variantLabel, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.muted)),
+                                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: o.primaryImage == null
+                                        ? const SizedBox(width: 52, height: 52, child: Icon(Icons.image_outlined, color: AppColors.muted))
+                                        : Image.network(
+                                            o.primaryImage!,
+                                            width: 52,
+                                            height: 52,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) => const SizedBox(width: 52, height: 52, child: Icon(Icons.broken_image_outlined, color: AppColors.muted)),
+                                          ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                    Text(o.productName, style: AppTextStyles.body),
+                                    Text(o.variantLabel, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.muted)),
+                                    Text('${o.totalQuantity} item', style: GoogleFonts.poppins(fontSize: 12, color: AppColors.muted)),
+                                  ])),
+                                ]),
                                 const SizedBox(height: 4),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

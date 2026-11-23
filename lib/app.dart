@@ -7,6 +7,7 @@ import 'core/di/app_dependencies.dart';
 import 'features/auth/viewmodel/auth_view_model.dart';
 import 'features/notifications/viewmodel/notifications_view_model.dart';
 import 'features/catalog/viewmodel/app_config_view_model.dart';
+import 'features/app_update/view/app_update_screen.dart';
 import 'package:provider/provider.dart';
 
 class SesuatuApp extends StatefulWidget {
@@ -85,6 +86,10 @@ class _SesuatuAppState extends State<SesuatuApp> with WidgetsBindingObserver {
         if (!_initialized) {
           return const Scaffold(
               body: Center(child: CircularProgressIndicator()));
+        }
+        final config = context.watch<AppConfigViewModel>();
+        if (config.updateRequired) {
+          return AppUpdateScreen(config: config);
         }
         return child ?? const SizedBox();
       },
