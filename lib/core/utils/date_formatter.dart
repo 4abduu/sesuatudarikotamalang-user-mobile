@@ -44,3 +44,15 @@ String formatDateTimeWib(String iso) {
   final base = formatDateTime(iso);
   return base == '—' || base == iso ? base : '$base WIB';
 }
+
+/// Merapikan teks body notifikasi (misal: "Batas hold: 2026-11-23T10:15:00.000Z")
+/// agar tanggal ISO mentah diubah ke format ramah pembeli (WIB).
+String formatNotificationBody(String body) {
+  if (body.isEmpty) return body;
+  final isoPattern = RegExp(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?');
+  return body.replaceAllMapped(isoPattern, (match) {
+    final matchedText = match.group(0)!;
+    final formatted = formatDateTimeWib(matchedText);
+    return formatted != matchedText ? formatted : matchedText;
+  });
+}

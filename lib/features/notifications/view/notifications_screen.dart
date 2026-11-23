@@ -254,7 +254,12 @@ class _NotificationCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 2),
-                  Text(n.body, style: GoogleFonts.poppins(fontSize: 12, height: 1.375, color: AppColors.muted), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text(
+                    formatNotificationBody(n.body),
+                    style: GoogleFonts.poppins(fontSize: 12, height: 1.375, color: AppColors.muted),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
