@@ -104,7 +104,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final vm = context.watch<OrderDetailViewModel>();
     final o = vm.order;
     if (o == null) {
-      return AppScaffold(title: 'Detail Pesanan', body: Center(
+      return AppScaffold(title: 'Detail Pesanan', showSearchAction: false, body: Center(
         child: vm.isLoading ? const CircularProgressIndicator() : const Text('Pesanan tidak ditemukan'),
       ));
     }
@@ -120,7 +120,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     return AppScaffold(
       title: o.orderNumber,
-          leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.popOrParent()),
+      showSearchAction: false,
+      leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.popOrParent()),
       body: vm.isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -438,7 +439,9 @@ class _RefundSection extends StatelessWidget {
             children: [
               const Icon(Icons.currency_exchange, size: 18, color: AppColors.primary),
               const SizedBox(width: 8),
-              Text('Pembatalan & Pengembalian Dana', style: AppTextStyles.h3),
+              Expanded(
+                child: Text('Pembatalan & Pengembalian Dana', style: AppTextStyles.h3),
+              ),
             ],
           ),
           const SizedBox(height: 8),

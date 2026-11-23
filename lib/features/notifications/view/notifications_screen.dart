@@ -235,10 +235,24 @@ class _NotificationCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(children: [
-                    Expanded(child: Text(n.title, style: GoogleFonts.baloo2(fontSize: 13, height: 1.25, color: AppColors.foreground, fontWeight: n.read ? FontWeight.w500 : FontWeight.w700))),
-                    Text(formatDateTimeWib(n.date), style: AppTextStyles.caption.copyWith(fontSize: 11)),
-                  ]),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          n.title,
+                          style: GoogleFonts.baloo2(
+                            fontSize: 13,
+                            height: 1.25,
+                            color: AppColors.foreground,
+                            fontWeight: n.read ? FontWeight.w500 : FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(formatDateTimeWib(n.date), style: AppTextStyles.caption.copyWith(fontSize: 10)),
+                    ],
+                  ),
                   const SizedBox(height: 2),
                   Text(n.body, style: GoogleFonts.poppins(fontSize: 12, height: 1.375, color: AppColors.muted), maxLines: 2, overflow: TextOverflow.ellipsis),
                 ],

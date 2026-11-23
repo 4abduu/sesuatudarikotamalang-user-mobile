@@ -78,22 +78,24 @@ class _ReviewSummarySectionState extends State<ReviewSummarySection> {
             )),
           const SizedBox(height: 4),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              const Icon(Icons.star, color: AppColors.mustard, size: 20),
-              const SizedBox(width: 8),
-              Text('Rating toko', style: AppTextStyles.bodyMuted),
-              const SizedBox(width: 8),
-              Text(rating > 0 ? rating.toStringAsFixed(1) : '0.0', style: AppTextStyles.h2),
-              const SizedBox(width: 4),
-              RatingStars(value: rating, size: 12, showValue: true),
-              const SizedBox(width: 8),
-              Text('dari $total ulasan', style: AppTextStyles.caption),
-            ]),
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                const Icon(Icons.star, color: AppColors.mustard, size: 18),
+                Text('Rating toko', style: AppTextStyles.bodyMuted),
+                Text(rating > 0 ? rating.toStringAsFixed(1) : '0.0', style: AppTextStyles.h2),
+                RatingStars(value: rating, size: 12, showValue: true),
+                Text('dari $total ulasan', style: AppTextStyles.caption),
+              ],
+            ),
           ),
         ]);
       },

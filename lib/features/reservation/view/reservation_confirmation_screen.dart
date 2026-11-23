@@ -71,6 +71,7 @@ class _ReservationConfirmationScreenState extends State<ReservationConfirmationS
       return const AppScaffold(
         title: 'Tiket Pembelian',
         showBottomNav: false,
+        showSearchAction: false,
         body: Center(child: Text('Tiket tidak ditemukan.')),
       );
     }
@@ -82,8 +83,14 @@ class _ReservationConfirmationScreenState extends State<ReservationConfirmationS
     return AppScaffold(
       title: 'Tiket Pembelian',
       showBottomNav: false,
+      showSearchAction: false,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          16,
+          16,
+          24 + MediaQuery.of(context).padding.bottom,
+        ),
         child: Column(
           children: [
             if (accepted) ...[

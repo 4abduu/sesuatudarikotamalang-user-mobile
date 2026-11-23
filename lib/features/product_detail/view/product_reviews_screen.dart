@@ -134,6 +134,7 @@ class _ProductReviewsScreenState extends State<ProductReviewsScreen> {
     final summary = viewModel.summary;
     return AppScaffold(
       title: 'Semua Ulasan',
+      showSearchAction: false,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () => context.popOrParent(),

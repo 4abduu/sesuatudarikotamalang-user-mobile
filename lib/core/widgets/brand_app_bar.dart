@@ -136,32 +136,34 @@ class BrandAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              // Teks brand selalu tampil (bukan diganti judul).
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Sesuatu',
-                    style: GoogleFonts.baloo2(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.foreground,
-                      height: 1.0,
+              if (title == null) ...[
+                const SizedBox(width: 8),
+                // Teks brand tampil penuh di halaman utama / saat tanpa judul.
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Sesuatu',
+                      style: GoogleFonts.baloo2(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.foreground,
+                        height: 1.0,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'DariKota Malang',
-                    style: GoogleFonts.baloo2(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                      height: 1.0,
+                    Text(
+                      'DariKota Malang',
+                      style: GoogleFonts.baloo2(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                        height: 1.0,
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
                 ],
               ),
             ),

@@ -129,17 +129,24 @@ class ProductCard extends StatelessWidget {
             const SizedBox(height: 2),
             Text(product.shortDesc, style: GoogleFonts.poppins(fontSize: 11, color: AppColors.muted), maxLines: 1, overflow: TextOverflow.ellipsis),
             const SizedBox(height: 6),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(
-                formatRupiah(product.price),
-                style: GoogleFonts.baloo2(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: product.isOutOfStock ? AppColors.muted : AppColors.primary,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    formatRupiah(product.price),
+                    style: GoogleFonts.baloo2(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: product.isOutOfStock ? AppColors.muted : AppColors.primary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-              RatingStars(value: product.rating, size: 11, showValue: true),
-            ]),
+                const SizedBox(width: 4),
+                RatingStars(value: product.rating, size: 10, showValue: true),
+              ],
+            ),
             const SizedBox(height: 2),
             Text('${product.soldCount} terjual', style: GoogleFonts.poppins(fontSize: 10, color: AppColors.muted)),
           ])),
