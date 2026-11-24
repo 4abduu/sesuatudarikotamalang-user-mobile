@@ -16,6 +16,7 @@ class CategoryFilterChips extends StatefulWidget {
 class _CategoryFilterChipsState extends State<CategoryFilterChips> {
   final ScrollController _scrollController = ScrollController();
   final List<GlobalKey> _chipKeys = [];
+  int? _lastScrolledIndex;
 
   @override
   void dispose() {
@@ -26,13 +27,35 @@ class _CategoryFilterChipsState extends State<CategoryFilterChips> {
   void _scrollToSelected(int index) {
     if (index < 0 || index >= _chipKeys.length) return;
     final keyContext = _chipKeys[index].currentContext;
-    if (keyContext == null) return;
-    Scrollable.ensureVisible(
-      keyContext,
-      alignment: 0.3,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    if (keyContext != null) {
+      Scrollable.ensureVisible(
+        keyContext,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else if (_scrollController.hasClients) {
+      // Fallback perkiraan offset: 1 chip ~ 95px
+      final estimatedOffset = (index * 95.0) - 100.0;
+      final target = estimatedOffset.clamp(0.0, _scrollController.position.maxScrollExtent);
+      _scrollController.animateTo(
+        target,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _triggerAutoScroll(int index) {
+    _lastScrolledIndex = index;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _scrollToSelected(index);
+      // Coba sekali lagi dengan jeda untuk memastikan context sudah terpasang
+      Future.delayed(const Duration(milliseconds: 150), () {
+        if (mounted) _scrollToSelected(index);
+      });
+    });
   }
 
   @override
@@ -56,9 +79,9 @@ class _CategoryFilterChipsState extends State<CategoryFilterChips> {
       }
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToSelected(activeIndex);
-    });
+    if (activeIndex != _lastScrolledIndex) {
+      _triggerAutoScroll(activeIndex);
+    }
 
     return SizedBox(
       height: 48,
@@ -69,26 +92,28 @@ class _CategoryFilterChipsState extends State<CategoryFilterChips> {
         radius: const Radius.circular(999),
         child: Padding(
           padding: const EdgeInsets.only(bottom: 6),
-          child: ListView(
+          child: SingleChildScrollView(
             controller: _scrollController,
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-            children: [
-              _chip(
-                'Semua',
-                widget.selected == null || widget.selected!.isEmpty,
-                () => widget.onSelected(null),
-                _chipKeys[0],
-              ),
-              ...categories.asMap().entries.map(
-                (entry) => _chip(
-                  entry.value.name,
-                  widget.selected == entry.value.id || (entry.value.slug.isNotEmpty && widget.selected == entry.value.slug),
-                  () => widget.onSelected(entry.value.id),
-                  _chipKeys[entry.key + 1],
+            child: Row(
+              children: [
+                _chip(
+                  'Semua',
+                  widget.selected == null || widget.selected!.isEmpty,
+                  () => widget.onSelected(null),
+                  _chipKeys[0],
                 ),
-              ),
-            ],
+                ...categories.asMap().entries.map(
+                  (entry) => _chip(
+                    entry.value.name,
+                    widget.selected == entry.value.id || (entry.value.slug.isNotEmpty && widget.selected == entry.value.slug),
+                    () => widget.onSelected(entry.value.id),
+                    _chipKeys[entry.key + 1],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

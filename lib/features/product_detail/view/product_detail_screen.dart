@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/routing/back_navigation.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/widgets/badge_chip.dart';
 import '../../../core/widgets/rating_stars.dart';
@@ -36,9 +37,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final detail = context.watch<ProductDetailViewModel>();
     if (detail.isLoading) {
       return AppScaffold(
+        title: 'Detail Produk',
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.canPop() ? context.pop() : context.go('/katalog'),
+          onPressed: () => context.popOrParent(),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -47,9 +49,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final product = detail.product;
     if (product == null) {
       return AppScaffold(
+        title: 'Detail Produk',
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.canPop() ? context.pop() : context.go('/katalog'),
+          onPressed: () => context.popOrParent(),
         ),
         body: const Center(child: Text('Produk tidak ditemukan')),
       );
@@ -67,7 +70,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         title: 'Detail Produk',
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.canPop() ? context.pop() : context.go('/katalog'),
+          onPressed: () => context.popOrParent(),
         ),
         body: SingleChildScrollView(
           // px-4 pt-4 pb-6
@@ -105,14 +108,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              Row(
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 6,
                 children: [
                   RatingStars(value: product.rating, size: 14, showValue: true),
-                  const SizedBox(width: 8),
                   Text('${product.soldCount} terjual', style: AppTextStyles.caption),
-                  const SizedBox(width: 8),
                   Text('•', style: AppTextStyles.caption),
-                  const SizedBox(width: 8),
                   Text(
                     product.totalStock <= 0
                         ? 'Stok habis'
@@ -128,9 +131,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ),
                   if (product.isOfficial) ...[
-                    const SizedBox(width: 8),
                     Text('•', style: AppTextStyles.caption),
-                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
