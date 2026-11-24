@@ -78,22 +78,33 @@ class _ReviewSummarySectionState extends State<ReviewSummarySection> {
             )),
           const SizedBox(height: 4),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 6,
-              runSpacing: 4,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.star, color: AppColors.mustard, size: 18),
+                const Icon(Icons.star_rounded, color: AppColors.mustard, size: 22),
+                const SizedBox(width: 8),
                 Text('Rating toko', style: AppTextStyles.bodyMuted),
-                Text(rating > 0 ? rating.toStringAsFixed(1) : '0.0', style: AppTextStyles.h2),
-                RatingStars(value: rating, size: 12, showValue: true),
-                Text('dari $total ulasan', style: AppTextStyles.caption),
+                const SizedBox(width: 8),
+                Text(
+                  rating > 0 ? rating.toStringAsFixed(1) : '0.0',
+                  style: AppTextStyles.h2.copyWith(fontSize: 18),
+                ),
+                const SizedBox(width: 8),
+                RatingStars(value: rating, size: 12, showValue: false),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    '($total ulasan)',
+                    style: AppTextStyles.caption.copyWith(fontSize: 12),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
           ),

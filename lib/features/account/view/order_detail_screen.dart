@@ -1,6 +1,7 @@
 import 'widgets/holiday_affected_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../core/routing/back_navigation.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_shadows.dart';
@@ -256,7 +257,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
                     const SizedBox(height: 16),
 
-                    if (isCompleted) ...o.items.map((item) => Padding(padding: const EdgeInsets.only(bottom: 8), child: item.reviewId == null ? PrimaryButton(label: 'Beri Ulasan: ${item.productName}', icon: const Icon(Icons.star_outline, size: 16), onPressed: () async { await context.push('/akun/ulasan/write?order=${widget.orderId}&item=${Uri.encodeComponent(item.id)}'); if (context.mounted) await vm.load(); }) : SecondaryButton(label: 'Lihat Ulasan: ${item.productName}', icon: const Icon(Icons.rate_review_outlined, size: 16, color: AppColors.primary), onPressed: () => context.push('/produk/${item.productId}/ulasan?reviewId=${Uri.encodeComponent(item.reviewId!)}')))),
+                    if (isCompleted) ...o.items.map((item) => Padding(padding: const EdgeInsets.only(bottom: 8), child: item.reviewId == null ? PrimaryButton(label: o.items.length > 1 ? 'Beri Ulasan (${item.productName})' : 'Beri Ulasan', icon: const Icon(Icons.star_outline, size: 16), onPressed: () async { await context.push('/akun/ulasan/write?order=${widget.orderId}&item=${Uri.encodeComponent(item.id)}'); if (context.mounted) await vm.load(); }) : SecondaryButton(label: o.items.length > 1 ? 'Lihat Ulasan (${item.productName})' : 'Lihat Ulasan Saya', icon: const Icon(Icons.rate_review_outlined, size: 16, color: AppColors.primary), onPressed: () => context.push('/produk/${item.productId}/ulasan?reviewId=${Uri.encodeComponent(item.reviewId!)}')))),
 
                     if (o.refund != null && o.refund!.shouldShowSection) ...[
                       const SizedBox(height: 16),
@@ -427,17 +428,30 @@ class _RefundSection extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.currency_exchange, size: 18, color: AppColors.primary),
-              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.currency_exchange, size: 16, color: AppColors.primary),
+              ),
+              const SizedBox(width: 10),
               Expanded(
-                child: Text('Pembatalan & Pengembalian Dana', style: AppTextStyles.h3),
+                child: Text(
+                  'Pembatalan & Pengembalian Dana',
+                  style: AppTextStyles.h3.copyWith(fontSize: 14),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(text, style: AppTextStyles.bodyMuted),
+          const SizedBox(height: 10),
+          Text(
+            text,
+            style: GoogleFonts.poppins(fontSize: 12, height: 1.45, color: AppColors.muted),
+          ),
           if (actionWidget != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             actionWidget,
           ],
         ],

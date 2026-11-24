@@ -7,7 +7,6 @@ import '../../data/models/product_model.dart';
 import '../../features/catalog/viewmodel/app_config_view_model.dart';
 import 'art_image.dart';
 import 'badge_chip.dart';
-import 'rating_stars.dart';
 import '../utils/currency_formatter.dart';
 
 class ProductCard extends StatelessWidget {
@@ -144,7 +143,21 @@ class ProductCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 4),
-                RatingStars(value: product.rating, size: 10, showValue: true),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.star_rounded, size: 13, color: AppColors.mustard),
+                    const SizedBox(width: 2),
+                    Text(
+                      product.rating.toStringAsFixed(1),
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 2),

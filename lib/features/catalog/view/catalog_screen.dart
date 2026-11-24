@@ -10,7 +10,7 @@ import '../../../shared/app_scaffold.dart';
 import '../viewmodel/catalog_view_model.dart';
 import 'widgets/category_filter_chips.dart';
 import 'widgets/sort_dropdown.dart';
-import 'widgets/product_grid_view.dart';
+import '../../../core/widgets/product_card.dart';
 
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
@@ -78,11 +78,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   void _fetchCurrentCatalog({bool reset = true}) {
     if (reset && _scrollController.hasClients) {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
+      _scrollController.jumpTo(0);
     }
     context.read<CatalogViewModel>().fetchCatalog(
       categoryId: _category,
@@ -111,69 +107,117 @@ class _CatalogScreenState extends State<CatalogScreen> {
         onRefresh: () async {
           _fetchCurrentCatalog(reset: true);
         },
-        child: SingleChildScrollView(
+        child: CustomScrollView(
           controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: _searchController,
-                onChanged: _onSearchChanged,
-                style: appSearchTextStyle,
-                decoration: appSearchDecoration('Cari dalam katalog...'),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _searchController,
+                      onChanged: _onSearchChanged,
+                      style: appSearchTextStyle,
+                      decoration: appSearchDecoration('Cari dalam katalog...'),
+                    ),
+                    const SizedBox(height: 12),
+                    CategoryFilterChips(
+                      selected: _category,
+                      onSelected: (v) {
+                        setState(() => _category = v);
+                        _fetchCurrentCatalog(reset: true);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Menampilkan $total produk',
+                          style: AppTextStyles.caption,
+                        ),
+                        Row(
+                          children: [
+                            Text('Urut: ', style: AppTextStyles.caption),
+                            SortDropdown(
+                              value: _sort,
+                              onChanged: (v) {
+                                if (v != null) {
+                                  setState(() => _sort = v);
+                                  _fetchCurrentCatalog(reset: true);
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              CategoryFilterChips(
-                selected: _category,
-                onSelected: (v) {
-                  setState(() => _category = v);
-                  _fetchCurrentCatalog(reset: true);
-                },
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Menampilkan $total produk',
-                    style: AppTextStyles.caption,
-                  ),
-                  Row(
-                    children: [
-                      Text('Urut: ', style: AppTextStyles.caption),
-                      SortDropdown(
-                        value: _sort,
-                        onChanged: (v) {
-                          if (v != null) {
-                            setState(() => _sort = v);
-                            _fetchCurrentCatalog(reset: true);
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              if (productsProvider.isCatalogLoading && catalogList.isEmpty)
-                const Center(
+            ),
+            if (productsProvider.isCatalogLoading && catalogList.isEmpty)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
                   child: Padding(
                     padding: EdgeInsets.all(40),
                     child: CircularProgressIndicator(),
                   ),
-                )
-              else ...[
-                ProductGridView(products: catalogList),
-                LoadMoreFooter(
-                  isLoading: productsProvider.isCatalogLoadingMore,
-                  hasMore: productsProvider.catalogHasMore,
-                  isEmpty: catalogList.isEmpty,
                 ),
-              ],
+              )
+            else if (catalogList.isEmpty)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Text('Tidak ada produk yang cocok.'),
+                  ),
+                ),
+              )
+            else ...[
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    childAspectRatio: 0.6,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, i) {
+                      final product = catalogList[i];
+                      return ProductCard(
+                        key: ValueKey(product.id),
+                        product: product,
+                        onTap: () => context.pushNamed(
+                          'productDetail',
+                          pathParameters: {'id': product.id},
+                        ),
+                      );
+                    },
+                    childCount: catalogList.length,
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                sliver: SliverToBoxAdapter(
+                  child: LoadMoreFooter(
+                    isLoading: productsProvider.isCatalogLoadingMore,
+                    hasMore: productsProvider.catalogHasMore,
+                    isEmpty: catalogList.isEmpty,
+                  ),
+                ),
+              ),
             ],
-          ),
+          ],
         ),
       ),
     );
