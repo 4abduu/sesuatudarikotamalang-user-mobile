@@ -79,33 +79,35 @@ class _ReviewSummarySectionState extends State<ReviewSummarySection> {
           const SizedBox(height: 4),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.star_rounded, color: AppColors.mustard, size: 22),
-                const SizedBox(width: 8),
-                Text('Rating toko', style: AppTextStyles.bodyMuted),
-                const SizedBox(width: 8),
-                Text(
-                  rating > 0 ? rating.toStringAsFixed(1) : '0.0',
-                  style: AppTextStyles.h2.copyWith(fontSize: 18),
-                ),
-                const SizedBox(width: 8),
-                RatingStars(value: rating, size: 12, showValue: false),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.star_rounded, color: AppColors.mustard, size: 22),
+                  const SizedBox(width: 6),
+                  Text('Rating toko', style: AppTextStyles.bodyMuted),
+                  const SizedBox(width: 6),
+                  Text(
+                    rating > 0 ? rating.toStringAsFixed(1) : '0.0',
+                    style: AppTextStyles.h2.copyWith(fontSize: 18),
+                  ),
+                  const SizedBox(width: 6),
+                  RatingStars(value: rating, size: 12, showValue: false),
+                  const SizedBox(width: 6),
+                  Text(
                     '($total ulasan)',
                     style: AppTextStyles.caption.copyWith(fontSize: 12),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ]);
